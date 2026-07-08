@@ -18,8 +18,10 @@ import { VideosComponent } from './pages/ui-elements/videos/videos.component';
 import { SignInComponent } from './pages/auth-pages/sign-in/sign-in.component';
 import { SignUpComponent } from './pages/auth-pages/sign-up/sign-up.component';
 import { CalenderComponent } from './pages/calender/calender.component';
+import { AuditLogComponent } from './pages/audit/audit-log.component';
 import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
+import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
   {
@@ -104,6 +106,13 @@ export const routes: Routes = [
         path:'videos',
         component:VideosComponent,
         title:'Angular Videos Dashboard | TailAdmin - Angular Admin Dashboard Template'
+      },
+      {
+        path: 'audit',
+        component: AuditLogComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['SADM', 'ADM'] },
+        title: 'Journal d\'audit | SGS'
       },
     ]
   },
