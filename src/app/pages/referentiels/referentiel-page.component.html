@@ -1,0 +1,86 @@
+@if (entity) {
+  <app-page-breadcrumb [pageTitle]="entity.label" />
+
+  <app-component-card [title]="entity.label" [desc]="entity.hint || ''">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div class="flex w-full items-end gap-3 sm:w-auto">
+        <div class="w-full sm:w-64">
+          <app-input-field
+            placeholder="Filtrer par code..."
+            [(value)]="filterText"
+            (keyup.enter)="search()"
+          />
+        </div>
+        <app-button size="sm" variant="outline" (btnClick)="search()">
+          Rechercher
+        </app-button>
+      </div>
+
+      <app-button size="sm" (btnClick)="openCreate()">
+        Nouveau
+      </app-button>
+    </div>
+
+    @if (listError) {
+      <p class="text-sm text-error-500">{{ listError }}</p>
+    }
+
+    <app-entity-table
+      [columns]="entity.columns"
+      [rows]="rows"
+      [loading]="loading"
+      (edit)="openEdit($event)"
+      (remove)="askDelete($event)"
+    />
+
+    @if (meta && meta.totalPages > 1) {
+      <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+        <span>Page {{ meta.pageNumber }} / {{ meta.totalPages }} — {{ meta.totalElements }} enregistrement(s)</span>
+        <div class="flex gap-2">
+          <app-button size="sm" variant="outline" [disabled]="!meta.hasPrev" (btnClick)="goToPage(page - 1)">
+            Précédent
+          </app-button>
+          <app-button size="sm" variant="outline" [disabled]="!meta.hasNext" (btnClick)="goToPage(page + 1)">
+            Suivant
+          </app-button>
+        </div>
+      </div>
+    }
+  </app-component-card>
+
+  <app-modal [isOpen]="isFormOpen" (close)="closeForm()" className="max-w-[600px] p-5 lg:p-8">
+    <h4 class="font-semibold text-gray-800 mb-6 text-title-sm dark:text-white/90">
+      {{ isEditMode ? 'Modifier' : 'Nouveau' }} — {{ entity.label }}
+    </h4>
+
+    <app-entity-form
+      [fields]="entity.fields"
+      [model]="formModel"
+      [isEdit]="isEditMode"
+      (modelChange)="onModelChange($event)"
+    />
+
+    @if (formError) {
+      <p class="mt-4 text-sm text-error-500">{{ formError }}</p>
+    }
+
+    <div class="flex items-center justify-end w-full gap-3 mt-8">
+      <app-button size="sm" variant="outline" (btnClick)="closeForm()">
+        Annuler
+      </app-button>
+      <app-button size="sm" [disabled]="saving" (btnClick)="save()">
+        Enregistrer
+      </app-button>
+    </div>
+  </app-modal>
+
+  <app-confirm-dialog
+    [isOpen]="isConfirmOpen"
+    title="Confirmer la suppression"
+    [message]="'Voulez-vous vraiment supprimer cet enregistrement ? Cette action est irréversible.'"
+    [errorMessage]="deleteError"
+    [confirming]="deleting"
+    (confirmed)="confirmDelete()"
+    (cancelled)="cancelDelete()"
+  />
+}

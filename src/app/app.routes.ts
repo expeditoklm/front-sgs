@@ -19,9 +19,22 @@ import { SignInComponent } from './pages/auth-pages/sign-in/sign-in.component';
 import { SignUpComponent } from './pages/auth-pages/sign-up/sign-up.component';
 import { CalenderComponent } from './pages/calender/calender.component';
 import { AuditLogComponent } from './pages/audit/audit-log.component';
+import { ReferentielPageComponent } from './pages/referentiels/referentiel-page.component';
+import { REFERENTIEL_CRUD_ENTITIES } from './core/models/referentiel-crud.models';
 import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
 import { roleGuard } from './core/guards/role.guard';
+
+// Une route par référentiel du Module 01 (Établissements, Années scolaires, Niveaux, Classes,
+// Matières, Salles, Utilisateurs, Profils), toutes servies par le même ReferentielPageComponent
+// générique, configuré via route data - cf. REFERENTIEL_CRUD_ENTITIES.
+const referentielRoutes: Routes = REFERENTIEL_CRUD_ENTITIES.map((entity) => ({
+  path: `referentiels/${entity.key}`,
+  component: ReferentielPageComponent,
+  canActivate: [roleGuard],
+  data: { entity, roles: entity.roles },
+  title: `${entity.label} | SGS`
+}));
 
 export const routes: Routes = [
   {
@@ -114,6 +127,7 @@ export const routes: Routes = [
         data: { roles: ['SADM', 'ADM'] },
         title: 'Journal d\'audit | SGS'
       },
+      ...referentielRoutes,
     ]
   },
   // auth pages

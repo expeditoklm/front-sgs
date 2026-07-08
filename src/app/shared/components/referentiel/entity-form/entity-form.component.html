@@ -1,0 +1,45 @@
+<div class="space-y-5">
+  @for (field of fields; track field.key) {
+    <div>
+      @switch (field.type) {
+        @case ('checkbox') {
+          <app-checkbox
+            [label]="field.label"
+            [checked]="!!model[field.key]"
+            [disabled]="isDisabled(field)"
+            (checkedChange)="update(field.key, $event)"
+          />
+        }
+        @case ('select') {
+          <app-label>{{ field.label }} @if (field.required) { <span class="text-error-500">*</span> }</app-label>
+          <app-select
+            [options]="optionsFor(field)"
+            [value]="model[field.key] ?? ''"
+            [placeholder]="'Choisir ' + field.label.toLowerCase()"
+            (valueChange)="update(field.key, $event)"
+          />
+        }
+        @case ('multiselect') {
+          @if (dynamicOptions[field.key]) {
+            <app-multi-select
+              [label]="field.label"
+              [options]="multiSelectOptions(field)"
+              [defaultSelected]="model[field.key] ?? []"
+              [disabled]="isDisabled(field)"
+              (selectionChange)="update(field.key, $event)"
+            />
+          }
+        }
+        @default {
+          <app-label>{{ field.label }} @if (field.required) { <span class="text-error-500">*</span> }</app-label>
+          <app-input-field
+            [type]="field.type"
+            [value]="model[field.key] ?? ''"
+            [disabled]="isDisabled(field)"
+            (valueChange)="update(field.key, $event)"
+          />
+        }
+      }
+    </div>
+  }
+</div>

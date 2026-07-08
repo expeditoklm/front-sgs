@@ -1,0 +1,57 @@
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { ApiResponse, PageResponse } from '../models/audit.models';
+
+export interface ListCriteria {
+  page: number;
+  size: number;
+  sortField: string;
+  sortOrder: 'ASC' | 'DESC';
+  filter: string;
+}
+
+// Générique par construction : les 8 référentiels du Module 01 partagent exactement le même
+// contrat REST (MasterController/AbstractBaseService côté backend), donc un seul service
+// paramétré par path, plutôt que 8 sous-classes quasi identiques.
+@Injectable({ providedIn: 'root' })
+export class ReferentielCrudService {
+  private endpoint = `${environment.apiUrl}/referentiels`;
+
+  constructor(private http: HttpClient) {
+  }
+
+  list(path: string, criteria: ListCriteria): Observable<PageResponse<Record<string, any>>> {
+    let params = new HttpParams()
+      .set('page', criteria.page)
+      .set('size', criteria.size)
+      .set('sortField', criteria.sortField)
+      .set('sortOrder', criteria.sortOrder);
+    if (criteria.filter) {
+      params = params.set('filter', criteria.filter);
+    }
+
+    return this.http
+      .get<ApiResponse<PageResponse<Record<string, any>>>>(`${this.endpoint}/${path}`, { params })
+      .pipe(map((response) => response.data));
+  }
+
+  create(path: string, payload: Record<string, unknown>): Observable<Record<string, any>> {
+    return this.http
+      .post<ApiResponse<Record<string, any>>>(`${this.endpoint}/${path}`, payload)
+      .pipe(map((response) => response.data));
+  }
+
+  update(path: string, uuid: string, payload: Record<string, unknown>): Observable<Record<string, any>> {
+    return this.http
+      .put<ApiResponse<Record<string, any>>>(`${this.endpoint}/${path}/${uuid}`, payload)
+      .pipe(map((response) => response.data));
+  }
+
+  remove(path: string, uuid: string): Observable<boolean> {
+    return this.http
+      .delete<ApiResponse<boolean>>(`${this.endpoint}/${path}/${uuid}`)
+      .pipe(map((response) => response.data));
+  }
+}
