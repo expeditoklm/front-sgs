@@ -30,7 +30,8 @@ export function isAuthEndpoint(url: string): boolean {
     'resend-otp',
     'refresh-token',
     'reset-request',
-    'reset'
+    'reset',
+    'frontend-errors'
   ];
   return endpointsToSkip.some((endpoint) => url.includes(endpoint));
 }
