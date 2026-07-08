@@ -39,13 +39,13 @@ function handleRefreshToken(
     refreshTokenSubject.next(null);
 
     return authService.refreshToken$().pipe(
-      switchMap((response) => {
+      switchMap((refreshed) => {
         isTokenRefreshing = false;
-        if (!response) {
+        if (!refreshed) {
           completeLogout();
           return of();
         }
-        refreshTokenSubject.next(response.token);
+        refreshTokenSubject.next('refreshed');
         return next(request.clone({ withCredentials: true, setHeaders: httpHeaders() }));
       })
     );

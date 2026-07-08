@@ -2,45 +2,139 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, map, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ApiResponse, LoginResponse, User } from '../models/auth.models';
+import { ApiResponse, ProfileOption, User, UserSummary } from '../models/auth.models';
 import { completeLogout } from '../helpers/auth.helpers';
+
+interface LoginStepData {
+  token: string;
+  user: UserSummary;
+}
+
+interface OtpStepData {
+  login: string;
+  profiles: ProfileOption[];
+}
+
+interface RoleSelectionData {
+  roleName: string;
+  roleUuid: string;
+  accessToken: string;
+  refreshToken: string;
+}
+
+interface RefreshTokenData {
+  token: string;
+  refreshToken: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthenticationService {
   private endpoint = `${environment.apiUrl}/authentication`;
+
+  // Le flux de connexion SGS se fait en 3 étapes (login -> OTP -> sélection de profil) : le token
+  // temporaire qui relie ces étapes n'a de sens que le temps de la connexion, donc en mémoire
+  // uniquement, jamais en localStorage.
+  private pendingToken: string | null = null;
+  private pendingUser: UserSummary | null = null;
+  private pendingLogin: string | null = null;
 
   user = signal<User | null>(this.userFromStorage);
 
   constructor(private http: HttpClient) {
   }
 
-  login$(credentials: { username: string; password: string }): Observable<boolean> {
+  login$(credentials: { login: string; password: string }): Observable<{ success: boolean; user?: UserSummary }> {
     return this.http
-      .post<ApiResponse<LoginResponse>>(`${this.endpoint}/login`, credentials, { withCredentials: true })
+      .post<ApiResponse<LoginStepData>>(`${this.endpoint}/login`, credentials, { withCredentials: true })
       .pipe(
-        tap((response) => this.storeAuthentication(response.data)),
+        tap((response) => {
+          this.pendingToken = response.data.token;
+          this.pendingUser = response.data.user;
+        }),
+        map((response) => ({ success: true, user: response.data.user })),
+        catchError(() => of({ success: false }))
+      );
+  }
+
+  validateOtp$(otp: string): Observable<{ success: boolean; profiles?: ProfileOption[] }> {
+    if (!this.pendingToken) {
+      return of({ success: false });
+    }
+
+    return this.http
+      .post<ApiResponse<OtpStepData>>(
+        `${this.endpoint}/validate-otp`,
+        { token: this.pendingToken, otp },
+        { withCredentials: true }
+      )
+      .pipe(
+        tap((response) => (this.pendingLogin = response.data.login)),
+        map((response) => ({ success: true, profiles: response.data.profiles })),
+        catchError(() => of({ success: false }))
+      );
+  }
+
+  resendOtp$(): Observable<boolean> {
+    if (!this.pendingToken) {
+      return of(false);
+    }
+
+    return this.http
+      .post(`${this.endpoint}/resend-otp`, { token: this.pendingToken }, { withCredentials: true })
+      .pipe(
         map(() => true),
         catchError(() => of(false))
       );
   }
 
-  refreshToken$(): Observable<LoginResponse | null> {
+  selectRole$(profileCode: string, profileLibelle: string): Observable<boolean> {
+    if (!this.pendingToken || !this.pendingUser) {
+      return of(false);
+    }
+
     return this.http
-      .post<ApiResponse<LoginResponse>>(`${this.endpoint}/refresh-token`, {}, { withCredentials: true })
+      .post<ApiResponse<RoleSelectionData>>(
+        `${this.endpoint}/select-role`,
+        { token: this.pendingToken, role: profileCode },
+        { withCredentials: true }
+      )
       .pipe(
-        tap((response) => this.storeAuthentication(response.data)),
-        map((response) => response.data),
-        catchError(() => of(null))
+        tap((response) => this.storeAuthentication(response.data, profileLibelle)),
+        map(() => true),
+        catchError(() => of(false))
+      );
+  }
+
+  // Le token d'accès réel vit dans un cookie httpOnly posé par le backend : côté client, on ne
+  // garde que le refresh token nécessaire pour redemander une session (le profil déjà stocké
+  // reste valable, la réponse de /refresh-token ne renvoie pas de nouveau profil).
+  refreshToken$(): Observable<boolean> {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) {
+      return of(false);
+    }
+
+    return this.http
+      .post<ApiResponse<RefreshTokenData>>(
+        `${this.endpoint}/refresh-token`,
+        { token: refreshToken },
+        { withCredentials: true }
+      )
+      .pipe(
+        tap((response) => localStorage.setItem('refresh_token', response.data.refreshToken)),
+        map(() => true),
+        catchError(() => of(false))
       );
   }
 
   logout(): void {
     this.http.post(`${this.endpoint}/logout`, {}, { withCredentials: true }).subscribe();
+    this.resetPendingState();
     completeLogout();
   }
 
   get isAuthenticated(): boolean {
-    return localStorage.getItem('token') !== null;
+    return localStorage.getItem('user') !== null;
   }
 
   get currentProfile(): string | null {
@@ -57,11 +151,26 @@ export class AuthenticationService {
     return raw ? JSON.parse(raw) : null;
   }
 
-  private storeAuthentication(authentication: LoginResponse): void {
-    localStorage.setItem('token', authentication.token);
-    localStorage.setItem('refresh_token', authentication.refreshToken);
-    localStorage.setItem('user', JSON.stringify(authentication.user));
-    localStorage.setItem('profile', authentication.user.profilCode);
-    this.user.set(authentication.user);
+  private storeAuthentication(data: RoleSelectionData, profileLibelle: string): void {
+    const user: User = {
+      login: this.pendingLogin ?? '',
+      email: this.pendingUser?.email ?? '',
+      firstName: this.pendingUser?.firstName ?? '',
+      lastName: this.pendingUser?.lastName ?? '',
+      profilCode: data.roleName,
+      profilLibelle: profileLibelle
+    };
+
+    localStorage.setItem('refresh_token', data.refreshToken);
+    localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('profile', user.profilCode);
+    this.user.set(user);
+    this.resetPendingState();
+  }
+
+  private resetPendingState(): void {
+    this.pendingToken = null;
+    this.pendingUser = null;
+    this.pendingLogin = null;
   }
 }

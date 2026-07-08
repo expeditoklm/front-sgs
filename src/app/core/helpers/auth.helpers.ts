@@ -13,7 +13,15 @@ export function httpHeaders(): Record<string, string> {
 }
 
 export function isAuthEndpoint(url: string): boolean {
-  const endpointsToSkip = ['login', 'refresh-token', 'reset-request', 'reset'];
+  const endpointsToSkip = [
+    'login',
+    'validate-otp',
+    'select-role',
+    'resend-otp',
+    'refresh-token',
+    'reset-request',
+    'reset'
+  ];
   return endpointsToSkip.some((endpoint) => url.includes(endpoint));
 }
 

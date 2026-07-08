@@ -4,19 +4,22 @@ export interface ApiResponse<T> {
   data: T;
 }
 
-export interface User {
-  id: string;
-  uuid: string;
+export interface UserSummary {
+  email: string;
   firstName: string;
   lastName: string;
-  email: string;
-  username: string;
-  profilCode: string;
-  profilLibelle: string;
 }
 
-export interface LoginResponse {
-  token: string;
-  refreshToken: string;
-  user: User;
+export interface ProfileOption {
+  code: string;
+  libelle: string;
+}
+
+export interface User {
+  login: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  profilCode: string;
+  profilLibelle: string;
 }
