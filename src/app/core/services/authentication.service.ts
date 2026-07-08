@@ -105,9 +105,11 @@ export class AuthenticationService {
       );
   }
 
-  // Le token d'accès réel vit dans un cookie httpOnly posé par le backend : côté client, on ne
-  // garde que le refresh token nécessaire pour redemander une session (le profil déjà stocké
-  // reste valable, la réponse de /refresh-token ne renvoie pas de nouveau profil).
+  // Le backend pose aussi un cookie httpOnly, mais SameSite=Lax : le navigateur ne l'envoie pas
+  // sur les appels cross-origin (Angular sur :4200, API sur :58080 - ports différents = origines
+  // différentes). On garde donc le vrai access token pour l'attacher nous-mêmes en
+  // Authorization: Bearer (cf. httpHeaders()) - le backend accepte déjà ce fallback
+  // (KeycloakAuthorizationFilter.extractToken()).
   refreshToken$(): Observable<boolean> {
     const refreshToken = localStorage.getItem('refresh_token');
     if (!refreshToken) {
@@ -121,7 +123,10 @@ export class AuthenticationService {
         { withCredentials: true }
       )
       .pipe(
-        tap((response) => localStorage.setItem('refresh_token', response.data.refreshToken)),
+        tap((response) => {
+          localStorage.setItem('access_token', response.data.token);
+          localStorage.setItem('refresh_token', response.data.refreshToken);
+        }),
         map(() => true),
         catchError(() => of(false))
       );
@@ -161,6 +166,7 @@ export class AuthenticationService {
       profilLibelle: profileLibelle
     };
 
+    localStorage.setItem('access_token', data.accessToken);
     localStorage.setItem('refresh_token', data.refreshToken);
     localStorage.setItem('user', JSON.stringify(user));
     localStorage.setItem('profile', user.profilCode);

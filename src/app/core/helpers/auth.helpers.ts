@@ -6,10 +6,20 @@ export function completeLogout(): void {
 }
 
 export function httpHeaders(): Record<string, string> {
-  return {
+  const headers: Record<string, string> = {
     'X-App-Name': 'SGS',
     'X-User-Role': localStorage.getItem('profile') || ''
   };
+
+  // Le cookie de session posé par le backend est SameSite=Lax : il n'est pas envoyé sur les
+  // appels cross-origin (Angular :4200 -> API :58080). On attache donc explicitement l'access
+  // token en Bearer - le backend gère déjà ce fallback (KeycloakAuthorizationFilter.extractToken()).
+  const accessToken = localStorage.getItem('access_token');
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+
+  return headers;
 }
 
 export function isAuthEndpoint(url: string): boolean {
