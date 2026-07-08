@@ -10,17 +10,25 @@ import { LabelComponent } from '../../shared/components/form/label/label.compone
 import { InputFieldComponent } from '../../shared/components/form/input/input-field.component';
 import { SelectComponent, Option } from '../../shared/components/form/select/select.component';
 import { AuditService } from '../../core/services/audit.service';
+import { ToastService } from '../../core/services/toast.service';
 import {
   AuditActionType,
+  AuditLogFilters,
   AuditRevision,
+  emptyAuditLogFilters,
   formatFieldValue,
   humanizeKey,
   MetaResponse,
-  recordLabel,
   REFERENTIEL_ENTITIES,
-  ReferentielEntityDescriptor,
-  ReferentielRecord
+  ReferentielEntityDescriptor
 } from '../../core/models/audit.models';
+
+const ACTION_TYPE_OPTIONS: Option[] = [
+  { value: '', label: 'Toutes les actions' },
+  { value: 'ADD', label: 'Création' },
+  { value: 'MOD', label: 'Modification' },
+  { value: 'DEL', label: 'Suppression' }
+];
 
 @Component({
   selector: 'app-audit-log',
@@ -42,26 +50,27 @@ import {
 export class AuditLogComponent implements OnInit {
 
   entities: Option[] = REFERENTIEL_ENTITIES.map((e) => ({ value: e.key, label: e.label }));
+  actionTypeOptions = ACTION_TYPE_OPTIONS;
   selectedEntityKey = REFERENTIEL_ENTITIES[0].key;
-  filterText = '';
+
+  filters: AuditLogFilters = emptyAuditLogFilters();
   page = 1;
+  pageSize = 15;
 
-  records: ReferentielRecord[] = [];
+  logs: AuditRevision[] = [];
   meta: MetaResponse | null = null;
-  loadingRecords = false;
-  recordsError = '';
+  loading = false;
+  loadError = '';
+  exporting = false;
 
-  selectedRecord: ReferentielRecord | null = null;
-  history: AuditRevision[] = [];
-  loadingHistory = false;
-  historyError = '';
-  isHistoryModalOpen = false;
+  selectedLog: AuditRevision | null = null;
+  isDetailsModalOpen = false;
 
-  constructor(private auditService: AuditService) {
+  constructor(private auditService: AuditService, private toastService: ToastService) {
   }
 
   ngOnInit(): void {
-    this.loadRecords();
+    this.load();
   }
 
   get selectedEntity(): ReferentielEntityDescriptor {
@@ -71,13 +80,22 @@ export class AuditLogComponent implements OnInit {
   onEntityChange(key: string): void {
     this.selectedEntityKey = key;
     this.page = 1;
-    this.filterText = '';
-    this.loadRecords();
+    this.load();
+  }
+
+  onActionTypeChange(value: string): void {
+    this.filters.actionType = value as AuditActionType | '';
   }
 
   search(): void {
     this.page = 1;
-    this.loadRecords();
+    this.load();
+  }
+
+  resetFilters(): void {
+    this.filters = emptyAuditLogFilters();
+    this.page = 1;
+    this.load();
   }
 
   goToPage(page: number): void {
@@ -85,54 +103,58 @@ export class AuditLogComponent implements OnInit {
       return;
     }
     this.page = page;
-    this.loadRecords();
+    this.load();
   }
 
-  loadRecords(): void {
-    this.loadingRecords = true;
-    this.recordsError = '';
-    this.auditService.listRecords(this.selectedEntity.path, this.filterText, this.page).subscribe({
-      next: (page) => {
-        this.records = page.content;
-        this.meta = page.meta;
-        this.loadingRecords = false;
+  load(): void {
+    this.loading = true;
+    this.loadError = '';
+    this.auditService.getAuditLogs(this.selectedEntity.path, this.filters, this.page, this.pageSize).subscribe({
+      next: (result) => {
+        this.logs = result.content;
+        this.meta = result.meta;
+        this.loading = false;
       },
-      error: () => {
-        this.records = [];
+      error: (err) => {
+        this.logs = [];
         this.meta = null;
-        this.recordsError = 'Impossible de charger la liste. Vérifiez que vous avez les droits nécessaires.';
-        this.loadingRecords = false;
+        this.loading = false;
+        this.loadError = 'Impossible de charger le journal. Vérifiez que vous avez les droits nécessaires.';
+        this.toastService.error(err?.error?.message || this.loadError, 'Chargement impossible');
       }
     });
   }
 
-  viewHistory(record: ReferentielRecord): void {
-    this.selectedRecord = record;
-    this.isHistoryModalOpen = true;
-    this.loadingHistory = true;
-    this.historyError = '';
-    this.history = [];
+  viewDetails(log: AuditRevision): void {
+    this.selectedLog = log;
+    this.isDetailsModalOpen = true;
+  }
 
-    this.auditService.getHistory(this.selectedEntity.path, record['id'] as number).subscribe({
-      next: (history) => {
-        this.history = history;
-        this.loadingHistory = false;
+  closeDetails(): void {
+    this.isDetailsModalOpen = false;
+    this.selectedLog = null;
+  }
+
+  exportCsv(): void {
+    this.exporting = true;
+    // Récupère tout ce qui correspond aux filtres actuels (au-delà de la page affichée), sans
+    // ajouter d'endpoint dédié côté backend - une taille de page généreuse suffit à l'échelle
+    // d'un outil d'administration.
+    this.auditService.getAuditLogs(this.selectedEntity.path, this.filters, 1, 1000).subscribe({
+      next: (result) => {
+        this.exporting = false;
+        if (result.content.length === 0) {
+          this.toastService.warning("Aucune ligne à exporter pour ces filtres.");
+          return;
+        }
+        this.downloadCsv(result.content);
+        this.toastService.success(`${result.content.length} ligne(s) exportée(s).`);
       },
-      error: () => {
-        this.historyError = "Impossible de charger l'historique de cet enregistrement.";
-        this.loadingHistory = false;
+      error: (err) => {
+        this.exporting = false;
+        this.toastService.error(err?.error?.message || "Échec de l'export.", "Échec de l'export");
       }
     });
-  }
-
-  closeHistory(): void {
-    this.isHistoryModalOpen = false;
-    this.selectedRecord = null;
-    this.history = [];
-  }
-
-  recordLabel(record: Record<string, any>): string {
-    return recordLabel(record);
   }
 
   actionBadgeColor(actionType: AuditActionType): 'success' | 'warning' | 'error' {
@@ -150,5 +172,29 @@ export class AuditLogComponent implements OnInit {
     return Object.entries(data)
       .filter(([key]) => key !== 'id' && key !== 'uuid')
       .map(([key, value]) => ({ key, label: humanizeKey(key), value: formatFieldValue(value) }));
+  }
+
+  private downloadCsv(rows: AuditRevision[]): void {
+    const headers = ['Révision', 'Date', 'Action', 'Opérateur', 'Email', 'Profil', 'Données'];
+    const escape = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+    const lines = rows.map((row) => [
+      row.revision,
+      row.date,
+      this.actionLabel(row.actionType),
+      row.operateurNom ?? '',
+      row.operateurEmail ?? '',
+      row.operateurProfil ?? '',
+      JSON.stringify(row.data ?? {})
+    ].map(escape).join(';'));
+
+    const csvContent = [headers.map(escape).join(';'), ...lines].join('\r\n');
+    // BOM UTF-8 pour qu'Excel (très répandu ici) affiche correctement les accents.
+    const blob = new Blob(['﻿' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `journal-audit-${this.selectedEntity.key}-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 }

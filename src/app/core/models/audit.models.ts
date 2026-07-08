@@ -42,6 +42,20 @@ export interface ReferentielEntityDescriptor {
   path: string;
 }
 
+// Filtres de consultation du journal d'audit (cf. GET /referentiels/{path}/audit-logs) : dates au
+// format ISO (yyyy-MM-dd, valeur brute d'un <input type="date">), opérateur en recherche
+// partielle, type d'action optionnel (vide = tous).
+export interface AuditLogFilters {
+  dateFrom: string;
+  dateTo: string;
+  operateur: string;
+  actionType: AuditActionType | '';
+}
+
+export function emptyAuditLogFilters(): AuditLogFilters {
+  return { dateFrom: '', dateTo: '', operateur: '', actionType: '' };
+}
+
 // Les 9 entités du Module 01 + Constante (paramétrage système) : toutes @Audited côté backend,
 // donc toutes exposées par le même endpoint générique GET /referentiels/{path}/{id}/history.
 export const REFERENTIEL_ENTITIES: ReferentielEntityDescriptor[] = [

@@ -4,8 +4,8 @@
   title="Journal d'audit"
   desc="Historique détaillé des modifications apportées aux référentiels et aux paramètres système."
 >
-  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-    <div class="w-full sm:w-72">
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <div>
       <app-label>Référentiel</app-label>
       <app-select
         [options]="entities"
@@ -14,23 +14,52 @@
       />
     </div>
 
-    <div class="flex w-full items-end gap-3 sm:w-auto">
-      <div class="w-full sm:w-64">
-        <app-label>Recherche (code)</app-label>
-        <app-input-field
-          [(value)]="filterText"
-          placeholder="Filtrer par code..."
-          (keyup.enter)="search()"
-        />
-      </div>
-      <app-button size="sm" variant="outline" (btnClick)="search()">
-        Rechercher
-      </app-button>
+    <div>
+      <app-label>Du</app-label>
+      <app-input-field type="date" [(value)]="filters.dateFrom" />
+    </div>
+
+    <div>
+      <app-label>Au</app-label>
+      <app-input-field type="date" [(value)]="filters.dateTo" />
+    </div>
+
+    <div>
+      <app-label>Opérateur</app-label>
+      <app-input-field
+        placeholder="Nom de l'opérateur..."
+        [(value)]="filters.operateur"
+        (keyup.enter)="search()"
+      />
+    </div>
+
+    <div>
+      <app-label>Type d'action</app-label>
+      <app-select
+        [options]="actionTypeOptions"
+        [value]="filters.actionType"
+        (valueChange)="onActionTypeChange($event)"
+      />
     </div>
   </div>
 
-  @if (recordsError) {
-    <p class="text-sm text-error-500">{{ recordsError }}</p>
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex gap-3">
+      <app-button size="sm" (btnClick)="search()">
+        Rechercher
+      </app-button>
+      <app-button size="sm" variant="outline" (btnClick)="resetFilters()">
+        Réinitialiser
+      </app-button>
+    </div>
+
+    <app-button size="sm" variant="outline" [disabled]="exporting" (btnClick)="exportCsv()">
+      {{ exporting ? 'Export en cours...' : 'Exporter (CSV)' }}
+    </app-button>
+  </div>
+
+  @if (loadError) {
+    <p class="text-sm text-error-500">{{ loadError }}</p>
   }
 
   <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
@@ -38,33 +67,53 @@
       <table class="min-w-full">
         <thead class="border-b border-gray-100 dark:border-white/[0.05]">
           <tr>
-            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Code</th>
-            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Libellé</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Révision</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Date</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Action</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Opérateur</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Profil</th>
             <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"></th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
-          @if (loadingRecords) {
+          @if (loading) {
             <tr>
-              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="3">Chargement...</td>
+              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="6">Chargement...</td>
             </tr>
-          } @else if (records.length === 0) {
+          } @else if (logs.length === 0) {
             <tr>
-              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="3">Aucun enregistrement.</td>
+              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="6">
+                Aucune entrée pour ces filtres.
+              </td>
             </tr>
           } @else {
-            @for (record of records; track record['id']) {
+            @for (log of logs; track log.revision) {
               <tr>
                 <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                  {{ record['code'] || '—' }}
+                  #{{ log.revision }}
                 </td>
-                <td class="px-5 py-4 text-gray-800 text-start text-theme-sm dark:text-white/90">
-                  {{ recordLabel(record) }}
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                  {{ log.date | date:'dd/MM/yyyy HH:mm:ss' }}
                 </td>
                 <td class="px-5 py-4 text-start">
-                  <app-button size="sm" variant="outline" (btnClick)="viewHistory(record)">
-                    Historique
-                  </app-button>
+                  <app-badge size="sm" [color]="actionBadgeColor(log.actionType)">
+                    {{ actionLabel(log.actionType) }}
+                  </app-badge>
+                </td>
+                <td class="px-5 py-4 text-gray-800 text-start text-theme-sm dark:text-white/90">
+                  {{ log.operateurNom || 'N/A' }}
+                </td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                  {{ log.operateurProfil || '—' }}
+                </td>
+                <td class="px-5 py-4 text-start">
+                  <button
+                    type="button"
+                    (click)="viewDetails(log)"
+                    class="text-sm font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                  >
+                    Détails
+                  </button>
                 </td>
               </tr>
             }
@@ -76,7 +125,7 @@
 
   @if (meta && meta.totalPages > 1) {
     <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-      <span>Page {{ meta.pageNumber }} / {{ meta.totalPages }} — {{ meta.totalElements }} enregistrement(s)</span>
+      <span>Page {{ meta.pageNumber }} / {{ meta.totalPages }} — {{ meta.totalElements }} entrée(s)</span>
       <div class="flex gap-2">
         <app-button size="sm" variant="outline" [disabled]="!meta.hasPrev" (btnClick)="goToPage(page - 1)">
           Précédent
@@ -89,54 +138,33 @@
   }
 </app-component-card>
 
-<app-modal [isOpen]="isHistoryModalOpen" (close)="closeHistory()" className="max-w-[900px] p-5 lg:p-8">
-  <h4 class="font-semibold text-gray-800 mb-1 text-title-sm dark:text-white/90">
-    Historique — {{ selectedRecord ? recordLabel(selectedRecord) : '' }}
-  </h4>
-  <p class="mb-6 text-sm text-gray-500 dark:text-gray-400">{{ selectedEntity.label }}</p>
+<app-modal [isOpen]="isDetailsModalOpen" (close)="closeDetails()" className="max-w-[700px] p-5 lg:p-8">
+  @if (selectedLog) {
+    <h4 class="font-semibold text-gray-800 mb-1 text-title-sm dark:text-white/90">
+      Révision #{{ selectedLog.revision }} — {{ selectedEntity.label }}
+    </h4>
+    <div class="mb-6 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+      <app-badge size="sm" [color]="actionBadgeColor(selectedLog.actionType)">
+        {{ actionLabel(selectedLog.actionType) }}
+      </app-badge>
+      <span>{{ selectedLog.date | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+    </div>
 
-  @if (loadingHistory) {
-    <p class="text-sm text-gray-500 dark:text-gray-400">Chargement de l'historique...</p>
-  } @else if (historyError) {
-    <p class="text-sm text-error-500">{{ historyError }}</p>
-  } @else if (history.length === 0) {
-    <p class="text-sm text-gray-500 dark:text-gray-400">Aucune révision enregistrée.</p>
-  } @else {
-    <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-      @for (revision of history; track revision.revision) {
-        <div class="rounded-lg border border-gray-200 p-4 dark:border-white/[0.05]">
-          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-            <div class="flex items-center gap-2">
-              <app-badge size="sm" [color]="actionBadgeColor(revision.actionType)">
-                {{ actionLabel(revision.actionType) }}
-              </app-badge>
-              <span class="text-sm font-medium text-gray-800 dark:text-white/90">
-                Révision #{{ revision.revision }}
-              </span>
-            </div>
-            <span class="text-sm text-gray-500 dark:text-gray-400">
-              {{ revision.date | date:'dd/MM/yyyy HH:mm:ss' }}
-            </span>
-          </div>
+    <div class="mb-4 text-sm text-gray-600 dark:text-gray-300">
+      <span class="font-medium">Opérateur : </span>{{ selectedLog.operateurNom || 'N/A' }}
+      @if (selectedLog.operateurProfil) {
+        <span class="text-gray-400 dark:text-gray-500"> ({{ selectedLog.operateurProfil }})</span>
+      }
+      @if (selectedLog.operateurEmail) {
+        <span class="text-gray-400 dark:text-gray-500"> — {{ selectedLog.operateurEmail }}</span>
+      }
+    </div>
 
-          <div class="mb-3 text-sm text-gray-600 dark:text-gray-300">
-            <span class="font-medium">Opérateur : </span>{{ revision.operateurNom || 'N/A' }}
-            @if (revision.operateurProfil) {
-              <span class="text-gray-400 dark:text-gray-500"> ({{ revision.operateurProfil }})</span>
-            }
-            @if (revision.operateurEmail) {
-              <span class="text-gray-400 dark:text-gray-500"> — {{ revision.operateurEmail }}</span>
-            }
-          </div>
-
-          <div class="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
-            @for (entry of dataEntries(revision.data); track entry.key) {
-              <div class="flex justify-between gap-2 text-sm border-b border-gray-100 py-1 dark:border-white/[0.05]">
-                <span class="text-gray-500 dark:text-gray-400">{{ entry.label }}</span>
-                <span class="text-gray-800 text-right dark:text-white/90">{{ entry.value }}</span>
-              </div>
-            }
-          </div>
+    <div class="grid grid-cols-1 gap-x-6 sm:grid-cols-2 max-h-[50vh] overflow-y-auto pr-1">
+      @for (entry of dataEntries(selectedLog.data); track entry.key) {
+        <div class="flex justify-between gap-2 text-sm border-b border-gray-100 py-1 dark:border-white/[0.05]">
+          <span class="text-gray-500 dark:text-gray-400">{{ entry.label }}</span>
+          <span class="text-gray-800 text-right dark:text-white/90">{{ entry.value }}</span>
         </div>
       }
     </div>
