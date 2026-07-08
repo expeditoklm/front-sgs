@@ -8,19 +8,21 @@
               {{ column.label }}
             </th>
           }
-          <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"></th>
+          @if (canManage) {
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"></th>
+          }
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
         @if (loading) {
           <tr>
-            <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" [attr.colspan]="columns.length + 1">
+            <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" [attr.colspan]="columns.length + (canManage ? 1 : 0)">
               Chargement...
             </td>
           </tr>
         } @else if (rows.length === 0) {
           <tr>
-            <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" [attr.colspan]="columns.length + 1">
+            <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" [attr.colspan]="columns.length + (canManage ? 1 : 0)">
               Aucun enregistrement.
             </td>
           </tr>
@@ -32,24 +34,26 @@
                   {{ formatValue(row, column) }}
                 </td>
               }
-              <td class="px-5 py-4 text-start whitespace-nowrap">
-                <div class="flex gap-2">
-                  <button
-                    type="button"
-                    (click)="edit.emit(row)"
-                    class="text-sm font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
-                  >
-                    Modifier
-                  </button>
-                  <button
-                    type="button"
-                    (click)="remove.emit(row)"
-                    class="text-sm font-medium text-error-500 hover:text-error-600"
-                  >
-                    Supprimer
-                  </button>
-                </div>
-              </td>
+              @if (canManage) {
+                <td class="px-5 py-4 text-start whitespace-nowrap">
+                  <div class="flex gap-2">
+                    <button
+                      type="button"
+                      (click)="edit.emit(row)"
+                      class="text-sm font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                    >
+                      Modifier
+                    </button>
+                    <button
+                      type="button"
+                      (click)="remove.emit(row)"
+                      class="text-sm font-medium text-error-500 hover:text-error-600"
+                    >
+                      Supprimer
+                    </button>
+                  </div>
+                </td>
+              }
             </tr>
           }
         }

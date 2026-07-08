@@ -11,6 +11,8 @@ import { ConfirmDialogComponent } from '../../shared/components/referentiel/conf
 import { EntityDefinition } from '../../core/models/referentiel-crud.models';
 import { MetaResponse } from '../../core/models/audit.models';
 import { ReferentielCrudService } from '../../core/services/referentiel-crud.service';
+import { ToastService } from '../../core/services/toast.service';
+import { AuthenticationService } from '../../core/services/authentication.service';
 
 @Component({
   selector: 'app-referentiel-page',
@@ -49,12 +51,26 @@ export class ReferentielPageComponent implements OnInit {
   deleteError = '';
   deleting = false;
 
-  constructor(private route: ActivatedRoute, private crudService: ReferentielCrudService) {
+  constructor(
+    private route: ActivatedRoute,
+    private crudService: ReferentielCrudService,
+    private toastService: ToastService,
+    private authService: AuthenticationService
+  ) {
   }
 
   ngOnInit(): void {
     this.entity = this.route.snapshot.data['entity'];
     this.load();
+  }
+
+  // Le route guard bloque déjà l'accès à la page entière si l'utilisateur n'a pas le bon rôle,
+  // mais cf. la consigne "affichage/masquage de fonctionnalités au niveau de l'UI" : les actions
+  // de gestion (créer/modifier/supprimer) restent conditionnées explicitement ici aussi, en
+  // défense en profondeur et pour rester correct si un référentiel a un jour un rôle en lecture
+  // seule distinct du rôle de gestion.
+  get canManage(): boolean {
+    return this.authService.hasAnyRole(this.entity.roles);
   }
 
   load(): void {
@@ -68,11 +84,12 @@ export class ReferentielPageComponent implements OnInit {
           this.meta = result.meta;
           this.loading = false;
         },
-        error: () => {
+        error: (err) => {
           this.rows = [];
           this.meta = null;
           this.listError = 'Impossible de charger la liste. Vérifiez que vous avez les droits nécessaires.';
           this.loading = false;
+          this.toastService.error(err?.error?.message || this.listError, 'Chargement impossible');
         }
       });
   }
@@ -126,11 +143,15 @@ export class ReferentielPageComponent implements OnInit {
       next: () => {
         this.saving = false;
         this.isFormOpen = false;
+        this.toastService.success(
+          this.isEditMode ? 'Modification enregistrée avec succès.' : 'Enregistrement créé avec succès.'
+        );
         this.load();
       },
       error: (err) => {
         this.saving = false;
         this.formError = err?.error?.message || "Une erreur est survenue lors de l'enregistrement.";
+        this.toastService.error(this.formError, "Échec de l'enregistrement");
       }
     });
   }
@@ -158,11 +179,13 @@ export class ReferentielPageComponent implements OnInit {
         this.deleting = false;
         this.isConfirmOpen = false;
         this.rowPendingDelete = null;
+        this.toastService.success('Suppression effectuée avec succès.');
         this.load();
       },
       error: (err) => {
         this.deleting = false;
         this.deleteError = err?.error?.message || 'Suppression impossible.';
+        this.toastService.error(this.deleteError, 'Échec de la suppression');
       }
     });
   }

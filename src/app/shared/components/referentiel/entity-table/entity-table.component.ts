@@ -11,6 +11,7 @@ export class EntityTableComponent {
   @Input() columns: ColumnConfig[] = [];
   @Input() rows: Record<string, any>[] = [];
   @Input() loading = false;
+  @Input() canManage = true;
 
   @Output() edit = new EventEmitter<Record<string, any>>();
   @Output() remove = new EventEmitter<Record<string, any>>();

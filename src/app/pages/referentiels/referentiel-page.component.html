@@ -16,9 +16,11 @@
         </app-button>
       </div>
 
-      <app-button size="sm" (btnClick)="openCreate()">
-        Nouveau
-      </app-button>
+      @if (canManage) {
+        <app-button size="sm" (btnClick)="openCreate()">
+          Nouveau
+        </app-button>
+      }
     </div>
 
     @if (listError) {
@@ -29,6 +31,7 @@
       [columns]="entity.columns"
       [rows]="rows"
       [loading]="loading"
+      [canManage]="canManage"
       (edit)="openEdit($event)"
       (remove)="askDelete($event)"
     />

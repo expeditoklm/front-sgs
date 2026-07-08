@@ -1,0 +1,15 @@
+<div class="fixed top-5 right-5 z-99999 flex w-full max-w-sm flex-col gap-3">
+  @for (toast of toastService.toasts(); track toast.id) {
+    <div class="relative shadow-theme-lg">
+      <button
+        type="button"
+        (click)="toastService.dismiss(toast.id)"
+        class="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/10 dark:hover:text-white"
+        aria-label="Fermer"
+      >
+        ×
+      </button>
+      <app-alert [variant]="toast.variant" [title]="toast.title" [message]="toast.message" />
+    </div>
+  }
+</div>
