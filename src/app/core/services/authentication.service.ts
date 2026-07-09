@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, catchError, map, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse, ProfileOption, User, UserSummary } from '../models/auth.models';
@@ -160,6 +160,31 @@ export class AuthenticationService {
   }): Observable<boolean> {
     return this.http
       .post(`${this.endpoint}/account-request`, payload)
+      .pipe(
+        map(() => true),
+        catchError(() => of(false))
+      );
+  }
+
+  // Réservé SADM/ADM (cf. SecurityConfig.SADM_ADM_PATHS côté gateway) - distinct de
+  // resetPasswordConfirm$ (self-service, anonyme). "x-app-user-creation" n'est vérifié que comme
+  // UUID syntaxiquement valide côté backend, la vraie protection vient du rôle exigé au gateway.
+  resetUserPasswordAdmin$(keycloakUserId: string, newPassword: string): Observable<boolean> {
+    return this.http
+      .put(
+        `${this.endpoint}/reset-password`,
+        { userId: keycloakUserId, newPassword },
+        { headers: new HttpHeaders({ 'x-app-user-creation': crypto.randomUUID() }) }
+      )
+      .pipe(
+        map(() => true),
+        catchError(() => of(false))
+      );
+  }
+
+  revokeUserSessions$(keycloakUserId: string): Observable<boolean> {
+    return this.http
+      .post(`${this.endpoint}/${keycloakUserId}/revoke-sessions`, {})
       .pipe(
         map(() => true),
         catchError(() => of(false))

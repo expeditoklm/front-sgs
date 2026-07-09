@@ -51,6 +51,17 @@ export class ReferentielPageComponent implements OnInit {
   deleteError = '';
   deleting = false;
 
+  isResetPasswordOpen = false;
+  resetPasswordTarget: Record<string, any> | null = null;
+  newPasswordValue = '';
+  resetPasswordError = '';
+  resettingPassword = false;
+
+  isRevokeSessionsOpen = false;
+  revokeSessionsTarget: Record<string, any> | null = null;
+  revokeSessionsError = '';
+  revokingSessions = false;
+
   constructor(
     private route: ActivatedRoute,
     private crudService: ReferentielCrudService,
@@ -71,6 +82,10 @@ export class ReferentielPageComponent implements OnInit {
   // seule distinct du rôle de gestion.
   get canManage(): boolean {
     return this.authService.hasAnyRole(this.entity.roles);
+  }
+
+  get showUserActions(): boolean {
+    return this.entity.key === 'utilisateurs';
   }
 
   load(): void {
@@ -187,6 +202,74 @@ export class ReferentielPageComponent implements OnInit {
         this.deleteError = err?.error?.message || 'Suppression impossible.';
         this.toastService.error(this.deleteError, 'Échec de la suppression');
       }
+    });
+  }
+
+  askResetPassword(row: Record<string, any>): void {
+    this.resetPasswordTarget = row;
+    this.newPasswordValue = '';
+    this.resetPasswordError = '';
+    this.isResetPasswordOpen = true;
+  }
+
+  cancelResetPassword(): void {
+    this.isResetPasswordOpen = false;
+    this.resetPasswordTarget = null;
+  }
+
+  confirmResetPassword(): void {
+    if (!this.resetPasswordTarget) {
+      return;
+    }
+    if (this.newPasswordValue.length < 8) {
+      this.resetPasswordError = 'Le mot de passe doit contenir au moins 8 caractères.';
+      return;
+    }
+
+    this.resetPasswordError = '';
+    this.resettingPassword = true;
+    this.authService
+      .resetUserPasswordAdmin$(this.resetPasswordTarget['keycloakId'], this.newPasswordValue)
+      .subscribe((success) => {
+        this.resettingPassword = false;
+        if (!success) {
+          this.resetPasswordError = 'Échec de la réinitialisation du mot de passe.';
+          this.toastService.error(this.resetPasswordError);
+          return;
+        }
+        this.isResetPasswordOpen = false;
+        this.resetPasswordTarget = null;
+        this.toastService.success('Mot de passe réinitialisé avec succès.');
+      });
+  }
+
+  askRevokeSessions(row: Record<string, any>): void {
+    this.revokeSessionsTarget = row;
+    this.revokeSessionsError = '';
+    this.isRevokeSessionsOpen = true;
+  }
+
+  cancelRevokeSessions(): void {
+    this.isRevokeSessionsOpen = false;
+    this.revokeSessionsTarget = null;
+  }
+
+  confirmRevokeSessions(): void {
+    if (!this.revokeSessionsTarget) {
+      return;
+    }
+    this.revokeSessionsError = '';
+    this.revokingSessions = true;
+    this.authService.revokeUserSessions$(this.revokeSessionsTarget['keycloakId']).subscribe((success) => {
+      this.revokingSessions = false;
+      if (!success) {
+        this.revokeSessionsError = 'Échec de la révocation des sessions.';
+        this.toastService.error(this.revokeSessionsError);
+        return;
+      }
+      this.isRevokeSessionsOpen = false;
+      this.revokeSessionsTarget = null;
+      this.toastService.success('Sessions révoquées avec succès.');
     });
   }
 

@@ -36,7 +36,7 @@
               }
               @if (canManage) {
                 <td class="px-5 py-4 text-start whitespace-nowrap">
-                  <div class="flex gap-2">
+                  <div class="flex flex-wrap gap-2">
                     <button
                       type="button"
                       (click)="edit.emit(row)"
@@ -51,6 +51,26 @@
                     >
                       Supprimer
                     </button>
+                    @if (showUserActions) {
+                      <button
+                        type="button"
+                        [disabled]="!row['keycloakId']"
+                        [title]="row['keycloakId'] ? '' : 'Aucun compte Keycloak associé pour cet utilisateur'"
+                        (click)="resetPassword.emit(row)"
+                        class="text-sm font-medium text-gray-600 hover:text-gray-800 disabled:opacity-40 disabled:cursor-not-allowed dark:text-gray-300 dark:hover:text-white"
+                      >
+                        Réinitialiser mdp
+                      </button>
+                      <button
+                        type="button"
+                        [disabled]="!row['keycloakId']"
+                        [title]="row['keycloakId'] ? '' : 'Aucun compte Keycloak associé pour cet utilisateur'"
+                        (click)="revokeSessions.emit(row)"
+                        class="text-sm font-medium text-gray-600 hover:text-gray-800 disabled:opacity-40 disabled:cursor-not-allowed dark:text-gray-300 dark:hover:text-white"
+                      >
+                        Révoquer sessions
+                      </button>
+                    }
                   </div>
                 </td>
               }
