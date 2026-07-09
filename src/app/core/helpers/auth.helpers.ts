@@ -29,8 +29,9 @@ export function isAuthEndpoint(url: string): boolean {
     'select-role',
     'resend-otp',
     'refresh-token',
-    'reset-request',
-    'reset',
+    'forgot-password',
+    'reset-password-confirm',
+    'account-request',
     'frontend-errors'
   ];
   return endpointsToSkip.some((endpoint) => url.includes(endpoint));

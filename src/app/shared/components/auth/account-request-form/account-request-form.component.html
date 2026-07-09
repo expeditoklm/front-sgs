@@ -1,0 +1,90 @@
+<div class="w-full max-w-md mx-auto mb-5 sm:pt-10">
+  <a routerLink="/signin"
+    class="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20" fill="none" class="size-5">
+      <path d="M12.7083 5L7.5 10.2083L12.7083 15.4167" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+        stroke-linejoin="round"></path>
+    </svg>
+    Retour à la connexion
+  </a>
+</div>
+
+<div class="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
+  <div>
+    <div class="mb-5 sm:mb-8">
+      <h1 class="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
+        Demande de compte
+      </h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        SGS ne permet pas la création directe d'un compte : renseignez vos informations, un
+        administrateur créera votre compte après validation.
+      </p>
+    </div>
+
+    @if (requestSent) {
+      <p class="text-sm text-gray-700 dark:text-gray-300">
+        Votre demande a bien été transmise à l'administration. Vous serez contacté une fois votre
+        compte créé.
+      </p>
+    } @else {
+      <form (ngSubmit)="onSubmit()">
+        <div class="space-y-5">
+          <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div class="sm:col-span-1">
+              <app-label>Prénom <span class="text-error-500">*</span></app-label>
+              <app-input-field type="text" [(value)]="prenom" id="prenom" name="prenom" placeholder="Votre prénom" />
+            </div>
+            <div class="sm:col-span-1">
+              <app-label>Nom <span class="text-error-500">*</span></app-label>
+              <app-input-field type="text" [(value)]="nom" id="nom" name="nom" placeholder="Votre nom" />
+            </div>
+          </div>
+
+          <div>
+            <app-label>Email <span class="text-error-500">*</span></app-label>
+            <app-input-field type="email" [(value)]="email" id="email" name="email" placeholder="vous@exemple.com" />
+          </div>
+
+          <div>
+            <app-label>Téléphone</app-label>
+            <app-input-field type="text" [(value)]="telephone" id="telephone" name="telephone" placeholder="+229 ..." />
+          </div>
+
+          <div>
+            <app-label>Établissement <span class="text-error-500">*</span></app-label>
+            <app-input-field type="text" [(value)]="etablissement" id="etablissement" name="etablissement" placeholder="Nom de l'établissement" />
+          </div>
+
+          <div>
+            <app-label>Message (optionnel)</app-label>
+            <app-input-field type="text" [(value)]="message" id="message" name="message" placeholder="Précisions utiles à l'administrateur" />
+          </div>
+
+          @if (errorMessage) {
+            <p class="text-sm text-error-500">{{ errorMessage }}</p>
+          }
+
+          <div>
+            <app-button
+              className="w-full"
+              size="sm"
+              [disabled]="isSubmitting"
+              (btnClick)="onSubmit()"
+            >
+              Envoyer la demande
+            </app-button>
+          </div>
+        </div>
+      </form>
+    }
+
+    <div class="mt-5">
+      <p class="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
+        Vous avez déjà un compte ?
+        <a routerLink="/signin" class="text-brand-500 hover:text-brand-600 dark:text-brand-400">
+          Se connecter
+        </a>
+      </p>
+    </div>
+  </div>
+</div>

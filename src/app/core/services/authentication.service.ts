@@ -132,6 +132,40 @@ export class AuthenticationService {
       );
   }
 
+  forgotPassword$(login: string): Observable<boolean> {
+    return this.http
+      .post(`${this.endpoint}/forgot-password`, { login })
+      .pipe(
+        map(() => true),
+        catchError(() => of(false))
+      );
+  }
+
+  resetPasswordConfirm$(token: string, newPassword: string): Observable<boolean> {
+    return this.http
+      .post(`${this.endpoint}/reset-password-confirm`, { token, newPassword })
+      .pipe(
+        map(() => true),
+        catchError(() => of(false))
+      );
+  }
+
+  requestAccount$(payload: {
+    nom: string;
+    prenom: string;
+    email: string;
+    telephone?: string;
+    etablissement: string;
+    message?: string;
+  }): Observable<boolean> {
+    return this.http
+      .post(`${this.endpoint}/account-request`, payload)
+      .pipe(
+        map(() => true),
+        catchError(() => of(false))
+      );
+  }
+
   logout(): void {
     this.http.post(`${this.endpoint}/logout`, {}, { withCredentials: true }).subscribe();
     this.resetPendingState();

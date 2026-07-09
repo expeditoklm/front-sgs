@@ -27,7 +27,7 @@ export class GlobalErrorHandler implements ErrorHandler {
   }
 
   private guessComponent(pathname: string): string {
-    if (pathname.startsWith('/signin') || pathname.startsWith('/signup')) return 'signin';
+    if (pathname.startsWith('/signin') || pathname.startsWith('/demande-compte') || pathname.startsWith('/reset-password')) return 'signin';
     if (pathname.startsWith('/audit')) return 'audit';
     if (pathname.startsWith('/referentiels')) return 'referentiel';
     if (pathname === '/') return 'dashboard';

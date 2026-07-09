@@ -16,7 +16,8 @@ import { ButtonsComponent } from './pages/ui-elements/buttons/buttons.component'
 import { ImagesComponent } from './pages/ui-elements/images/images.component';
 import { VideosComponent } from './pages/ui-elements/videos/videos.component';
 import { SignInComponent } from './pages/auth-pages/sign-in/sign-in.component';
-import { SignUpComponent } from './pages/auth-pages/sign-up/sign-up.component';
+import { AccountRequestComponent } from './pages/auth-pages/account-request/account-request.component';
+import { ResetPasswordComponent } from './pages/auth-pages/reset-password/reset-password.component';
 import { CalenderComponent } from './pages/calender/calender.component';
 import { AuditLogComponent } from './pages/audit/audit-log.component';
 import { ReferentielPageComponent } from './pages/referentiels/referentiel-page.component';
@@ -138,10 +139,16 @@ export const routes: Routes = [
     title:'Angular Sign In Dashboard | TailAdmin - Angular Admin Dashboard Template'
   },
   {
-    path:'signup',
-    component:SignUpComponent,
+    path:'demande-compte',
+    component:AccountRequestComponent,
     canActivate: [guestGuard],
-    title:'Angular Sign Up Dashboard | TailAdmin - Angular Admin Dashboard Template'
+    title:'Demande de compte | SGS'
+  },
+  {
+    path:'reset-password',
+    component:ResetPasswordComponent,
+    canActivate: [guestGuard],
+    title:'Réinitialisation du mot de passe | SGS'
   },
   // error pages
   {
