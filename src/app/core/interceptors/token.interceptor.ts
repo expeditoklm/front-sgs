@@ -21,10 +21,17 @@ export const tokenInterceptor: HttpInterceptorFn = (request, next) => {
 
   return next(authorizedRequest).pipe(
     catchError((error: HttpErrorResponse) => {
-      const shouldRefresh = error.status === 401 && localStorage.getItem('refresh_token') !== null;
-      return shouldRefresh
-        ? handleRefreshToken(authorizedRequest, next, authService)
-        : throwError(() => error);
+      if (error.status !== 401) {
+        return throwError(() => error);
+      }
+      if (localStorage.getItem('refresh_token') !== null) {
+        return handleRefreshToken(authorizedRequest, next, authService);
+      }
+      // 401 sans refresh_token exploitable (token invalide/absent, pas seulement expiré) :
+      // aucun rafraîchissement possible, retour direct à /signin plutôt que de laisser
+      // l'erreur remonter silencieusement jusqu'au composant appelant.
+      completeLogout();
+      return throwError(() => error);
     })
   );
 };
