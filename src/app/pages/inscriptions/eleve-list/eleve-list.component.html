@@ -1,0 +1,159 @@
+<app-page-breadcrumb pageTitle="Élèves" />
+
+<app-component-card title="Élèves" desc="Dossiers élèves : fiche d'identité, pièces justificatives et parents/tuteurs rattachés.">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div class="flex w-full items-end gap-3 sm:w-auto">
+      <div class="w-full sm:w-64">
+        <app-input-field
+          placeholder="Filtrer par code, nom ou prénom..."
+          [(value)]="filterText"
+          (keyup.enter)="search()"
+        />
+      </div>
+      <app-button size="sm" variant="outline" (btnClick)="search()">
+        Rechercher
+      </app-button>
+    </div>
+
+    <app-button size="sm" (btnClick)="openCreate()">
+      Nouvel élève
+    </app-button>
+  </div>
+
+  @if (listError) {
+    <p class="text-sm text-error-500">{{ listError }}</p>
+  }
+
+  <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+    <div class="max-w-full overflow-x-auto">
+      <table class="min-w-full">
+        <thead class="border-b border-gray-100 dark:border-white/[0.05]">
+          <tr>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Code</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Nom</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Prénom</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Naissance</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Sexe</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Actif</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
+          @if (loading) {
+            <tr>
+              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="7">Chargement...</td>
+            </tr>
+          } @else if (rows.length === 0) {
+            <tr>
+              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="7">Aucun élève.</td>
+            </tr>
+          } @else {
+            @for (row of rows; track row.uuid) {
+              <tr>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.code || '—' }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.nom }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.prenom }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.dateNaissance }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.sexe === 'M' ? 'Masculin' : 'Féminin' }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.actif ? 'Oui' : 'Non' }}</td>
+                <td class="px-5 py-4 text-start whitespace-nowrap">
+                  <div class="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      (click)="openDossier(row)"
+                      class="text-sm font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                    >
+                      Ouvrir le dossier
+                    </button>
+                    <button
+                      type="button"
+                      (click)="askDelete(row)"
+                      class="text-sm font-medium text-error-500 hover:text-error-600"
+                    >
+                      Supprimer
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  @if (meta && meta.totalPages > 1) {
+    <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+      <span>Page {{ meta.pageNumber }} / {{ meta.totalPages }} — {{ meta.totalElements }} élève(s)</span>
+      <div class="flex gap-2">
+        <app-button size="sm" variant="outline" [disabled]="!meta.hasPrev" (btnClick)="goToPage(page - 1)">
+          Précédent
+        </app-button>
+        <app-button size="sm" variant="outline" [disabled]="!meta.hasNext" (btnClick)="goToPage(page + 1)">
+          Suivant
+        </app-button>
+      </div>
+    </div>
+  }
+</app-component-card>
+
+<app-modal [isOpen]="isFormOpen" (close)="closeForm()" className="max-w-[600px] p-5 lg:p-8">
+  <h4 class="font-semibold text-gray-800 mb-6 text-title-sm dark:text-white/90">
+    Nouvel élève
+  </h4>
+
+  <div class="space-y-5">
+    <div>
+      <app-label>Nom <span class="text-error-500">*</span></app-label>
+      <app-input-field [value]="formModel.nom" (valueChange)="updateField('nom', $event)" />
+    </div>
+    <div>
+      <app-label>Prénom <span class="text-error-500">*</span></app-label>
+      <app-input-field [value]="formModel.prenom" (valueChange)="updateField('prenom', $event)" />
+    </div>
+    <div>
+      <app-label>Date de naissance <span class="text-error-500">*</span></app-label>
+      <app-input-field type="date" [value]="formModel.dateNaissance" (valueChange)="updateField('dateNaissance', $event)" />
+    </div>
+    <div>
+      <app-label>Lieu de naissance</app-label>
+      <app-input-field [value]="formModel.lieuNaissance ?? ''" (valueChange)="updateField('lieuNaissance', $event)" />
+    </div>
+    <div>
+      <app-label>Sexe <span class="text-error-500">*</span></app-label>
+      <app-select [options]="sexeOptions" [value]="formModel.sexe" (valueChange)="updateField('sexe', $event)" />
+    </div>
+    <div>
+      <app-label>Établissement <span class="text-error-500">*</span></app-label>
+      <app-select
+        [options]="etablissementOptions"
+        [value]="formModel.etablissementId?.toString() ?? ''"
+        placeholder="Choisir un établissement"
+        (valueChange)="updateField('etablissementId', +$event)"
+      />
+    </div>
+  </div>
+
+  @if (formError) {
+    <p class="mt-4 text-sm text-error-500">{{ formError }}</p>
+  }
+
+  <div class="flex items-center justify-end w-full gap-3 mt-8">
+    <app-button size="sm" variant="outline" (btnClick)="closeForm()">
+      Annuler
+    </app-button>
+    <app-button size="sm" [disabled]="saving" (btnClick)="save()">
+      Enregistrer
+    </app-button>
+  </div>
+</app-modal>
+
+<app-confirm-dialog
+  [isOpen]="isConfirmOpen"
+  title="Confirmer la suppression"
+  [message]="'Voulez-vous vraiment supprimer la fiche de ' + (rowPendingDelete?.prenom || '') + ' ' + (rowPendingDelete?.nom || '') + ' ? Cette action est irréversible.'"
+  [errorMessage]="deleteError"
+  [confirming]="deleting"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()"
+/>

@@ -1,0 +1,69 @@
+<app-component-card title="Pièces justificatives" desc="Documents rattachés à l'inscription sélectionnée.">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end mb-5">
+    <div class="w-full sm:w-56">
+      <app-label>Type de document</app-label>
+      <app-select [options]="typeOptions" [value]="selectedType" (valueChange)="selectedType = $any($event)" />
+    </div>
+    <div class="w-full sm:w-72">
+      <app-label>Fichier</app-label>
+      <app-file-input (change)="onFileSelected($event)" />
+    </div>
+    <app-button size="sm" [disabled]="uploading" (btnClick)="upload()">
+      Envoyer
+    </app-button>
+  </div>
+
+  @if (uploadError) {
+    <p class="mb-4 text-sm text-error-500">{{ uploadError }}</p>
+  }
+
+  @if (loadError) {
+    <p class="text-sm text-error-500">{{ loadError }}</p>
+  }
+
+  <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+    <div class="max-w-full overflow-x-auto">
+      <table class="min-w-full">
+        <thead class="border-b border-gray-100 dark:border-white/[0.05]">
+          <tr>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Type</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Statut</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Commentaire</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
+          @if (loading) {
+            <tr>
+              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="4">Chargement...</td>
+            </tr>
+          } @else if (pieces.length === 0) {
+            <tr>
+              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="4">Aucune pièce justificative.</td>
+            </tr>
+          } @else {
+            @for (piece of pieces; track piece.uuid) {
+              <tr>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ typeLabels[piece.type] }}</td>
+                <td class="px-5 py-4 text-start">
+                  <app-badge [color]="badgeColor(piece.statutValidation)">{{ statutLabels[piece.statutValidation] }}</app-badge>
+                </td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ piece.commentaireRejet || '—' }}</td>
+                <td class="px-5 py-4 text-start whitespace-nowrap">
+                  <button
+                    type="button"
+                    [disabled]="deletingUuid === piece.uuid"
+                    (click)="remove(piece)"
+                    class="text-sm font-medium text-error-500 hover:text-error-600 disabled:opacity-40"
+                  >
+                    Supprimer
+                  </button>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</app-component-card>

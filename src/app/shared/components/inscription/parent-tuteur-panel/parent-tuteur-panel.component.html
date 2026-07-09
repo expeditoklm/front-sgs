@@ -1,0 +1,128 @@
+<app-component-card title="Parents / tuteurs" desc="Personnes rattachées à cet élève, contactées lors des notifications.">
+  <div class="flex justify-end mb-5">
+    <app-button size="sm" (btnClick)="openAttach()">
+      Rattacher un parent/tuteur
+    </app-button>
+  </div>
+
+  @if (loadError) {
+    <p class="mb-4 text-sm text-error-500">{{ loadError }}</p>
+  }
+
+  <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+    <div class="max-w-full overflow-x-auto">
+      <table class="min-w-full">
+        <thead class="border-b border-gray-100 dark:border-white/[0.05]">
+          <tr>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Nom</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Téléphone</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Email</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Relation</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Contact principal</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
+          @if (loading) {
+            <tr>
+              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="6">Chargement...</td>
+            </tr>
+          } @else if (parents.length === 0) {
+            <tr>
+              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="6">Aucun parent/tuteur rattaché.</td>
+            </tr>
+          } @else {
+            @for (parent of parents; track parent.parentTuteurUuid) {
+              <tr>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ parent.prenom }} {{ parent.nom }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ parent.telephone }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ parent.email || '—' }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ typeRelationLabels[parent.typeRelation] }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ parent.contactPrincipal ? 'Oui' : 'Non' }}</td>
+                <td class="px-5 py-4 text-start whitespace-nowrap">
+                  <button
+                    type="button"
+                    (click)="askDetach(parent)"
+                    class="text-sm font-medium text-error-500 hover:text-error-600"
+                  >
+                    Détacher
+                  </button>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</app-component-card>
+
+<app-modal [isOpen]="isFormOpen" (close)="closeForm()" className="max-w-[600px] p-5 lg:p-8">
+  <h4 class="font-semibold text-gray-800 mb-2 text-title-sm dark:text-white/90">
+    Rattacher un parent/tuteur
+  </h4>
+  <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+    Si un parent existe déjà avec ce téléphone, il sera automatiquement réutilisé (pas de doublon créé).
+  </p>
+
+  <div class="space-y-5">
+    <div>
+      <app-label>Nom <span class="text-error-500">*</span></app-label>
+      <app-input-field [value]="formModel.nom" (valueChange)="updateField('nom', $event)" />
+    </div>
+    <div>
+      <app-label>Prénom <span class="text-error-500">*</span></app-label>
+      <app-input-field [value]="formModel.prenom" (valueChange)="updateField('prenom', $event)" />
+    </div>
+    <div>
+      <app-label>Téléphone <span class="text-error-500">*</span></app-label>
+      <app-input-field [value]="formModel.telephone" (valueChange)="updateField('telephone', $event)" />
+    </div>
+    <div>
+      <app-label>Email</app-label>
+      <app-input-field type="email" [value]="formModel.email ?? ''" (valueChange)="updateField('email', $event)" />
+    </div>
+    <div>
+      <app-label>Profession</app-label>
+      <app-input-field [value]="formModel.profession ?? ''" (valueChange)="updateField('profession', $event)" />
+    </div>
+    <div>
+      <app-label>Adresse</app-label>
+      <app-input-field [value]="formModel.adresse ?? ''" (valueChange)="updateField('adresse', $event)" />
+    </div>
+    <div>
+      <app-label>Relation avec l'élève <span class="text-error-500">*</span></app-label>
+      <app-select [options]="typeRelationOptions" [value]="formModel.typeRelation" (valueChange)="updateField('typeRelation', $any($event))" />
+    </div>
+    <div>
+      <app-checkbox
+        label="Contact principal"
+        [checked]="formModel.contactPrincipal"
+        (checkedChange)="updateField('contactPrincipal', $event)"
+      />
+    </div>
+  </div>
+
+  @if (formError) {
+    <p class="mt-4 text-sm text-error-500">{{ formError }}</p>
+  }
+
+  <div class="flex items-center justify-end w-full gap-3 mt-8">
+    <app-button size="sm" variant="outline" (btnClick)="closeForm()">
+      Annuler
+    </app-button>
+    <app-button size="sm" [disabled]="saving" (btnClick)="attach()">
+      Rattacher
+    </app-button>
+  </div>
+</app-modal>
+
+<app-confirm-dialog
+  [isOpen]="isConfirmOpen"
+  title="Confirmer le détachement"
+  [message]="'Voulez-vous vraiment détacher ' + (parentPendingDetach?.prenom || '') + ' ' + (parentPendingDetach?.nom || '') + ' de cet élève ?'"
+  [errorMessage]="detachError"
+  [confirming]="detaching"
+  (confirmed)="confirmDetach()"
+  (cancelled)="cancelDetach()"
+/>

@@ -1,0 +1,194 @@
+@if (loading) {
+  <p class="text-sm text-gray-500 dark:text-gray-400">Chargement du dossier...</p>
+} @else if (loadError) {
+  <p class="text-sm text-error-500">{{ loadError }}</p>
+} @else if (eleve) {
+  <app-page-breadcrumb [pageTitle]="'Dossier — ' + eleve.prenom + ' ' + eleve.nom" />
+
+  <div class="mb-5 flex items-center justify-between">
+    <div>
+      <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">{{ eleve.prenom }} {{ eleve.nom }}</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Code : {{ eleve.code || '—' }}</p>
+    </div>
+    <app-button size="sm" variant="outline" (btnClick)="goToList()">
+      Retour à la liste
+    </app-button>
+  </div>
+
+  <div class="mb-5 flex gap-1 border-b border-gray-200 dark:border-white/[0.05]">
+    <button
+      type="button"
+      (click)="selectTab('infos')"
+      class="px-4 py-2.5 text-sm font-medium border-b-2 -mb-px"
+      [class.border-brand-500]="activeTab === 'infos'"
+      [class.text-brand-500]="activeTab === 'infos'"
+      [class.border-transparent]="activeTab !== 'infos'"
+      [class.text-gray-500]="activeTab !== 'infos'"
+    >
+      Informations
+    </button>
+    <button
+      type="button"
+      (click)="selectTab('pieces')"
+      class="px-4 py-2.5 text-sm font-medium border-b-2 -mb-px"
+      [class.border-brand-500]="activeTab === 'pieces'"
+      [class.text-brand-500]="activeTab === 'pieces'"
+      [class.border-transparent]="activeTab !== 'pieces'"
+      [class.text-gray-500]="activeTab !== 'pieces'"
+    >
+      Pièces justificatives
+    </button>
+    <button
+      type="button"
+      (click)="selectTab('parents')"
+      class="px-4 py-2.5 text-sm font-medium border-b-2 -mb-px"
+      [class.border-brand-500]="activeTab === 'parents'"
+      [class.text-brand-500]="activeTab === 'parents'"
+      [class.border-transparent]="activeTab !== 'parents'"
+      [class.text-gray-500]="activeTab !== 'parents'"
+    >
+      Parents / tuteurs
+    </button>
+  </div>
+
+  @if (activeTab === 'infos') {
+    <app-component-card title="Fiche élève" desc="Informations d'état civil et photo.">
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div>
+          <app-label>Nom <span class="text-error-500">*</span></app-label>
+          <app-input-field [value]="infosModel.nom" (valueChange)="updateInfoField('nom', $event)" />
+        </div>
+        <div>
+          <app-label>Prénom <span class="text-error-500">*</span></app-label>
+          <app-input-field [value]="infosModel.prenom" (valueChange)="updateInfoField('prenom', $event)" />
+        </div>
+        <div>
+          <app-label>Date de naissance <span class="text-error-500">*</span></app-label>
+          <app-input-field type="date" [value]="infosModel.dateNaissance" (valueChange)="updateInfoField('dateNaissance', $event)" />
+        </div>
+        <div>
+          <app-label>Lieu de naissance</app-label>
+          <app-input-field [value]="infosModel.lieuNaissance ?? ''" (valueChange)="updateInfoField('lieuNaissance', $event)" />
+        </div>
+        <div>
+          <app-label>Sexe <span class="text-error-500">*</span></app-label>
+          <app-select [options]="sexeOptions" [value]="infosModel.sexe" (valueChange)="updateInfoField('sexe', $event)" />
+        </div>
+        <div>
+          <app-label>Photo</app-label>
+          <app-file-input (change)="onPhotoSelected($event)" />
+          @if (uploadingPhoto) {
+            <p class="mt-1.5 text-xs text-gray-500">Envoi en cours...</p>
+          } @else if (infosModel.photoFichierId) {
+            <p class="mt-1.5 text-xs text-success-500">Photo prête (fichier #{{ infosModel.photoFichierId }}) - enregistrez pour la rattacher.</p>
+          }
+        </div>
+      </div>
+
+      @if (infosError) {
+        <p class="mt-4 text-sm text-error-500">{{ infosError }}</p>
+      }
+
+      <div class="flex items-center justify-end w-full gap-3 mt-6">
+        <app-button size="sm" [disabled]="savingInfos" (btnClick)="saveInfos()">
+          Enregistrer
+        </app-button>
+      </div>
+    </app-component-card>
+
+    <div class="mt-5">
+      <app-component-card title="Inscriptions" desc="Une inscription est nécessaire pour rattacher des pièces justificatives.">
+        @if (inscriptions.length === 0) {
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Aucune inscription pour cet élève.</p>
+        } @else {
+          <div class="flex flex-wrap gap-2 mb-4">
+            @for (inscription of inscriptions; track inscription.uuid) {
+              <button
+                type="button"
+                (click)="selectInscription(inscription.uuid)"
+                class="rounded-lg border px-3 py-2 text-sm"
+                [class.border-brand-500]="selectedInscription?.uuid === inscription.uuid"
+                [class.text-brand-500]="selectedInscription?.uuid === inscription.uuid"
+                [class.border-gray-300]="selectedInscription?.uuid !== inscription.uuid"
+                [class.dark:border-gray-700]="selectedInscription?.uuid !== inscription.uuid"
+              >
+                {{ inscription.code || ('#' + inscription.id) }} — {{ statutLabels[inscription.statut] }}
+              </button>
+            }
+          </div>
+        }
+        <app-button size="sm" variant="outline" (btnClick)="openCreateInscription()">
+          Nouvelle inscription
+        </app-button>
+      </app-component-card>
+    </div>
+  }
+
+  @if (activeTab === 'pieces') {
+    @if (selectedInscription) {
+      <app-piece-justificative-panel [inscriptionUuid]="selectedInscription.uuid" />
+    } @else {
+      <app-component-card title="Pièces justificatives">
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Créez d'abord une inscription (onglet Informations) pour pouvoir y rattacher des pièces justificatives.
+        </p>
+      </app-component-card>
+    }
+  }
+
+  @if (activeTab === 'parents') {
+    <app-parent-tuteur-panel [eleveUuid]="eleve.uuid" />
+  }
+
+  <app-modal [isOpen]="isInscriptionFormOpen" (close)="closeInscriptionForm()" className="max-w-[600px] p-5 lg:p-8">
+    <h4 class="font-semibold text-gray-800 mb-6 text-title-sm dark:text-white/90">
+      Nouvelle inscription
+    </h4>
+
+    <div class="space-y-5">
+      <div>
+        <app-label>Classe <span class="text-error-500">*</span></app-label>
+        <app-select
+          [options]="classeOptions"
+          [value]="inscriptionModel.classeId?.toString() ?? ''"
+          placeholder="Choisir une classe"
+          (valueChange)="updateInscriptionField('classeId', +$event)"
+        />
+      </div>
+      <div>
+        <app-label>Année scolaire <span class="text-error-500">*</span></app-label>
+        <app-select
+          [options]="anneeScolaireOptions"
+          [value]="inscriptionModel.anneeScolaireId?.toString() ?? ''"
+          placeholder="Choisir une année scolaire"
+          (valueChange)="updateInscriptionField('anneeScolaireId', +$event)"
+        />
+      </div>
+      <div>
+        <app-label>Type d'inscription <span class="text-error-500">*</span></app-label>
+        <app-select
+          [options]="typeInscriptionOptions"
+          [value]="inscriptionModel.type ?? ''"
+          (valueChange)="updateInscriptionField('type', $event)"
+        />
+      </div>
+      <div>
+        <app-label>Montant dû (FCFA) <span class="text-error-500">*</span></app-label>
+        <app-input-field type="number" [value]="inscriptionModel.montantDu ?? ''" (valueChange)="updateInscriptionField('montantDu', $event)" />
+      </div>
+    </div>
+
+    @if (inscriptionError) {
+      <p class="mt-4 text-sm text-error-500">{{ inscriptionError }}</p>
+    }
+
+    <div class="flex items-center justify-end w-full gap-3 mt-8">
+      <app-button size="sm" variant="outline" (btnClick)="closeInscriptionForm()">
+        Annuler
+      </app-button>
+      <app-button size="sm" [disabled]="savingInscription" (btnClick)="saveInscription()">
+        Enregistrer
+      </app-button>
+    </div>
+  </app-modal>
+}

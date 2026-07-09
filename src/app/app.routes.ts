@@ -22,6 +22,8 @@ import { CalenderComponent } from './pages/calender/calender.component';
 import { AuditLogComponent } from './pages/audit/audit-log.component';
 import { ReferentielPageComponent } from './pages/referentiels/referentiel-page.component';
 import { REFERENTIEL_CRUD_ENTITIES } from './core/models/referentiel-crud.models';
+import { EleveListComponent } from './pages/inscriptions/eleve-list/eleve-list.component';
+import { EleveDossierComponent } from './pages/inscriptions/eleve-dossier/eleve-dossier.component';
 import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
 import { roleGuard } from './core/guards/role.guard';
@@ -127,6 +129,23 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['SADM', 'ADM'] },
         title: 'Journal d\'audit | SGS'
+      },
+      // Module Inscription des Élèves : ouvert à SEC (secrétariat) en plus de SADM/ADM,
+      // cf. @PreAuthorize côté service-inscription (EleveController/PieceJustificativeController/
+      // ParentTuteurController class-level, hasAnyAuthority('SEC','SADM','ADM')).
+      {
+        path: 'inscriptions/eleves',
+        component: EleveListComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['SEC', 'SADM', 'ADM'] },
+        title: 'Élèves | SGS'
+      },
+      {
+        path: 'inscriptions/eleves/:uuid',
+        component: EleveDossierComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['SEC', 'SADM', 'ADM'] },
+        title: 'Dossier élève | SGS'
       },
       ...referentielRoutes,
     ]
