@@ -1,0 +1,120 @@
+<app-page-breadcrumb pageTitle="Statistiques d'inscription" />
+
+<div class="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+  <div class="w-full sm:w-64">
+    <app-label>Année scolaire</app-label>
+    <app-select
+      [options]="anneeScolaireOptions"
+      [value]="anneeScolaireFilter"
+      placeholder="Toutes"
+      (valueChange)="anneeScolaireFilter = $any($event); applyFilter()"
+    />
+  </div>
+</div>
+
+@if (loadError) {
+  <p class="mb-4 text-sm text-error-500">{{ loadError }}</p>
+}
+
+<div class="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+  <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/[0.05] dark:bg-white/[0.03]">
+    <p class="text-sm text-gray-500 dark:text-gray-400">Effectif total (validé)</p>
+    <p class="mt-1 text-title-sm font-bold text-gray-800 dark:text-white/90">{{ totalEffectif }}</p>
+  </div>
+  <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/[0.05] dark:bg-white/[0.03]">
+    <p class="text-sm text-gray-500 dark:text-gray-400">Capacité totale</p>
+    <p class="mt-1 text-title-sm font-bold text-gray-800 dark:text-white/90">{{ totalCapacite }}</p>
+  </div>
+  <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/[0.05] dark:bg-white/[0.03]">
+    <p class="text-sm text-gray-500 dark:text-gray-400">Taux de remplissage global</p>
+    <p class="mt-1 text-title-sm font-bold text-gray-800 dark:text-white/90">{{ tauxRemplissageGlobal() }}</p>
+  </div>
+</div>
+
+<app-component-card title="Effectifs par classe" desc="Effectif validé comparé à la capacité maximale.">
+  @if (loading) {
+    <p class="text-sm text-gray-500 dark:text-gray-400">Chargement...</p>
+  } @else if (classeRows.length === 0) {
+    <p class="text-sm text-gray-500 dark:text-gray-400">Aucune donnée.</p>
+  } @else {
+    <div class="max-w-full overflow-x-auto custom-scrollbar">
+      <div class="min-w-[600px]">
+        <apx-chart
+          [series]="classeSeries"
+          [chart]="classeChart"
+          [colors]="classeColors"
+          [plotOptions]="classePlotOptions"
+          [dataLabels]="classeDataLabels"
+          [stroke]="classeStroke"
+          [xaxis]="classeXaxis"
+          [yaxis]="classeYaxis"
+          [legend]="classeLegend"
+          [grid]="classeGrid"
+          [fill]="classeFill"
+          [tooltip]="classeTooltip"
+        ></apx-chart>
+      </div>
+    </div>
+
+    <div class="mt-5 overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+      <div class="max-w-full overflow-x-auto">
+        <table class="min-w-full">
+          <thead class="border-b border-gray-100 dark:border-white/[0.05]">
+            <tr>
+              <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Classe</th>
+              <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Niveau</th>
+              <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Effectif</th>
+              <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Capacité</th>
+              <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Taux</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
+            @for (row of classeRows; track row.classeId) {
+              <tr>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.classeLibelle }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.niveauLibelle }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.effectif }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.capaciteMax ?? '—' }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                  {{ row.tauxRemplissage !== null ? row.tauxRemplissage.toFixed(1) + ' %' : '—' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</app-component-card>
+
+<div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
+  <app-component-card title="Effectifs par niveau">
+    @if (niveauRows.length === 0) {
+      <p class="text-sm text-gray-500 dark:text-gray-400">Aucune donnée.</p>
+    } @else {
+      <apx-chart
+        [series]="niveauSeries"
+        [chart]="niveauChart"
+        [colors]="niveauColors"
+        [plotOptions]="niveauPlotOptions"
+        [dataLabels]="niveauDataLabels"
+        [xaxis]="niveauXaxis"
+      ></apx-chart>
+    }
+  </app-component-card>
+
+  <app-component-card title="Répartition par sexe">
+    @if (sexeRows.length === 0) {
+      <p class="text-sm text-gray-500 dark:text-gray-400">Aucune donnée.</p>
+    } @else {
+      <apx-chart
+        [series]="sexeSeries"
+        [chart]="sexeChart"
+        [labels]="sexeLabels"
+        [colors]="sexeColors"
+        [legend]="sexeLegend"
+        [responsive]="sexeResponsive"
+      ></apx-chart>
+    }
+  </app-component-card>
+</div>

@@ -17,6 +17,9 @@ import {
   ParentTuteurRequest,
   PieceJustificative,
   PieceJustificativeRequest,
+  StatistiqueClasse,
+  StatistiqueNiveau,
+  StatistiqueSexe,
   StatutInscription,
   UploadResponse
 } from '../models/inscription.models';
@@ -202,6 +205,36 @@ export class InscriptionService {
   // PaiementController.telechargerRecu.
   telechargerRecu(uuid: string): Observable<Blob> {
     return this.http.get(`${this.base}/paiements/${uuid}/recu`, { responseType: 'blob' });
+  }
+
+  // --- Statistiques d'inscription (tableau de bord) ----------------------
+
+  statistiquesParClasse(anneeScolaireId?: number): Observable<StatistiqueClasse[]> {
+    return this.http
+      .get<ApiResponse<StatistiqueClasse[]>>(`${this.base}/statistiques/par-classe`, {
+        params: this.optionalAnneeScolaireParams(anneeScolaireId)
+      })
+      .pipe(map((response) => response.data));
+  }
+
+  statistiquesParNiveau(anneeScolaireId?: number): Observable<StatistiqueNiveau[]> {
+    return this.http
+      .get<ApiResponse<StatistiqueNiveau[]>>(`${this.base}/statistiques/par-niveau`, {
+        params: this.optionalAnneeScolaireParams(anneeScolaireId)
+      })
+      .pipe(map((response) => response.data));
+  }
+
+  statistiquesParSexe(anneeScolaireId?: number): Observable<StatistiqueSexe[]> {
+    return this.http
+      .get<ApiResponse<StatistiqueSexe[]>>(`${this.base}/statistiques/par-sexe`, {
+        params: this.optionalAnneeScolaireParams(anneeScolaireId)
+      })
+      .pipe(map((response) => response.data));
+  }
+
+  private optionalAnneeScolaireParams(anneeScolaireId?: number): HttpParams {
+    return anneeScolaireId ? new HttpParams().set('anneeScolaireId', anneeScolaireId) : new HttpParams();
   }
 
   private paginationParams(criteria: ListCriteria): HttpParams {

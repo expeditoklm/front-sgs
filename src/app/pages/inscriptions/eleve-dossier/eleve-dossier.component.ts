@@ -12,7 +12,9 @@ import { PieceJustificativePanelComponent } from '../../../shared/components/ins
 import { ParentTuteurPanelComponent } from '../../../shared/components/inscription/parent-tuteur-panel/parent-tuteur-panel.component';
 import { InscriptionService } from '../../../core/services/inscription.service';
 import { ReferentielCrudService } from '../../../core/services/referentiel-crud.service';
+import { ReportService } from '../../../core/services/report.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { downloadBlob } from '../../../core/helpers/download.helpers';
 import { SelectOption } from '../../../core/models/referentiel-crud.models';
 import {
   Eleve,
@@ -75,12 +77,14 @@ export class EleveDossierComponent implements OnInit {
   classeOptions: SelectOption[] = [];
   anneeScolaireOptions: SelectOption[] = [];
   readonly typeInscriptionOptions = typeInscriptionOptions();
+  generatingCertificat = false;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private inscriptionService: InscriptionService,
     private referentielCrudService: ReferentielCrudService,
+    private reportService: ReportService,
     private toastService: ToastService
   ) {
   }
@@ -198,6 +202,21 @@ export class EleveDossierComponent implements OnInit {
       error: (err) => {
         this.uploadingPhoto = false;
         this.toastService.error(err?.error?.message || "Échec de l'envoi de la photo.");
+      }
+    });
+  }
+
+  telechargerCertificat(): void {
+    if (!this.selectedInscription) return;
+    this.generatingCertificat = true;
+    this.reportService.genererCertificatInscription(this.selectedInscription.uuid).subscribe({
+      next: (blob) => {
+        this.generatingCertificat = false;
+        downloadBlob(blob, `certificat-inscription-${this.selectedInscription!.code || this.selectedInscription!.uuid}.pdf`);
+      },
+      error: (err) => {
+        this.generatingCertificat = false;
+        this.toastService.error(err?.error?.message || 'Échec de la génération du certificat.');
       }
     });
   }

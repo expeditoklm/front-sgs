@@ -205,6 +205,30 @@ export interface FilterCriteria {
   value: unknown;
 }
 
+// Statistiques d'inscription (cf. StatistiqueController/StatistiqueService) - "effectif" ne compte
+// que les inscriptions VALIDEE (élèves réellement présents dans la classe).
+export interface StatistiqueClasse {
+  classeId: number;
+  classeCode: string;
+  classeLibelle: string;
+  niveauLibelle: string;
+  capaciteMax: number | null;
+  effectif: number;
+  tauxRemplissage: number | null;
+}
+
+export interface StatistiqueNiveau {
+  niveauId: number;
+  niveauCode: string;
+  niveauLibelle: string;
+  effectif: number;
+}
+
+export interface StatistiqueSexe {
+  sexe: Sexe;
+  effectif: number;
+}
+
 // Réponse brute de POST /storage/upload (service-referentiel) - PAS enveloppée dans ApiResponse,
 // contrairement à tous les autres endpoints (cf. StorageController.uploadFile, qui répond
 // directement le UploadResponse). Le champ "download" contient en réalité l'uuid du fichier

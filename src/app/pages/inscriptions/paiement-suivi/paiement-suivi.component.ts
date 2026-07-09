@@ -9,6 +9,7 @@ import { InputFieldComponent } from '../../../shared/components/form/input/input
 import { BadgeComponent } from '../../../shared/components/ui/badge/badge.component';
 import { InscriptionService } from '../../../core/services/inscription.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { downloadBlob } from '../../../core/helpers/download.helpers';
 import { MetaResponse } from '../../../core/models/audit.models';
 import { SelectOption } from '../../../core/models/referentiel-crud.models';
 import {
@@ -153,12 +154,7 @@ export class PaiementSuiviComponent implements OnInit {
     this.inscriptionService.telechargerRecu(row.uuid).subscribe({
       next: (blob) => {
         this.downloadingUuid = null;
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `recu-${row.numeroRecu ?? row.uuid}.pdf`;
-        link.click();
-        window.URL.revokeObjectURL(url);
+        downloadBlob(blob, `recu-${row.numeroRecu ?? row.uuid}.pdf`);
       },
       error: (err) => {
         this.downloadingUuid = null;

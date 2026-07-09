@@ -26,6 +26,7 @@ import { EleveListComponent } from './pages/inscriptions/eleve-list/eleve-list.c
 import { EleveDossierComponent } from './pages/inscriptions/eleve-dossier/eleve-dossier.component';
 import { InscriptionSuiviComponent } from './pages/inscriptions/inscription-suivi/inscription-suivi.component';
 import { PaiementSuiviComponent } from './pages/inscriptions/paiement-suivi/paiement-suivi.component';
+import { StatistiquesDashboardComponent } from './pages/inscriptions/statistiques-dashboard/statistiques-dashboard.component';
 import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
 import { roleGuard } from './core/guards/role.guard';
@@ -162,6 +163,13 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['SEC', 'SADM', 'ADM'] },
         title: 'Suivi des paiements | SGS'
+      },
+      {
+        path: 'inscriptions/statistiques',
+        component: StatistiquesDashboardComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['SEC', 'SADM', 'ADM'] },
+        title: 'Statistiques d\'inscription | SGS'
       },
       ...referentielRoutes,
     ]

@@ -117,9 +117,16 @@
             }
           </div>
         }
-        <app-button size="sm" variant="outline" (btnClick)="openCreateInscription()">
-          Nouvelle inscription
-        </app-button>
+        <div class="flex flex-wrap gap-3">
+          <app-button size="sm" variant="outline" (btnClick)="openCreateInscription()">
+            Nouvelle inscription
+          </app-button>
+          @if (selectedInscription) {
+            <app-button size="sm" variant="outline" [disabled]="generatingCertificat" (btnClick)="telechargerCertificat()">
+              Télécharger le certificat d'inscription
+            </app-button>
+          }
+        </div>
       </app-component-card>
     </div>
   }

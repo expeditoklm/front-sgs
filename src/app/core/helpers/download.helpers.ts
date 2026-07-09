@@ -1,0 +1,10 @@
+// Déclenche le téléchargement d'un Blob côté navigateur (reçus de paiement, certificats, ...) -
+// factorisé ici car utilisé par plusieurs écrans (paiement-suivi, eleve-dossier).
+export function downloadBlob(blob: Blob, filename: string): void {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  window.URL.revokeObjectURL(url);
+}

@@ -61,7 +61,8 @@ export class AppSidebarComponent {
       subItems: [
         { name: "Élèves", path: "/inscriptions/eleves", pro: false },
         { name: "Suivi des inscriptions", path: "/inscriptions/suivi", pro: false },
-        { name: "Suivi des paiements", path: "/inscriptions/paiements", pro: false }
+        { name: "Suivi des paiements", path: "/inscriptions/paiements", pro: false },
+        { name: "Statistiques", path: "/inscriptions/statistiques", pro: false }
       ],
     },
     {
