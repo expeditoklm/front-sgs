@@ -59,7 +59,9 @@ export class AppSidebarComponent {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 3.5C9.51472 3.5 7.5 5.51472 7.5 8C7.5 10.4853 9.51472 12.5 12 12.5C14.4853 12.5 16.5 10.4853 16.5 8C16.5 5.51472 14.4853 3.5 12 3.5ZM9 8C9 6.34315 10.3431 5 12 5C13.6569 5 15 6.34315 15 8C15 9.65685 13.6569 11 12 11C10.3431 11 9 9.65685 9 8ZM6.5 18.5C6.5 16.067 9.13401 14 12 14C14.866 14 17.5 16.067 17.5 18.5V19.25C17.5 19.6642 17.1642 20 16.75 20H7.25C6.83579 20 6.5 19.6642 6.5 19.25V18.5ZM12 12.5C8.27208 12.5 5 15.1467 5 18.5V19.25C5 20.4926 6.00736 21.5 7.25 21.5H16.75C17.9926 21.5 19 20.4926 19 19.25V18.5C19 15.1467 15.7279 12.5 12 12.5Z" fill="currentColor"></path></svg>`,
       name: "Inscription des Élèves",
       subItems: [
-        { name: "Élèves", path: "/inscriptions/eleves", pro: false }
+        { name: "Élèves", path: "/inscriptions/eleves", pro: false },
+        { name: "Suivi des inscriptions", path: "/inscriptions/suivi", pro: false },
+        { name: "Suivi des paiements", path: "/inscriptions/paiements", pro: false }
       ],
     },
     {

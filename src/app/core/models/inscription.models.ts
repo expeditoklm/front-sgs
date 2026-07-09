@@ -153,6 +153,58 @@ export interface PieceJustificativeRequest {
   fichierId: number;
 }
 
+export type ModePaiement = 'ESPECES' | 'MOBILE_MONEY' | 'VIREMENT' | 'CHEQUE';
+
+export const MODE_PAIEMENT_LABELS: Record<ModePaiement, string> = {
+  ESPECES: 'Espèces',
+  MOBILE_MONEY: 'Mobile money',
+  VIREMENT: 'Virement',
+  CHEQUE: 'Chèque'
+};
+
+export type StatutPaiement = 'EN_ATTENTE' | 'CONFIRME' | 'ECHOUE' | 'REMBOURSE';
+
+export const STATUT_PAIEMENT_LABELS: Record<StatutPaiement, string> = {
+  EN_ATTENTE: 'En attente',
+  CONFIRME: 'Confirmé',
+  ECHOUE: 'Échoué',
+  REMBOURSE: 'Remboursé'
+};
+
+export interface Paiement {
+  id: number;
+  uuid: string;
+  code: string | null;
+  inscriptionId: number;
+  inscriptionUuid: string;
+  eleveUuid: string;
+  eleveNomComplet: string;
+  montant: number;
+  mode: ModePaiement;
+  referenceExterne: string | null;
+  statut: StatutPaiement;
+  datePaiement: string;
+  numeroRecu: string | null;
+  codeVerification: string | null;
+}
+
+export interface PaiementRequest {
+  inscriptionUuid: string;
+  montant: number;
+  mode: ModePaiement;
+  referenceExterne?: string | null;
+}
+
+// Filtre générique du CRUD backend (cf. bj.sgs.core.specs.FilterCriteria/FilterSpecification) -
+// "field" accepte un chemin pointé pour les relations (ex. "eleve.nom", "inscription.eleve.nom").
+export type FilterCondition = 'eq' | 'neq' | 'contains' | 'start' | 'ends' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'between';
+
+export interface FilterCriteria {
+  field: string;
+  condition: FilterCondition;
+  value: unknown;
+}
+
 // Réponse brute de POST /storage/upload (service-referentiel) - PAS enveloppée dans ApiResponse,
 // contrairement à tous les autres endpoints (cf. StorageController.uploadFile, qui répond
 // directement le UploadResponse). Le champ "download" contient en réalité l'uuid du fichier

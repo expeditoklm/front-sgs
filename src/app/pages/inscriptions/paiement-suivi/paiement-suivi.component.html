@@ -1,0 +1,111 @@
+<app-page-breadcrumb pageTitle="Suivi des paiements" />
+
+<app-component-card title="Paiements" desc="Suivi des versements, confirmation et téléchargement des reçus.">
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-5">
+    <div>
+      <app-label>Statut</app-label>
+      <app-select [options]="statutOptions" [value]="statutFilter" placeholder="Tous" (valueChange)="statutFilter = $any($event)" />
+    </div>
+    <div>
+      <app-label>Mode</app-label>
+      <app-select [options]="modeOptions" [value]="modeFilter" placeholder="Tous" (valueChange)="modeFilter = $any($event)" />
+    </div>
+    <div>
+      <app-label>Date début</app-label>
+      <app-input-field type="date" [value]="dateDebut" (valueChange)="dateDebut = $any($event)" />
+    </div>
+    <div>
+      <app-label>Date fin</app-label>
+      <app-input-field type="date" [value]="dateFin" (valueChange)="dateFin = $any($event)" />
+    </div>
+  </div>
+
+  <div class="flex items-center gap-3 mb-5">
+    <app-button size="sm" (btnClick)="search()">Filtrer</app-button>
+    <app-button size="sm" variant="outline" (btnClick)="resetFilters()">Réinitialiser</app-button>
+  </div>
+
+  @if (listError) {
+    <p class="text-sm text-error-500">{{ listError }}</p>
+  }
+
+  <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+    <div class="max-w-full overflow-x-auto">
+      <table class="min-w-full">
+        <thead class="border-b border-gray-100 dark:border-white/[0.05]">
+          <tr>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">N° reçu</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Élève</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Montant</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Mode</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Statut</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Date</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
+          @if (loading) {
+            <tr>
+              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="7">Chargement...</td>
+            </tr>
+          } @else if (rows.length === 0) {
+            <tr>
+              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="7">Aucun paiement.</td>
+            </tr>
+          } @else {
+            @for (row of rows; track row.uuid) {
+              <tr>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.numeroRecu || '—' }}</td>
+                <td class="px-5 py-4 text-start text-theme-sm">
+                  <button type="button" (click)="openDossier(row)" class="font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400">
+                    {{ row.eleveNomComplet }}
+                  </button>
+                </td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.montant }} FCFA</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ modeLabels[row.mode] }}</td>
+                <td class="px-5 py-4 text-start">
+                  <app-badge [color]="badgeColor(row.statut)">{{ statutLabels[row.statut] }}</app-badge>
+                </td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ formatDate(row.datePaiement) }}</td>
+                <td class="px-5 py-4 text-start whitespace-nowrap">
+                  <div class="flex flex-wrap gap-2">
+                    @if (row.statut === 'EN_ATTENTE') {
+                      <button
+                        type="button"
+                        [disabled]="confirmingUuid === row.uuid"
+                        (click)="confirmer(row)"
+                        class="text-sm font-medium text-success-500 hover:text-success-600 disabled:opacity-40"
+                      >
+                        Confirmer
+                      </button>
+                    }
+                    @if (row.statut === 'CONFIRME') {
+                      <button
+                        type="button"
+                        [disabled]="downloadingUuid === row.uuid"
+                        (click)="telechargerRecu(row)"
+                        class="text-sm font-medium text-brand-500 hover:text-brand-600 disabled:opacity-40"
+                      >
+                        Télécharger le reçu
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  @if (meta && meta.totalPages > 1) {
+    <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mt-4">
+      <span>Page {{ meta.pageNumber }} / {{ meta.totalPages }} — {{ meta.totalElements }} paiement(s)</span>
+      <div class="flex gap-2">
+        <app-button size="sm" variant="outline" [disabled]="!meta.hasPrev" (btnClick)="goToPage(page - 1)">Précédent</app-button>
+        <app-button size="sm" variant="outline" [disabled]="!meta.hasNext" (btnClick)="goToPage(page + 1)">Suivant</app-button>
+      </div>
+    </div>
+  }
+</app-component-card>

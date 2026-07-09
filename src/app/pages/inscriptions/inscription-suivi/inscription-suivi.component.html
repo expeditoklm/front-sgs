@@ -1,0 +1,131 @@
+<app-page-breadcrumb pageTitle="Suivi des inscriptions" />
+
+<app-component-card title="Inscriptions" desc="Suivi et validation des dossiers d'inscription.">
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-5">
+    <div>
+      <app-label>Statut</app-label>
+      <app-select [options]="statutOptions" [value]="statutFilter" placeholder="Tous" (valueChange)="statutFilter = $any($event)" />
+    </div>
+    <div>
+      <app-label>Type</app-label>
+      <app-select [options]="typeOptions" [value]="typeFilter" placeholder="Tous" (valueChange)="typeFilter = $any($event)" />
+    </div>
+    <div>
+      <app-label>Classe</app-label>
+      <app-select [options]="classeOptions" [value]="classeFilter" placeholder="Toutes" (valueChange)="classeFilter = $any($event)" />
+    </div>
+    <div>
+      <app-label>Année scolaire</app-label>
+      <app-select [options]="anneeScolaireOptions" [value]="anneeScolaireFilter" placeholder="Toutes" (valueChange)="anneeScolaireFilter = $any($event)" />
+    </div>
+  </div>
+
+  <div class="flex items-center gap-3 mb-5">
+    <app-button size="sm" (btnClick)="search()">Filtrer</app-button>
+    <app-button size="sm" variant="outline" (btnClick)="resetFilters()">Réinitialiser</app-button>
+  </div>
+
+  @if (listError) {
+    <p class="text-sm text-error-500">{{ listError }}</p>
+  }
+
+  <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+    <div class="max-w-full overflow-x-auto">
+      <table class="min-w-full">
+        <thead class="border-b border-gray-100 dark:border-white/[0.05]">
+          <tr>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Code</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Élève</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Classe</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Type</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Statut</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Montant dû</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
+          @if (loading) {
+            <tr>
+              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="7">Chargement...</td>
+            </tr>
+          } @else if (rows.length === 0) {
+            <tr>
+              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="7">Aucune inscription.</td>
+            </tr>
+          } @else {
+            @for (row of rows; track row.uuid) {
+              <tr>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.code || '—' }}</td>
+                <td class="px-5 py-4 text-start text-theme-sm">
+                  <button type="button" (click)="openDossier(row)" class="font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400">
+                    {{ row.eleveNomComplet }}
+                  </button>
+                </td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ classeLabel(row.classeId) }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ typeLabels[row.type] }}</td>
+                <td class="px-5 py-4 text-start">
+                  <app-badge [color]="badgeColor(row.statut)">{{ statutLabels[row.statut] }}</app-badge>
+                </td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.montantDu }} FCFA</td>
+                <td class="px-5 py-4 text-start whitespace-nowrap">
+                  <div class="flex flex-wrap gap-2">
+                    @if (canSubmit(row)) {
+                      <button type="button" (click)="applyTransition(row, 'EN_ATTENTE')" class="text-sm font-medium text-brand-500 hover:text-brand-600">
+                        Soumettre
+                      </button>
+                    }
+                    @if (canValidateOrReject(row)) {
+                      <button type="button" (click)="applyTransition(row, 'VALIDEE')" class="text-sm font-medium text-success-500 hover:text-success-600">
+                        Valider
+                      </button>
+                      <button type="button" (click)="applyTransition(row, 'REJETEE')" class="text-sm font-medium text-error-500 hover:text-error-600">
+                        Rejeter
+                      </button>
+                    }
+                    @if (canCancel(row)) {
+                      <button type="button" (click)="applyTransition(row, 'ANNULEE')" class="text-sm font-medium text-error-500 hover:text-error-600">
+                        Annuler
+                      </button>
+                    }
+                    @if (canResubmit(row)) {
+                      <button type="button" (click)="applyTransition(row, 'NOUVELLE')" class="text-sm font-medium text-gray-600 hover:text-gray-800 dark:text-gray-300">
+                        Remettre en brouillon
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  @if (meta && meta.totalPages > 1) {
+    <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mt-4">
+      <span>Page {{ meta.pageNumber }} / {{ meta.totalPages }} — {{ meta.totalElements }} inscription(s)</span>
+      <div class="flex gap-2">
+        <app-button size="sm" variant="outline" [disabled]="!meta.hasPrev" (btnClick)="goToPage(page - 1)">Précédent</app-button>
+        <app-button size="sm" variant="outline" [disabled]="!meta.hasNext" (btnClick)="goToPage(page + 1)">Suivant</app-button>
+      </div>
+    </div>
+  }
+</app-component-card>
+
+<app-modal [isOpen]="isMotifOpen" (close)="closeMotifModal()" className="max-w-[480px] p-5 lg:p-8">
+  <h4 class="font-semibold text-gray-800 mb-3 text-title-sm dark:text-white/90">
+    Motif de la transition
+  </h4>
+  <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+    Un motif est obligatoire pour rejeter ou annuler une inscription.
+  </p>
+  <app-input-field [value]="motifValue" (valueChange)="motifValue = $any($event)" placeholder="Motif..." />
+  @if (motifError) {
+    <p class="mt-3 text-sm text-error-500">{{ motifError }}</p>
+  }
+  <div class="flex items-center justify-end w-full gap-3 mt-6">
+    <app-button size="sm" variant="outline" (btnClick)="closeMotifModal()">Annuler</app-button>
+    <app-button size="sm" [disabled]="applyingTransition" (btnClick)="confirmMotifTransition()">Confirmer</app-button>
+  </div>
+</app-modal>

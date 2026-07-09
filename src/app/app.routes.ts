@@ -24,6 +24,8 @@ import { ReferentielPageComponent } from './pages/referentiels/referentiel-page.
 import { REFERENTIEL_CRUD_ENTITIES } from './core/models/referentiel-crud.models';
 import { EleveListComponent } from './pages/inscriptions/eleve-list/eleve-list.component';
 import { EleveDossierComponent } from './pages/inscriptions/eleve-dossier/eleve-dossier.component';
+import { InscriptionSuiviComponent } from './pages/inscriptions/inscription-suivi/inscription-suivi.component';
+import { PaiementSuiviComponent } from './pages/inscriptions/paiement-suivi/paiement-suivi.component';
 import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
 import { roleGuard } from './core/guards/role.guard';
@@ -146,6 +148,20 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['SEC', 'SADM', 'ADM'] },
         title: 'Dossier élève | SGS'
+      },
+      {
+        path: 'inscriptions/suivi',
+        component: InscriptionSuiviComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['SEC', 'SADM', 'ADM'] },
+        title: 'Suivi des inscriptions | SGS'
+      },
+      {
+        path: 'inscriptions/paiements',
+        component: PaiementSuiviComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['SEC', 'SADM', 'ADM'] },
+        title: 'Suivi des paiements | SGS'
       },
       ...referentielRoutes,
     ]

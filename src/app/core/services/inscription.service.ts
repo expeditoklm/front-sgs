@@ -9,12 +9,15 @@ import {
   EleveParent,
   EleveParentRequest,
   EleveRequest,
+  FilterCriteria,
   Inscription,
   InscriptionRequest,
+  Paiement,
   ParentTuteur,
   ParentTuteurRequest,
   PieceJustificative,
   PieceJustificativeRequest,
+  StatutInscription,
   UploadResponse
 } from '../models/inscription.models';
 
@@ -82,6 +85,25 @@ export class InscriptionService {
   createInscription(payload: InscriptionRequest): Observable<Inscription> {
     return this.http
       .post<ApiResponse<Inscription>>(`${this.base}/inscriptions`, payload)
+      .pipe(map((response) => response.data));
+  }
+
+  // Suivi des inscriptions (tableau paginé/filtrable) - passe par le endpoint générique
+  // POST .../filter (cf. bj.sgs.core.MasterController.filter / FilterSpecification), pas de
+  // endpoint dédié côté backend : les critères (statut, type, classe, texte élève...) sont
+  // exprimés comme une liste de FilterCriteria, "field" acceptant un chemin pointé pour les
+  // relations (ex. "eleve.nom").
+  filterInscriptions(filters: FilterCriteria[], criteria: ListCriteria): Observable<PageResponse<Inscription>> {
+    return this.http
+      .post<ApiResponse<PageResponse<Inscription>>>(`${this.base}/inscriptions/filter`, filters, {
+        params: this.paginationParams(criteria)
+      })
+      .pipe(map((response) => response.data));
+  }
+
+  transition(uuid: string, statutCible: StatutInscription, motif?: string): Observable<Inscription> {
+    return this.http
+      .post<ApiResponse<Inscription>>(`${this.base}/inscriptions/${uuid}/transition`, { statutCible, motif })
       .pipe(map((response) => response.data));
   }
 
@@ -158,5 +180,39 @@ export class InscriptionService {
     formData.append('directory', directory);
     formData.append('file', file);
     return this.http.post<UploadResponse>(`${this.storageEndpoint}/upload`, formData);
+  }
+
+  // --- Suivi des paiements ----------------------------------------------
+
+  filterPaiements(filters: FilterCriteria[], criteria: ListCriteria): Observable<PageResponse<Paiement>> {
+    return this.http
+      .post<ApiResponse<PageResponse<Paiement>>>(`${this.base}/paiements/filter`, filters, {
+        params: this.paginationParams(criteria)
+      })
+      .pipe(map((response) => response.data));
+  }
+
+  confirmerPaiement(uuid: string): Observable<Paiement> {
+    return this.http
+      .post<ApiResponse<Paiement>>(`${this.base}/paiements/${uuid}/confirmer`, {})
+      .pipe(map((response) => response.data));
+  }
+
+  // Le reçu est un vrai flux PDF (application/pdf), pas enveloppé dans ApiResponse - cf.
+  // PaiementController.telechargerRecu.
+  telechargerRecu(uuid: string): Observable<Blob> {
+    return this.http.get(`${this.base}/paiements/${uuid}/recu`, { responseType: 'blob' });
+  }
+
+  private paginationParams(criteria: ListCriteria): HttpParams {
+    let params = new HttpParams()
+      .set('page', criteria.page)
+      .set('size', criteria.size)
+      .set('sortField', criteria.sortField)
+      .set('sortOrder', criteria.sortOrder);
+    if (criteria.filter) {
+      params = params.set('filter', criteria.filter);
+    }
+    return params;
   }
 }
