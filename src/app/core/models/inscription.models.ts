@@ -153,6 +153,11 @@ export interface PieceJustificativeRequest {
   fichierId: number;
 }
 
+export interface PieceValidationRequest {
+  statut: StatutValidationPiece;
+  commentaireRejet?: string | null;
+}
+
 export type ModePaiement = 'ESPECES' | 'MOBILE_MONEY' | 'VIREMENT' | 'CHEQUE';
 
 export const MODE_PAIEMENT_LABELS: Record<ModePaiement, string> = {

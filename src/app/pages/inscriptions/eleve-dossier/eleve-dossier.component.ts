@@ -21,6 +21,9 @@ import {
   EleveRequest,
   Inscription,
   InscriptionRequest,
+  MODE_PAIEMENT_LABELS,
+  ModePaiement,
+  PaiementRequest,
   TYPE_INSCRIPTION_LABELS,
   STATUT_INSCRIPTION_LABELS,
   TypeInscription
@@ -78,6 +81,16 @@ export class EleveDossierComponent implements OnInit {
   anneeScolaireOptions: SelectOption[] = [];
   readonly typeInscriptionOptions = typeInscriptionOptions();
   generatingCertificat = false;
+
+  // --- Paiement ---
+  // Il n'existait jusqu'ici AUCUN moyen d'enregistrer un paiement depuis l'UI : "Suivi des
+  // paiements" ne fait que lister/filtrer/confirmer des paiements déjà créés. Formulaire ajouté
+  // ici (comme "Nouvelle inscription"), rattaché à l'inscription sélectionnée.
+  isPaiementFormOpen = false;
+  paiementModel: Partial<PaiementRequest> = {};
+  paiementError = '';
+  savingPaiement = false;
+  readonly modePaiementOptions: SelectOption[] = Object.entries(MODE_PAIEMENT_LABELS).map(([value, label]) => ({ value, label }));
 
   constructor(
     private route: ActivatedRoute,
@@ -259,6 +272,73 @@ export class EleveDossierComponent implements OnInit {
           this.savingInscription = false;
           this.inscriptionError = err?.error?.message || "Échec de la création de l'inscription.";
           this.toastService.error(this.inscriptionError, "Échec de l'enregistrement");
+        }
+      });
+  }
+
+  openCreatePaiement(): void {
+    if (!this.selectedInscription) return;
+    this.paiementModel = { inscriptionUuid: this.selectedInscription.uuid, mode: 'ESPECES' as ModePaiement };
+    this.paiementError = '';
+    this.isPaiementFormOpen = true;
+  }
+
+  closePaiementForm(): void {
+    this.isPaiementFormOpen = false;
+  }
+
+  updatePaiementField(key: keyof PaiementRequest, value: unknown): void {
+    this.paiementModel = { ...this.paiementModel, [key]: value };
+  }
+
+  savePaiement(): void {
+    if (!this.selectedInscription) return;
+    const { montant, mode } = this.paiementModel;
+    if (!montant || montant <= 0 || !mode) {
+      this.paiementError = 'Montant et mode de paiement sont obligatoires.';
+      return;
+    }
+
+    this.savingPaiement = true;
+    this.paiementError = '';
+    this.inscriptionService
+      .creerPaiement({
+        inscriptionUuid: this.selectedInscription.uuid,
+        montant: +montant,
+        mode,
+        referenceExterne: this.paiementModel.referenceExterne || null
+      })
+      .subscribe({
+        next: (paiement) => {
+          // Un paiement en espèces est reçu sur-le-champ par le secrétariat - le confirmer tout de
+          // suite évite un aller-retour inutile par "Suivi des paiements" (mobile money/virement/
+          // chèque, eux, attendent une confirmation externe - webhook opérateur ou relevé bancaire -
+          // donc restent EN_ATTENTE, cf. PaiementService.confirmer).
+          if (mode === 'ESPECES') {
+            this.inscriptionService.confirmerPaiement(paiement.uuid).subscribe({
+              next: () => {
+                this.savingPaiement = false;
+                this.isPaiementFormOpen = false;
+                this.toastService.success('Paiement enregistré et confirmé avec succès.');
+              },
+              error: (err) => {
+                this.savingPaiement = false;
+                this.isPaiementFormOpen = false;
+                this.toastService.error(
+                  err?.error?.message || 'Paiement enregistré, mais échec de la confirmation automatique - à confirmer depuis Suivi des paiements.'
+                );
+              }
+            });
+          } else {
+            this.savingPaiement = false;
+            this.isPaiementFormOpen = false;
+            this.toastService.success('Paiement enregistré avec succès - à confirmer depuis Suivi des paiements dès réception.');
+          }
+        },
+        error: (err) => {
+          this.savingPaiement = false;
+          this.paiementError = err?.error?.message || "Échec de l'enregistrement du paiement.";
+          this.toastService.error(this.paiementError, "Échec de l'enregistrement");
         }
       });
   }

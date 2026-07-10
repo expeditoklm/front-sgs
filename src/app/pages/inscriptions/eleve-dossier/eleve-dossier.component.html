@@ -116,12 +116,20 @@
               </button>
             }
           </div>
+          @if (selectedInscription) {
+            <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+              Montant dû : <span class="font-medium text-gray-800 dark:text-white/90">{{ selectedInscription.montantDu }} FCFA</span>
+            </p>
+          }
         }
         <div class="flex flex-wrap gap-3">
           <app-button size="sm" variant="outline" (btnClick)="openCreateInscription()">
             Nouvelle inscription
           </app-button>
           @if (selectedInscription) {
+            <app-button size="sm" variant="outline" (btnClick)="openCreatePaiement()">
+              Enregistrer un paiement
+            </app-button>
             <app-button size="sm" variant="outline" [disabled]="generatingCertificat" (btnClick)="telechargerCertificat()">
               Télécharger le certificat d'inscription
             </app-button>
@@ -194,6 +202,49 @@
         Annuler
       </app-button>
       <app-button size="sm" [disabled]="savingInscription" (btnClick)="saveInscription()">
+        Enregistrer
+      </app-button>
+    </div>
+  </app-modal>
+
+  <app-modal [isOpen]="isPaiementFormOpen" (close)="closePaiementForm()" className="max-w-[600px] p-5 lg:p-8">
+    <h4 class="font-semibold text-gray-800 mb-6 text-title-sm dark:text-white/90">
+      Enregistrer un paiement
+    </h4>
+
+    <div class="space-y-5">
+      <div>
+        <app-label>Montant (FCFA) <span class="text-error-500">*</span></app-label>
+        <app-input-field type="number" [value]="paiementModel.montant ?? ''" (valueChange)="updatePaiementField('montant', +$event)" />
+      </div>
+      <div>
+        <app-label>Mode de paiement <span class="text-error-500">*</span></app-label>
+        <app-select
+          [options]="modePaiementOptions"
+          [value]="paiementModel.mode ?? ''"
+          (valueChange)="updatePaiementField('mode', $event)"
+        />
+      </div>
+      <div>
+        <app-label>Référence externe</app-label>
+        <app-input-field [value]="paiementModel.referenceExterne ?? ''" placeholder="Ex. n° de transaction mobile money" (valueChange)="updatePaiementField('referenceExterne', $event)" />
+      </div>
+    </div>
+
+    @if (paiementError) {
+      <p class="mt-4 text-sm text-error-500">{{ paiementError }}</p>
+    }
+
+    <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">
+      Un paiement en espèces est confirmé automatiquement (reçu disponible immédiatement dans Suivi
+      des paiements). Les autres modes restent "En attente" jusqu'à confirmation.
+    </p>
+
+    <div class="flex items-center justify-end w-full gap-3 mt-8">
+      <app-button size="sm" variant="outline" (btnClick)="closePaiementForm()">
+        Annuler
+      </app-button>
+      <app-button size="sm" [disabled]="savingPaiement" (btnClick)="savePaiement()">
         Enregistrer
       </app-button>
     </div>

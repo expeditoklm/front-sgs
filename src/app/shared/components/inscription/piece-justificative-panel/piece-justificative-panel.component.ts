@@ -5,8 +5,11 @@ import { LabelComponent } from '../../form/label/label.component';
 import { SelectComponent } from '../../form/select/select.component';
 import { FileInputComponent } from '../../form/input/file-input.component';
 import { BadgeComponent } from '../../ui/badge/badge.component';
+import { ModalComponent } from '../../ui/modal/modal.component';
+import { InputFieldComponent } from '../../form/input/input-field.component';
 import { InscriptionService } from '../../../../core/services/inscription.service';
 import { ToastService } from '../../../../core/services/toast.service';
+import { AuthenticationService } from '../../../../core/services/authentication.service';
 import { SelectOption } from '../../../../core/models/referentiel-crud.models';
 import {
   PieceJustificative,
@@ -20,7 +23,7 @@ import {
 // page du dossier élève qui l'englobe.
 @Component({
   selector: 'app-piece-justificative-panel',
-  imports: [ComponentCardComponent, ButtonComponent, LabelComponent, SelectComponent, FileInputComponent, BadgeComponent],
+  imports: [ComponentCardComponent, ButtonComponent, LabelComponent, SelectComponent, FileInputComponent, BadgeComponent, ModalComponent, InputFieldComponent],
   templateUrl: './piece-justificative-panel.component.html'
 })
 export class PieceJustificativePanelComponent implements OnChanges {
@@ -36,12 +39,32 @@ export class PieceJustificativePanelComponent implements OnChanges {
   uploadError = '';
 
   deletingUuid: string | null = null;
+  validatingUuid: string | null = null;
+
+  // Rejet : motif obligatoire, saisi dans une modale (même pattern que inscription-suivi) -
+  // "rejectingPiece" garde la pièce ciblée le temps de la saisie.
+  isRejectModalOpen = false;
+  rejectingPiece: PieceJustificative | null = null;
+  rejectMotif = '';
+  rejectError = '';
 
   readonly typeLabels = TYPE_DOCUMENT_LABELS;
   readonly statutLabels = STATUT_VALIDATION_PIECE_LABELS;
   readonly typeOptions: SelectOption[] = Object.entries(TYPE_DOCUMENT_LABELS).map(([value, label]) => ({ value, label }));
 
-  constructor(private inscriptionService: InscriptionService, private toastService: ToastService) {
+  constructor(
+    private inscriptionService: InscriptionService,
+    private toastService: ToastService,
+    private authenticationService: AuthenticationService
+  ) {
+  }
+
+  // Valider/rejeter une pièce est un acte de contrôle (SADM/ADM) - le secrétariat (SEC) constitue
+  // le dossier et peut donc téléverser/supprimer, mais ne s'auto-valide pas lui-même. Même
+  // @PreAuthorize côté backend (PieceJustificativeController.valider, class-level SEC/SADM/ADM,
+  // mais l'action n'a de sens qu'exercée par l'administration).
+  get canValiderOuRejeter(): boolean {
+    return this.authenticationService.hasAnyRole(['SADM', 'ADM']);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -123,6 +146,55 @@ export class PieceJustificativePanelComponent implements OnChanges {
       error: (err) => {
         this.deletingUuid = null;
         this.toastService.error(err?.error?.message || 'Suppression impossible.');
+      }
+    });
+  }
+
+  valider(piece: PieceJustificative): void {
+    this.validatingUuid = piece.uuid;
+    this.inscriptionService.validerPieceJustificative(piece.uuid, { statut: 'VALIDE', commentaireRejet: null }).subscribe({
+      next: () => {
+        this.validatingUuid = null;
+        this.toastService.success('Pièce justificative validée avec succès.');
+        this.load();
+      },
+      error: (err) => {
+        this.validatingUuid = null;
+        this.toastService.error(err?.error?.message || 'Validation impossible.');
+      }
+    });
+  }
+
+  openRejectModal(piece: PieceJustificative): void {
+    this.rejectingPiece = piece;
+    this.rejectMotif = '';
+    this.rejectError = '';
+    this.isRejectModalOpen = true;
+  }
+
+  closeRejectModal(): void {
+    this.isRejectModalOpen = false;
+    this.rejectingPiece = null;
+  }
+
+  confirmReject(): void {
+    if (!this.rejectMotif.trim()) {
+      this.rejectError = 'Le motif de rejet est obligatoire.';
+      return;
+    }
+    const piece = this.rejectingPiece!;
+    this.validatingUuid = piece.uuid;
+    this.inscriptionService.validerPieceJustificative(piece.uuid, { statut: 'REJETE', commentaireRejet: this.rejectMotif.trim() }).subscribe({
+      next: () => {
+        this.validatingUuid = null;
+        this.toastService.success('Pièce justificative rejetée.');
+        this.closeRejectModal();
+        this.load();
+      },
+      error: (err) => {
+        this.validatingUuid = null;
+        this.rejectError = err?.error?.message || 'Rejet impossible.';
+        this.toastService.error(this.rejectError);
       }
     });
   }

@@ -13,10 +13,12 @@ import {
   Inscription,
   InscriptionRequest,
   Paiement,
+  PaiementRequest,
   ParentTuteur,
   ParentTuteurRequest,
   PieceJustificative,
   PieceJustificativeRequest,
+  PieceValidationRequest,
   StatistiqueClasse,
   StatistiqueNiveau,
   StatistiqueSexe,
@@ -175,6 +177,12 @@ export class InscriptionService {
       .pipe(map((response) => response.data));
   }
 
+  validerPieceJustificative(uuid: string, payload: PieceValidationRequest): Observable<PieceJustificative> {
+    return this.http
+      .post<ApiResponse<PieceJustificative>>(`${this.base}/pieces-justificatives/${uuid}/valider`, payload)
+      .pipe(map((response) => response.data));
+  }
+
   // --- Upload de fichier (service-referentiel/StorageController) -------
   // Réponse non enveloppée dans ApiResponse (cf. UploadResponse) - contrairement à tous les autres
   // appels de ce service.
@@ -186,6 +194,12 @@ export class InscriptionService {
   }
 
   // --- Suivi des paiements ----------------------------------------------
+
+  creerPaiement(payload: PaiementRequest): Observable<Paiement> {
+    return this.http
+      .post<ApiResponse<Paiement>>(`${this.base}/paiements`, payload)
+      .pipe(map((response) => response.data));
+  }
 
   filterPaiements(filters: FilterCriteria[], criteria: ListCriteria): Observable<PageResponse<Paiement>> {
     return this.http
