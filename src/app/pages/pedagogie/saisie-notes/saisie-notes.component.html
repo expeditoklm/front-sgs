@@ -1,0 +1,83 @@
+<app-page-breadcrumb pageTitle="Saisie des notes" />
+
+@if (loadError) {
+  <p class="text-sm text-error-500">{{ loadError }}</p>
+} @else if (loading) {
+  <p class="text-sm text-gray-500 dark:text-gray-400">Chargement...</p>
+} @else if (evaluation) {
+  <app-component-card [title]="evaluation.libelle" [desc]="typeLabels[evaluation.type] + ' — coefficient ' + evaluation.coefficient + ' — barème /' + evaluation.bareme + ' — ' + evaluation.date">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+      <div class="flex items-center gap-3">
+        <app-button size="sm" variant="outline" (btnClick)="retour()">Retour aux évaluations</app-button>
+        <app-badge [color]="evaluation.statut === 'PUBLIEE' ? 'success' : 'light'">{{ statutLabels[evaluation.statut] }}</app-badge>
+      </div>
+      @if (canPublier) {
+        <app-button size="sm" [disabled]="publishing" (btnClick)="publier()">Publier l'évaluation</app-button>
+      }
+    </div>
+
+    @if (!gridEditable) {
+      <p class="mb-4 text-sm text-warning-600 dark:text-orange-400">
+        Cette évaluation est publiée - seuls les rôles SADM/ADM peuvent encore corriger les notes.
+      </p>
+    }
+
+    <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+      <div class="max-w-full overflow-x-auto">
+        <table class="min-w-full">
+          <thead class="border-b border-gray-100 dark:border-white/[0.05]">
+            <tr>
+              <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Élève</th>
+              <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Note / {{ evaluation.bareme }}</th>
+              <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Absent</th>
+              <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Appréciation</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
+            @if (rows.length === 0) {
+              <tr>
+                <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="4">Aucun élève inscrit (VALIDEE) dans cette classe.</td>
+              </tr>
+            } @else {
+              @for (row of rows; track row.inscriptionUuid) {
+                <tr>
+                  <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    {{ row.eleveNomComplet }}
+                    @if (row.erreur) {
+                      <p class="mt-1 text-xs text-error-500">{{ row.erreur }}</p>
+                    }
+                  </td>
+                  <td class="px-5 py-4 text-start w-32">
+                    <app-input-field
+                      type="number"
+                      [value]="row.valeur ?? ''"
+                      [disabled]="!gridEditable || row.absent"
+                      [error]="!!row.erreur"
+                      (valueChange)="setValeur(row, $any($event))"
+                    />
+                  </td>
+                  <td class="px-5 py-4 text-start">
+                    <app-checkbox [checked]="row.absent" [disabled]="!gridEditable" (checkedChange)="setAbsent(row, $event)" />
+                  </td>
+                  <td class="px-5 py-4 text-start min-w-[200px]">
+                    <app-input-field
+                      [value]="row.appreciation"
+                      [disabled]="!gridEditable"
+                      (valueChange)="setAppreciation(row, $any($event))"
+                    />
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    @if (gridEditable && rows.length > 0) {
+      <div class="flex items-center justify-end w-full gap-3 mt-6">
+        <app-button size="sm" [disabled]="saving" (btnClick)="enregistrer()">Enregistrer les notes</app-button>
+      </div>
+    }
+  </app-component-card>
+}

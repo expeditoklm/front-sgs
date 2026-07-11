@@ -1,0 +1,146 @@
+<app-page-breadcrumb pageTitle="Session de délibération" />
+
+@if (loadError) {
+  <p class="text-sm text-error-500">{{ loadError }}</p>
+} @else if (loading) {
+  <p class="text-sm text-gray-500 dark:text-gray-400">Chargement...</p>
+} @else if (deliberation) {
+  <app-component-card
+    [title]="deliberation.code || 'Délibération'"
+    [desc]="estFinDAnnee ? 'Délibération de fin d\'année — décision de passage obligatoire pour chaque élève avant clôture.' : 'Délibération de période — mentions et observations, pas de décision de passage.'"
+  >
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+      <div class="flex items-center gap-3">
+        <app-button size="sm" variant="outline" (btnClick)="retour()">Retour aux délibérations</app-button>
+        <app-badge [color]="badgeColor()">{{ statutLabels[deliberation.statut] }}</app-badge>
+      </div>
+      <div class="flex items-center gap-3">
+        @if (deliberation.statut === 'PLANIFIEE') {
+          <app-button size="sm" [disabled]="opening" (btnClick)="ouvrir()">Ouvrir la session</app-button>
+        }
+        @if (estModifiable) {
+          <app-button size="sm" [disabled]="cloturing" (btnClick)="askCloturer()">Clôturer définitivement</app-button>
+        }
+      </div>
+    </div>
+
+    @if (deliberation.statut === 'PLANIFIEE') {
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Cette délibération n'est pas encore ouverte : les décisions par élève (pré-remplies avec les
+        suggestions automatiques) seront créées à l'ouverture de la session.
+      </p>
+    } @else {
+      @if (!estModifiable) {
+        <p class="mb-4 text-sm text-warning-600 dark:text-orange-400">
+          Cette délibération est clôturée - les décisions sont définitives et ne peuvent plus être modifiées.
+        </p>
+      }
+
+      <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+        <div class="max-w-full overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="border-b border-gray-100 dark:border-white/[0.05]">
+              <tr>
+                <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Élève</th>
+                <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Moyenne / 20</th>
+                <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Rang</th>
+                <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Suggestion</th>
+                @if (estFinDAnnee) {
+                  <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Décision</th>
+                }
+                <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Mention</th>
+                <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Moyenne ajustée</th>
+                <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Motif / Observation</th>
+                <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
+              @if (lignes.length === 0) {
+                <tr>
+                  <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="9">Aucune décision.</td>
+                </tr>
+              } @else {
+                @for (ligne of lignes; track ligne.decision.uuid) {
+                  <tr>
+                    <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      {{ ligne.eleveNomComplet }}
+                      @if (ligne.erreur) {
+                        <p class="mt-1 text-xs text-error-500">{{ ligne.erreur }}</p>
+                      }
+                    </td>
+                    <td class="px-5 py-4 text-start text-theme-sm">
+                      <span class="font-semibold text-gray-800 dark:text-white/90">{{ ligne.decision.moyenneEffective ?? '—' }}</span>
+                      @if (ligne.decision.moyenneAjustee != null) {
+                        <p class="text-xs text-gray-400" title="Moyenne calculée avant ajustement du jury">calculée : {{ ligne.decision.moyenneGenerale ?? '—' }}</p>
+                      }
+                    </td>
+                    <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ ligne.decision.rangClasse ?? '—' }}</td>
+                    <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      {{ ligne.decision.decisionSuggeree ? decisionLabels[ligne.decision.decisionSuggeree] : '—' }}
+                    </td>
+                    @if (estFinDAnnee) {
+                      <td class="px-5 py-4 text-start min-w-[180px]">
+                        @if (estModifiable) {
+                          <app-select [options]="decisionOptions" [value]="ligne.decisionChoisie" placeholder="Choisir..." (valueChange)="ligne.decisionChoisie = $any($event)" />
+                        } @else {
+                          <span class="text-theme-sm text-gray-500 dark:text-gray-400">{{ ligne.decision.decision ? decisionLabels[ligne.decision.decision] : '—' }}</span>
+                        }
+                      </td>
+                    }
+                    <td class="px-5 py-4 text-start min-w-[170px]">
+                      @if (estModifiable) {
+                        <app-select [options]="mentionOptions" [value]="ligne.mentionChoisie" placeholder="Aucune" (valueChange)="ligne.mentionChoisie = $any($event)" />
+                      } @else {
+                        <span class="text-theme-sm text-gray-500 dark:text-gray-400">{{ ligne.decision.mention ? mentionLabels[ligne.decision.mention] : '—' }}</span>
+                      }
+                    </td>
+                    <td class="px-5 py-4 text-start w-32">
+                      @if (estModifiable) {
+                        <app-input-field type="number" [value]="ligne.moyenneAjustee ?? ''" (valueChange)="setMoyenneAjustee(ligne, $any($event))" />
+                      } @else {
+                        <span class="text-theme-sm text-gray-500 dark:text-gray-400">{{ ligne.decision.moyenneAjustee ?? '—' }}</span>
+                      }
+                    </td>
+                    <td class="px-5 py-4 text-start min-w-[220px]">
+                      @if (estModifiable) {
+                        @if (ligne.moyenneAjustee != null) {
+                          <app-input-field [value]="ligne.motifAjustement" placeholder="Motif de l'ajustement (obligatoire)" (valueChange)="ligne.motifAjustement = $any($event)" />
+                        } @else {
+                          <app-input-field [value]="ligne.observation" placeholder="Observation..." (valueChange)="ligne.observation = $any($event)" />
+                        }
+                      } @else {
+                        <span class="text-theme-sm text-gray-500 dark:text-gray-400">{{ ligne.decision.motifAjustement || ligne.decision.observation || '—' }}</span>
+                      }
+                    </td>
+                    <td class="px-5 py-4 text-start whitespace-nowrap">
+                      @if (estModifiable) {
+                        <button
+                          type="button"
+                          [disabled]="ligne.saving"
+                          (click)="enregistrer(ligne)"
+                          class="text-sm font-medium text-brand-500 hover:text-brand-600 disabled:opacity-50"
+                        >
+                          Enregistrer
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  </app-component-card>
+}
+
+<app-confirm-dialog
+  [isOpen]="isConfirmClotureOpen"
+  title="Clôturer la délibération"
+  message="La clôture est définitive et irréversible : plus aucune décision ne pourra être modifiée, et les notifications aux parents seront déclenchées. Confirmer ?"
+  [errorMessage]="clotureError"
+  [confirming]="cloturing"
+  (confirmed)="confirmCloture()"
+  (cancelled)="cancelCloture()"
+/>

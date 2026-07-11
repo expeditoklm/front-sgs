@@ -1,0 +1,165 @@
+<app-page-breadcrumb pageTitle="Délibérations" />
+
+<app-component-card title="Délibérations" desc="Sessions de conseil de classe : ouverture, décisions, clôture définitive.">
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-5">
+    <div>
+      <app-label>Classe</app-label>
+      <app-select [options]="classeOptions" [value]="classeFilter" placeholder="Toutes" (valueChange)="classeFilter = $any($event)" />
+    </div>
+    <div>
+      <app-label>Statut</app-label>
+      <app-select [options]="statutOptions" [value]="statutFilter" placeholder="Tous" (valueChange)="statutFilter = $any($event)" />
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+    <div class="flex items-center gap-3">
+      <app-button size="sm" (btnClick)="search()">Filtrer</app-button>
+      <app-button size="sm" variant="outline" (btnClick)="resetFilters()">Réinitialiser</app-button>
+    </div>
+    <app-button size="sm" (btnClick)="openCreate()">Nouvelle délibération</app-button>
+  </div>
+
+  @if (listError) {
+    <p class="text-sm text-error-500">{{ listError }}</p>
+  }
+
+  <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+    <div class="max-w-full overflow-x-auto">
+      <table class="min-w-full">
+        <thead class="border-b border-gray-100 dark:border-white/[0.05]">
+          <tr>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Code</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Classe</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Période</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Date</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Statut</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
+          @if (loading) {
+            <tr>
+              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="6">Chargement...</td>
+            </tr>
+          } @else if (rows.length === 0) {
+            <tr>
+              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="6">Aucune délibération.</td>
+            </tr>
+          } @else {
+            @for (row of rows; track row.uuid) {
+              <tr>
+                <td class="px-5 py-4 text-start text-theme-sm">
+                  <button type="button" (click)="ouvrirDetail(row)" class="font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400">
+                    {{ row.code || '—' }}
+                  </button>
+                </td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ classeLabel(row.classeId) }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ periodeLabel(row.periodeId) }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.date }}</td>
+                <td class="px-5 py-4 text-start">
+                  <app-badge [color]="badgeColor(row.statut)">{{ statutLabels[row.statut] }}</app-badge>
+                </td>
+                <td class="px-5 py-4 text-start whitespace-nowrap">
+                  <div class="flex flex-wrap gap-2">
+                    <button type="button" (click)="ouvrirDetail(row)" class="text-sm font-medium text-brand-500 hover:text-brand-600">
+                      Voir les décisions
+                    </button>
+                    @if (canOuvrir(row)) {
+                      <button
+                        type="button"
+                        [disabled]="ouvrantUuid === row.uuid"
+                        (click)="ouvrir(row)"
+                        class="text-sm font-medium text-success-500 hover:text-success-600 disabled:opacity-50"
+                      >
+                        Ouvrir
+                      </button>
+                    }
+                    @if (canCloturer(row)) {
+                      <button type="button" (click)="askCloturer(row)" class="text-sm font-medium text-error-500 hover:text-error-600">
+                        Clôturer
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  @if (meta && meta.totalPages > 1) {
+    <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mt-4">
+      <span>Page {{ meta.pageNumber }} / {{ meta.totalPages }} — {{ meta.totalElements }} délibération(s)</span>
+      <div class="flex gap-2">
+        <app-button size="sm" variant="outline" [disabled]="!meta.hasPrev" (btnClick)="goToPage(page - 1)">Précédent</app-button>
+        <app-button size="sm" variant="outline" [disabled]="!meta.hasNext" (btnClick)="goToPage(page + 1)">Suivant</app-button>
+      </div>
+    </div>
+  }
+</app-component-card>
+
+<app-modal [isOpen]="isFormOpen" (close)="closeForm()" className="max-w-[600px] p-5 lg:p-8">
+  <h4 class="font-semibold text-gray-800 mb-6 text-title-sm dark:text-white/90">Nouvelle délibération</h4>
+
+  <div class="space-y-5">
+    <div>
+      <app-label>Classe <span class="text-error-500">*</span></app-label>
+      <app-select
+        [options]="classeOptions"
+        [value]="formModel.classeId?.toString() ?? ''"
+        placeholder="Choisir une classe"
+        (valueChange)="updateField('classeId', +$event)"
+      />
+    </div>
+
+    <app-checkbox
+      [checked]="finDAnnee"
+      label="Délibération de fin d'année (décision passage/redoublement, pas de période précise)"
+      (checkedChange)="toggleFinDAnnee($event)"
+    />
+
+    @if (!finDAnnee) {
+      <div>
+        <app-label>Période <span class="text-error-500">*</span></app-label>
+        <app-select
+          [options]="periodeOptions"
+          [value]="formModel.periodeId?.toString() ?? ''"
+          placeholder="Choisir une période"
+          (valueChange)="updateField('periodeId', +$event)"
+        />
+      </div>
+    }
+
+    <div>
+      <app-label>Président du conseil</app-label>
+      <app-select
+        [options]="presidentOptions"
+        [value]="formModel.presidentId?.toString() ?? ''"
+        placeholder="Choisir un président"
+        (valueChange)="updateField('presidentId', +$event)"
+      />
+    </div>
+  </div>
+
+  @if (formError) {
+    <p class="mt-4 text-sm text-error-500">{{ formError }}</p>
+  }
+
+  <div class="flex items-center justify-end w-full gap-3 mt-8">
+    <app-button size="sm" variant="outline" (btnClick)="closeForm()">Annuler</app-button>
+    <app-button size="sm" [disabled]="saving" (btnClick)="save()">Enregistrer</app-button>
+  </div>
+</app-modal>
+
+<app-confirm-dialog
+  [isOpen]="isConfirmClotureOpen"
+  title="Confirmer la clôture"
+  message="La clôture d'une délibération est définitive et irréversible. Voulez-vous vraiment clôturer cette délibération ?"
+  [errorMessage]="clotureError"
+  [confirming]="cloturing"
+  (confirmed)="confirmCloture()"
+  (cancelled)="cancelCloture()"
+/>

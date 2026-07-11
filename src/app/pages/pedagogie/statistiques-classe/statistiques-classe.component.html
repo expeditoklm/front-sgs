@@ -1,0 +1,134 @@
+<app-page-breadcrumb pageTitle="Statistiques de classe" />
+
+<div class="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+  <div>
+    <app-label>Classe <span class="text-error-500">*</span></app-label>
+    <app-select [options]="classeOptions" [value]="classeId" placeholder="Choisir une classe" (valueChange)="classeId = $any($event)" />
+  </div>
+  <div>
+    <app-label>Période <span class="text-error-500">*</span></app-label>
+    <app-select [options]="periodeOptions" [value]="periodeId" placeholder="Choisir une période" (valueChange)="periodeId = $any($event)" />
+  </div>
+  <div class="flex items-end">
+    <app-button size="sm" (btnClick)="afficher()">Afficher les statistiques</app-button>
+  </div>
+</div>
+
+@if (loadError) {
+  <p class="mb-4 text-sm text-error-500">{{ loadError }}</p>
+}
+
+@if (rechercheEffectuee && !loading && stats) {
+  @if (stats.effectif === 0) {
+    <app-component-card title="Aucune donnée" desc="Aucune moyenne n'est encore calculée pour cette classe et cette période (publiez au moins une évaluation).">
+    </app-component-card>
+  } @else {
+    <div class="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/[0.05] dark:bg-white/[0.03]">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Élèves notés</p>
+        <p class="mt-1 text-title-sm font-bold text-gray-800 dark:text-white/90">{{ stats.effectif }}</p>
+      </div>
+      <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/[0.05] dark:bg-white/[0.03]">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Note minimale</p>
+        <p class="mt-1 text-title-sm font-bold text-gray-800 dark:text-white/90">{{ stats.noteMin ?? '—' }}</p>
+      </div>
+      <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/[0.05] dark:bg-white/[0.03]">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Note maximale</p>
+        <p class="mt-1 text-title-sm font-bold text-gray-800 dark:text-white/90">{{ stats.noteMax ?? '—' }}</p>
+      </div>
+      <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/[0.05] dark:bg-white/[0.03]">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Moyenne de classe</p>
+        <p class="mt-1 text-title-sm font-bold text-gray-800 dark:text-white/90">{{ stats.moyenne ?? '—' }}</p>
+      </div>
+      <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/[0.05] dark:bg-white/[0.03]">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Taux de réussite (≥ 10)</p>
+        <p class="mt-1 text-title-sm font-bold text-gray-800 dark:text-white/90">{{ stats.tauxReussite != null ? stats.tauxReussite + ' %' : '—' }}</p>
+      </div>
+    </div>
+
+    <app-component-card title="Moyenne par matière" desc="Moyenne de classe pour chaque matière (sur 20).">
+      @if (matiereRows.length === 0) {
+        <p class="text-sm text-gray-500 dark:text-gray-400">Aucune donnée.</p>
+      } @else {
+        <div class="max-w-full overflow-x-auto custom-scrollbar">
+          <div class="min-w-[600px]">
+            <apx-chart
+              [series]="moyenneSeries"
+              [chart]="moyenneChart"
+              [colors]="moyenneColors"
+              [plotOptions]="moyennePlotOptions"
+              [dataLabels]="moyenneDataLabels"
+              [stroke]="moyenneStroke"
+              [xaxis]="moyenneXaxis"
+              [yaxis]="moyenneYaxis"
+              [grid]="moyenneGrid"
+              [tooltip]="moyenneTooltip"
+            ></apx-chart>
+          </div>
+        </div>
+
+        <div class="mt-5 overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+          <div class="max-w-full overflow-x-auto">
+            <table class="min-w-full">
+              <thead class="border-b border-gray-100 dark:border-white/[0.05]">
+                <tr>
+                  <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Matière</th>
+                  <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Élèves notés</th>
+                  <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Min</th>
+                  <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Max</th>
+                  <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Moyenne</th>
+                  <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Taux de réussite</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                @for (row of matiereRows; track row.matiereId) {
+                  <tr>
+                    <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ matiereLabel(row.matiereId) }}</td>
+                    <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.effectif }}</td>
+                    <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.noteMin ?? '—' }}</td>
+                    <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.noteMax ?? '—' }}</td>
+                    <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.moyenne ?? '—' }}</td>
+                    <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.tauxReussite != null ? row.tauxReussite + ' %' : '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    </app-component-card>
+
+    <div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
+      <app-component-card title="Taux de réussite par matière" desc="Pourcentage d'élèves à 10/20 ou plus, par matière.">
+        @if (matiereRows.length === 0) {
+          <p class="text-sm text-gray-500 dark:text-gray-400">Aucune donnée.</p>
+        } @else {
+          <apx-chart
+            [series]="tauxSeries"
+            [chart]="tauxChart"
+            [colors]="tauxColors"
+            [plotOptions]="tauxPlotOptions"
+            [dataLabels]="tauxDataLabels"
+            [xaxis]="tauxXaxis"
+            [tooltip]="tauxTooltip"
+          ></apx-chart>
+        }
+      </app-component-card>
+
+      <app-component-card title="Réussite de la classe" desc="Répartition des élèves selon la moyenne générale (seuil 10/20).">
+        @if (reussiteSeries.length === 0) {
+          <p class="text-sm text-gray-500 dark:text-gray-400">Aucune donnée.</p>
+        } @else {
+          <apx-chart
+            [series]="reussiteSeries"
+            [chart]="reussiteChart"
+            [labels]="reussiteLabels"
+            [colors]="reussiteColors"
+            [legend]="reussiteLegend"
+            [responsive]="reussiteResponsive"
+          ></apx-chart>
+        }
+      </app-component-card>
+    </div>
+  }
+}

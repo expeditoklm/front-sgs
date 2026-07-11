@@ -65,7 +65,8 @@ export const REFERENTIEL_CRUD_ENTITIES: EntityDefinition[] = [
         key: 'typeEtablissement', label: "Type d'établissement", type: 'select', required: true,
         staticOptions: [{ value: 'PUBLIC', label: 'Public' }, { value: 'PRIVE', label: 'Privé' }]
       },
-      { key: 'effectifCible', label: 'Effectif cible', type: 'number' }
+      { key: 'effectifCible', label: 'Effectif cible', type: 'number' },
+      { key: 'logoUrl', label: 'URL du logo (en-tête des documents PDF)', type: 'text' }
     ]
   },
   {
@@ -142,6 +143,31 @@ export const REFERENTIEL_CRUD_ENTITIES: EntityDefinition[] = [
       { key: 'code', label: 'Code', type: 'text', required: true, readOnlyOnEdit: true },
       { key: 'libelle', label: 'Libellé', type: 'text', required: true },
       { key: 'coefficient', label: 'Coefficient', type: 'number', required: true }
+    ]
+  },
+  {
+    key: 'periodes',
+    label: 'Périodes',
+    path: 'periodes',
+    roles: ['SADM', 'ADM'],
+    columns: [
+      { key: 'code', label: 'Code' },
+      { key: 'libelle', label: 'Libellé' },
+      { key: 'dateDebut', label: 'Début' },
+      { key: 'dateFin', label: 'Fin' },
+      { key: 'ordre', label: 'Ordre' },
+      { key: 'anneeScolaireCode', label: 'Année scolaire' }
+    ],
+    fields: [
+      { key: 'code', label: 'Code', type: 'text', required: true, readOnlyOnEdit: true },
+      { key: 'libelle', label: 'Libellé', type: 'text', required: true },
+      { key: 'dateDebut', label: 'Date de début', type: 'date', required: true },
+      { key: 'dateFin', label: 'Date de fin', type: 'date', required: true },
+      { key: 'ordre', label: 'Ordre', type: 'number', required: true },
+      {
+        key: 'anneeScolaireId', label: 'Année scolaire', type: 'select', required: true,
+        optionsSource: { path: 'annees-scolaires', valueField: 'id', labelField: 'code' }
+      }
     ]
   },
   {

@@ -1,0 +1,132 @@
+<app-page-breadcrumb pageTitle="Notes et moyennes" />
+
+<app-component-card title="Consultation des notes et moyennes" desc="Par élève (détail matière par matière) ou par classe (palmarès).">
+  <div class="flex gap-2 mb-6 border-b border-gray-200 dark:border-white/[0.05]">
+    <button
+      type="button"
+      (click)="selectTab('eleve')"
+      class="px-4 py-2 text-sm font-medium border-b-2 -mb-px"
+      [class.border-brand-500]="activeTab === 'eleve'"
+      [class.text-brand-500]="activeTab === 'eleve'"
+      [class.border-transparent]="activeTab !== 'eleve'"
+      [class.text-gray-500]="activeTab !== 'eleve'"
+    >
+      Par élève
+    </button>
+    <button
+      type="button"
+      (click)="selectTab('classe')"
+      class="px-4 py-2 text-sm font-medium border-b-2 -mb-px"
+      [class.border-brand-500]="activeTab === 'classe'"
+      [class.text-brand-500]="activeTab === 'classe'"
+      [class.border-transparent]="activeTab !== 'classe'"
+      [class.text-gray-500]="activeTab !== 'classe'"
+    >
+      Par classe
+    </button>
+  </div>
+
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-5">
+    <div>
+      <app-label>Classe <span class="text-error-500">*</span></app-label>
+      <app-select [options]="classeOptions" [value]="classeId" placeholder="Choisir une classe" (valueChange)="onClasseChange($any($event))" />
+    </div>
+    <div>
+      <app-label>Période <span class="text-error-500">*</span></app-label>
+      <app-select [options]="periodeOptions" [value]="periodeId" placeholder="Choisir une période" (valueChange)="periodeId = $any($event)" />
+    </div>
+    @if (activeTab === 'eleve') {
+      <div>
+        <app-label>Élève <span class="text-error-500">*</span></app-label>
+        <app-select [options]="eleveOptions" [value]="inscriptionId" placeholder="Choisir un élève" (valueChange)="inscriptionId = $any($event)" />
+      </div>
+    }
+  </div>
+
+  @if (activeTab === 'eleve') {
+    <app-button size="sm" (btnClick)="rechercherEleve()">Rechercher</app-button>
+
+    @if (eleveError) {
+      <p class="mt-4 text-sm text-error-500">{{ eleveError }}</p>
+    }
+
+    @if (rechercheEleveEffectuee && !loadingEleve && !eleveError) {
+      <div class="mt-6 overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+        <div class="max-w-full overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="border-b border-gray-100 dark:border-white/[0.05]">
+              <tr>
+                <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Matière</th>
+                <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Moyenne / 20</th>
+                <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Rang matière</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
+              @if (moyennesMatiere.length === 0) {
+                <tr>
+                  <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="3">Aucune moyenne calculée pour cette période.</td>
+                </tr>
+              } @else {
+                @for (m of moyennesMatiere; track m.matiereId) {
+                  <tr>
+                    <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ matiereLabel(m.matiereId) }}</td>
+                    <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ m.valeur }}</td>
+                    <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ m.rangMatiere ?? '—' }}</td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="mt-4 flex items-center gap-6 text-sm">
+        <span class="font-semibold text-gray-800 dark:text-white/90">
+          Moyenne générale : {{ moyenneGenerale ? moyenneGenerale.valeur : '—' }}
+        </span>
+        <span class="text-gray-500 dark:text-gray-400">
+          Rang classe : {{ moyenneGenerale?.rangClasse ?? '—' }}
+        </span>
+      </div>
+    }
+  }
+
+  @if (activeTab === 'classe') {
+    <app-button size="sm" (btnClick)="rechercherClasse()">Rechercher</app-button>
+
+    @if (classeError) {
+      <p class="mt-4 text-sm text-error-500">{{ classeError }}</p>
+    }
+
+    @if (rechercheClasseEffectuee && !loadingClasse && !classeError) {
+      <div class="mt-6 overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+        <div class="max-w-full overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="border-b border-gray-100 dark:border-white/[0.05]">
+              <tr>
+                <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Rang</th>
+                <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Élève</th>
+                <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Moyenne générale / 20</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
+              @if (palmares.length === 0) {
+                <tr>
+                  <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="3">Aucune moyenne calculée pour cette classe/période.</td>
+                </tr>
+              } @else {
+                @for (ligne of palmares; track ligne.inscriptionId) {
+                  <tr>
+                    <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ ligne.rangClasse ?? '—' }}</td>
+                    <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ ligne.eleveNomComplet }}</td>
+                    <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ ligne.valeur }}</td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  }
+</app-component-card>

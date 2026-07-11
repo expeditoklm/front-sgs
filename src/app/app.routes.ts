@@ -27,6 +27,12 @@ import { EleveDossierComponent } from './pages/inscriptions/eleve-dossier/eleve-
 import { InscriptionSuiviComponent } from './pages/inscriptions/inscription-suivi/inscription-suivi.component';
 import { PaiementSuiviComponent } from './pages/inscriptions/paiement-suivi/paiement-suivi.component';
 import { StatistiquesDashboardComponent } from './pages/inscriptions/statistiques-dashboard/statistiques-dashboard.component';
+import { EvaluationListComponent } from './pages/pedagogie/evaluation-list/evaluation-list.component';
+import { SaisieNotesComponent } from './pages/pedagogie/saisie-notes/saisie-notes.component';
+import { MoyennesConsultationComponent } from './pages/pedagogie/moyennes-consultation/moyennes-consultation.component';
+import { DeliberationListComponent } from './pages/pedagogie/deliberation-list/deliberation-list.component';
+import { DeliberationDetailComponent } from './pages/pedagogie/deliberation-detail/deliberation-detail.component';
+import { StatistiquesClasseComponent } from './pages/pedagogie/statistiques-classe/statistiques-classe.component';
 import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
 import { roleGuard } from './core/guards/role.guard';
@@ -170,6 +176,55 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['SEC', 'SADM', 'ADM'] },
         title: 'Statistiques d\'inscription | SGS'
+      },
+      // Module Pédagogie — Notes & Moyennes : ouvert à ENS (enseignant) en plus de SADM/ADM,
+      // cf. @PreAuthorize côté service-pedagogie (EvaluationController/NoteController class-level,
+      // hasAnyAuthority('ENS','SADM','ADM')).
+      {
+        path: 'pedagogie/evaluations',
+        component: EvaluationListComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['ENS', 'SADM', 'ADM'] },
+        title: 'Évaluations | SGS'
+      },
+      {
+        path: 'pedagogie/evaluations/:uuid/notes',
+        component: SaisieNotesComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['ENS', 'SADM', 'ADM'] },
+        title: 'Saisie des notes | SGS'
+      },
+      // Consultation en lecture seule - ouverte aussi à PAR/ELV, cf. MoyenneController
+      // (@PreAuthorize ENS/SEC/SADM/ADM/PAR/ELV) ; la restriction "un parent ne voit que ses
+      // enfants" reste une lacune backend documentée (MODULE_PEDAGOGIE.md section 8).
+      {
+        path: 'pedagogie/moyennes',
+        component: MoyennesConsultationComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['ENS', 'SEC', 'SADM', 'ADM', 'PAR', 'ELV'] },
+        title: 'Notes et moyennes | SGS'
+      },
+      {
+        path: 'pedagogie/statistiques',
+        component: StatistiquesClasseComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['ENS', 'SEC', 'SADM', 'ADM'] },
+        title: 'Statistiques de classe | SGS'
+      },
+      // Délibérations : SADM/ADM uniquement, cf. DeliberationController class-level @PreAuthorize.
+      {
+        path: 'pedagogie/deliberations',
+        component: DeliberationListComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['SADM', 'ADM'] },
+        title: 'Délibérations | SGS'
+      },
+      {
+        path: 'pedagogie/deliberations/:uuid',
+        component: DeliberationDetailComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['SADM', 'ADM'] },
+        title: 'Session de délibération | SGS'
       },
       ...referentielRoutes,
     ]

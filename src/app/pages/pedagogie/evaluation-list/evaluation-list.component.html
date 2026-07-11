@@ -1,0 +1,199 @@
+<app-page-breadcrumb pageTitle="Évaluations" />
+
+<app-component-card title="Évaluations" desc="Création et gestion des évaluations (devoirs, compositions, interrogations).">
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-5">
+    <div>
+      <app-label>Classe</app-label>
+      <app-select [options]="classeOptions" [value]="classeFilter" placeholder="Toutes" (valueChange)="classeFilter = $any($event)" />
+    </div>
+    <div>
+      <app-label>Matière</app-label>
+      <app-select [options]="matiereOptions" [value]="matiereFilter" placeholder="Toutes" (valueChange)="matiereFilter = $any($event)" />
+    </div>
+    <div>
+      <app-label>Période</app-label>
+      <app-select [options]="periodeOptions" [value]="periodeFilter" placeholder="Toutes" (valueChange)="periodeFilter = $any($event)" />
+    </div>
+    <div>
+      <app-label>Statut</app-label>
+      <app-select [options]="statutOptions" [value]="statutFilter" placeholder="Tous" (valueChange)="statutFilter = $any($event)" />
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+    <div class="flex items-center gap-3">
+      <app-button size="sm" (btnClick)="search()">Filtrer</app-button>
+      <app-button size="sm" variant="outline" (btnClick)="resetFilters()">Réinitialiser</app-button>
+    </div>
+    <app-button size="sm" (btnClick)="openCreate()">Nouvelle évaluation</app-button>
+  </div>
+
+  @if (listError) {
+    <p class="text-sm text-error-500">{{ listError }}</p>
+  }
+
+  <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+    <div class="max-w-full overflow-x-auto">
+      <table class="min-w-full">
+        <thead class="border-b border-gray-100 dark:border-white/[0.05]">
+          <tr>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Libellé</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Classe</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Matière</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Période</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Type</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Date</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Statut</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
+          @if (loading) {
+            <tr>
+              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="8">Chargement...</td>
+            </tr>
+          } @else if (rows.length === 0) {
+            <tr>
+              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="8">Aucune évaluation.</td>
+            </tr>
+          } @else {
+            @for (row of rows; track row.uuid) {
+              <tr>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.libelle }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ classeLabel(row.classeId) }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ matiereLabel(row.matiereId) }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ periodeLabel(row.periodeId) }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ typeLabels[row.type] }}</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.date }}</td>
+                <td class="px-5 py-4 text-start">
+                  <app-badge [color]="badgeColor(row.statut)">{{ statutLabels[row.statut] }}</app-badge>
+                </td>
+                <td class="px-5 py-4 text-start whitespace-nowrap">
+                  <div class="flex flex-wrap gap-2">
+                    <button type="button" (click)="saisirNotes(row)" class="text-sm font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400">
+                      Saisir les notes
+                    </button>
+                    @if (canEdit(row)) {
+                      <button type="button" (click)="openEdit(row)" class="text-sm font-medium text-gray-600 hover:text-gray-800 dark:text-gray-300">
+                        Modifier
+                      </button>
+                    }
+                    @if (canPublier(row)) {
+                      <button
+                        type="button"
+                        [disabled]="publishingUuid === row.uuid"
+                        (click)="publier(row)"
+                        class="text-sm font-medium text-success-500 hover:text-success-600 disabled:opacity-50"
+                      >
+                        Publier
+                      </button>
+                    }
+                    @if (canEdit(row)) {
+                      <button type="button" (click)="askDelete(row)" class="text-sm font-medium text-error-500 hover:text-error-600">
+                        Supprimer
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  @if (meta && meta.totalPages > 1) {
+    <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mt-4">
+      <span>Page {{ meta.pageNumber }} / {{ meta.totalPages }} — {{ meta.totalElements }} évaluation(s)</span>
+      <div class="flex gap-2">
+        <app-button size="sm" variant="outline" [disabled]="!meta.hasPrev" (btnClick)="goToPage(page - 1)">Précédent</app-button>
+        <app-button size="sm" variant="outline" [disabled]="!meta.hasNext" (btnClick)="goToPage(page + 1)">Suivant</app-button>
+      </div>
+    </div>
+  }
+</app-component-card>
+
+<app-modal [isOpen]="isFormOpen" (close)="closeForm()" className="max-w-[600px] p-5 lg:p-8">
+  <h4 class="font-semibold text-gray-800 mb-6 text-title-sm dark:text-white/90">
+    {{ isEditMode ? "Modifier l'évaluation" : 'Nouvelle évaluation' }}
+  </h4>
+
+  <div class="space-y-5">
+    <div>
+      <app-label>Année scolaire <span class="text-error-500">*</span></app-label>
+      <app-select
+        [options]="anneeScolaireOptions"
+        [value]="formModel.anneeScolaireId?.toString() ?? ''"
+        placeholder="Choisir une année scolaire"
+        (valueChange)="updateField('anneeScolaireId', +$event)"
+      />
+    </div>
+    <div>
+      <app-label>Classe <span class="text-error-500">*</span></app-label>
+      <app-select
+        [options]="classeOptions"
+        [value]="formModel.classeId?.toString() ?? ''"
+        placeholder="Choisir une classe"
+        (valueChange)="updateField('classeId', +$event)"
+      />
+    </div>
+    <div>
+      <app-label>Matière <span class="text-error-500">*</span></app-label>
+      <app-select
+        [options]="matiereOptions"
+        [value]="formModel.matiereId?.toString() ?? ''"
+        placeholder="Choisir une matière"
+        (valueChange)="updateField('matiereId', +$event)"
+      />
+    </div>
+    <div>
+      <app-label>Période <span class="text-error-500">*</span></app-label>
+      <app-select
+        [options]="periodeOptions"
+        [value]="formModel.periodeId?.toString() ?? ''"
+        placeholder="Choisir une période"
+        (valueChange)="updateField('periodeId', +$event)"
+      />
+    </div>
+    <div>
+      <app-label>Type <span class="text-error-500">*</span></app-label>
+      <app-select [options]="typeOptions" [value]="formModel.type ?? ''" (valueChange)="updateField('type', $any($event))" />
+    </div>
+    <div>
+      <app-label>Libellé <span class="text-error-500">*</span></app-label>
+      <app-input-field [value]="formModel.libelle ?? ''" (valueChange)="updateField('libelle', $any($event))" />
+    </div>
+    <div>
+      <app-label>Date <span class="text-error-500">*</span></app-label>
+      <app-input-field type="date" [value]="formModel.date ?? ''" (valueChange)="updateField('date', $any($event))" />
+    </div>
+    <div>
+      <app-label>Coefficient <span class="text-error-500">*</span></app-label>
+      <app-input-field type="number" [value]="formModel.coefficient ?? 1" (valueChange)="updateField('coefficient', $any($event))" />
+    </div>
+    <div>
+      <app-label>Barème <span class="text-error-500">*</span></app-label>
+      <app-input-field type="number" [value]="formModel.bareme ?? 20" (valueChange)="updateField('bareme', $any($event))" />
+    </div>
+  </div>
+
+  @if (formError) {
+    <p class="mt-4 text-sm text-error-500">{{ formError }}</p>
+  }
+
+  <div class="flex items-center justify-end w-full gap-3 mt-8">
+    <app-button size="sm" variant="outline" (btnClick)="closeForm()">Annuler</app-button>
+    <app-button size="sm" [disabled]="saving" (btnClick)="save()">Enregistrer</app-button>
+  </div>
+</app-modal>
+
+<app-confirm-dialog
+  [isOpen]="isConfirmOpen"
+  title="Confirmer la suppression"
+  [message]="'Voulez-vous vraiment supprimer l\'évaluation ' + (rowPendingDelete?.libelle || '') + ' ? Cette action est irréversible.'"
+  [errorMessage]="deleteError"
+  [confirming]="deleting"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()"
+/>

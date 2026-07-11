@@ -66,6 +66,16 @@ export class AppSidebarComponent {
       ],
     },
     {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.0004 3.5C11.8236 3.5 11.6489 3.53588 11.4865 3.60541L4.42858 6.62486L11.4865 9.6443C11.6489 9.71383 11.8236 9.74971 12.0004 9.74971C12.1772 9.74971 12.3519 9.71383 12.5143 9.6443L19.5722 6.62486L12.5143 3.60541C12.3519 3.53588 12.1772 3.5 12.0004 3.5ZM21.0143 5.53215L12.9945 2.10938C12.6832 1.97688 12.3438 1.9082 12.0004 1.9082C11.657 1.9082 11.3175 1.97688 11.0062 2.10938L2.98649 5.53215C2.42893 5.76965 2.20312 6.19359 2.20312 6.62486C2.20312 7.05612 2.42893 7.48007 2.98649 7.71756L5.09368 8.61503V13.4384C5.09368 14.6968 5.85296 15.7455 6.83814 16.4936C7.83242 17.2486 9.16719 17.7497 10.6337 17.7497H13.3671C14.8336 17.7497 16.1684 17.2486 17.1627 16.4936C18.1478 15.7455 18.9071 14.6968 18.9071 13.4384V8.61503L19.9994 8.15251V13C19.9994 13.4142 20.3352 13.75 20.7494 13.75C21.1636 13.75 21.4994 13.4142 21.4994 13V7.36908C21.7891 7.13116 21.9971 6.79273 21.9971 6.62486C21.9971 6.19359 21.7719 5.76965 21.0143 5.53215ZM6.59368 9.24074L11.0062 11.1403C11.3175 11.2728 11.657 11.3415 12.0004 11.3415C12.3438 11.3415 12.6832 11.2728 12.9945 11.1403L17.4071 9.24074V13.4384C17.4071 14.0242 17.0397 14.6234 16.2559 15.1187C15.4808 15.6086 14.4022 15.9497 13.3671 15.9497H10.6337C9.5986 15.9497 8.51996 15.6086 7.74485 15.1187C6.96104 14.6234 6.59368 14.0242 6.59368 13.4384V9.24074Z" fill="currentColor"></path></svg>`,
+      name: "Pédagogie",
+      subItems: [
+        { name: "Évaluations", path: "/pedagogie/evaluations", pro: false },
+        { name: "Notes et moyennes", path: "/pedagogie/moyennes", pro: false },
+        { name: "Statistiques de classe", path: "/pedagogie/statistiques", pro: false },
+        { name: "Délibérations", path: "/pedagogie/deliberations", pro: false }
+      ],
+    },
+    {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 3.5C7.30558 3.5 3.5 7.30558 3.5 12C3.5 14.1526 4.3002 16.1184 5.61936 17.616C6.17279 15.3096 8.24852 13.5955 10.7246 13.5955H13.2746C15.7509 13.5955 17.8268 15.31 18.38 17.6167C19.6996 16.119 20.5 14.153 20.5 12C20.5 7.30558 16.6944 3.5 12 3.5ZM17.0246 18.8566V18.8455C17.0246 16.7744 15.3457 15.0955 13.2746 15.0955H10.7246C8.65354 15.0955 6.97461 16.7744 6.97461 18.8455V18.856C8.38223 19.8895 10.1198 20.5 12 20.5C13.8798 20.5 15.6171 19.8898 17.0246 18.8566ZM2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12ZM11.9991 7.25C10.8847 7.25 9.98126 8.15342 9.98126 9.26784C9.98126 10.3823 10.8847 11.2857 11.9991 11.2857C13.1135 11.2857 14.0169 10.3823 14.0169 9.26784C14.0169 8.15342 13.1135 7.25 11.9991 7.25ZM8.48126 9.26784C8.48126 7.32499 10.0563 5.75 11.9991 5.75C13.9419 5.75 15.5169 7.32499 15.5169 9.26784C15.5169 11.2107 13.9419 12.7857 11.9991 12.7857C10.0563 12.7857 8.48126 11.2107 8.48126 9.26784Z" fill="currentColor"></path></svg>`,
       name: "User Profile",
       path: "/profile",
@@ -174,6 +184,18 @@ export class AppSidebarComponent {
     }
     if (item.name === 'Inscription des Élèves') {
       return this.authService.hasAnyRole(['SEC', 'SADM', 'ADM']) ? item : null;
+    }
+    if (item.name === 'Pédagogie') {
+      // Filtrage par sous-entrée (comme Référentiels) : les rôles diffèrent par page - mêmes
+      // listes que les data.roles des routes correspondantes dans app.routes.ts.
+      const rolesParPage: Record<string, string[]> = {
+        '/pedagogie/evaluations': ['ENS', 'SADM', 'ADM'],
+        '/pedagogie/moyennes': ['ENS', 'SEC', 'SADM', 'ADM', 'PAR', 'ELV'],
+        '/pedagogie/statistiques': ['ENS', 'SEC', 'SADM', 'ADM'],
+        '/pedagogie/deliberations': ['SADM', 'ADM']
+      };
+      const visibleSubItems = (item.subItems ?? []).filter((sub) => this.authService.hasAnyRole(rolesParPage[sub.path] ?? []));
+      return visibleSubItems.length > 0 ? { ...item, subItems: visibleSubItems } : null;
     }
     return item;
   }
