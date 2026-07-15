@@ -786,6 +786,15 @@ span.flatpickr-weekday,
   border: none;
   color: black;
 }
+
+/* En developpement, le rechargement a chaud de Vite peut laisser une ancienne
+   racine FullCalendar dans le meme host. Les deux instances se superposent alors
+   et doublent les titres, boutons, jours et heures. Toujours conserver visuellement
+   la racine la plus recente. */
+.custom-calendar full-calendar > .fc:not(:last-child) {
+  display: none !important;
+}
+
 .fc.fc-media-screen {
   @apply min-h-screen;
 }

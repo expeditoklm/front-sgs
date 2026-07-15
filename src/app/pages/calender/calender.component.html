@@ -1,117 +1,48 @@
-<div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-  <div class="custom-calendar">
-    <full-calendar #calendar [options]="calendarOptions"></full-calendar>
+<div class="space-y-6">
+ <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+  <div><p class="text-sm font-medium text-brand-500">Organisation scolaire</p><h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Emploi du temps intelligent</h1><p class="text-sm text-gray-500">Planification, remplacements, disponibilités et suivi des absences.</p></div>
+  <div class="flex flex-wrap gap-2"><span class="rounded-lg bg-gray-100 px-3 py-2 text-sm">{{publication}}</span><button (click)="exporter()" class="rounded-lg border px-4 py-2 text-sm">Exporter PDF</button><button (click)="publier()" class="rounded-lg border border-brand-500 px-4 py-2 text-sm font-medium text-brand-600">Publier</button><button (click)="ouvrir()" class="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white">+ Planifier un cours</button></div>
+ </div>
+ @if(erreur){<div class="rounded-xl border border-error-200 bg-error-50 p-3 text-sm text-error-700">{{erreur}}</div>}
+ @if(succes){<div class="rounded-xl border border-success-200 bg-success-50 p-3 text-sm text-success-700">{{succes}}</div>}
+ <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+  <div class="rounded-xl border bg-white p-4"><p class="text-xs text-gray-500">Cours visibles</p><p class="text-2xl font-semibold">{{cours.length}}</p></div>
+  <div class="rounded-xl border bg-white p-4"><p class="text-xs text-gray-500">Volume hebdomadaire</p><p class="text-2xl font-semibold">{{volume | number:'1.0-1'}} h</p></div>
+  <div class="rounded-xl border bg-white p-4"><p class="text-xs text-gray-500">Cours publiés</p><p class="text-2xl font-semibold">{{publies}}</p></div>
+  <div class="rounded-xl border bg-white p-4"><p class="text-xs text-gray-500">Solutions proposées</p><p class="text-2xl font-semibold" [class.text-success-600]="!conflits" [class.text-warning-600]="conflits">{{conflits}}</p></div>
+ </div>
+ <div class="grid gap-3 rounded-xl border bg-white p-4 sm:grid-cols-2 lg:grid-cols-5">
+  <label class="text-xs text-gray-500">Année<select [(ngModel)]="anneeId" (change)="charger()" class="mt-1 h-10 w-full rounded-lg border px-3"><option *ngFor="let x of annees" [ngValue]="x.id">{{x.label}}</option></select></label>
+  <label class="text-xs text-gray-500">Classe<select [(ngModel)]="classeFiltre" (change)="charger()" class="mt-1 h-10 w-full rounded-lg border px-3"><option [ngValue]="0">Toutes</option><option *ngFor="let x of classes" [ngValue]="x.id">{{x.label}}</option></select></label>
+  <label class="text-xs text-gray-500">Enseignant<select [(ngModel)]="enseignantFiltre" (change)="charger()" class="mt-1 h-10 w-full rounded-lg border px-3"><option [ngValue]="0">Tous</option><option *ngFor="let x of enseignants" [ngValue]="x.id">{{x.label}}</option></select></label>
+  <label class="text-xs text-gray-500">Salle<select [(ngModel)]="salleFiltre" (change)="charger()" class="mt-1 h-10 w-full rounded-lg border px-3"><option [ngValue]="0">Toutes</option><option *ngFor="let x of salles" [ngValue]="x.id">{{x.label}}</option></select></label>
+  <div class="flex items-end"><span class="rounded-lg bg-gray-100 px-3 py-2 text-sm">{{chargement?'Synchronisation…':'À jour'}}</span></div>
+ </div>
+ <div class="rounded-2xl border bg-white">
+  <div class="flex flex-wrap gap-2 border-b p-3 text-sm">
+   <button (click)="changerVue('calendrier')" [class.bg-brand-50]="vue==='calendrier'" class="rounded-lg px-3 py-2">Calendrier</button>
+   <button (click)="changerVue('remplacements')" [class.bg-brand-50]="vue==='remplacements'" class="rounded-lg px-3 py-2">Remplacements ({{remplacements.length}})</button>
+   <button (click)="changerVue('disponibilites')" [class.bg-brand-50]="vue==='disponibilites'" class="rounded-lg px-3 py-2">Disponibilités</button>
+   <button (click)="changerVue('absences')" [class.bg-brand-50]="vue==='absences'" class="rounded-lg px-3 py-2">Absences ({{absences.length}})</button>
+   <button (click)="changerVue('journal')" [class.bg-brand-50]="vue==='journal'" class="rounded-lg px-3 py-2">Journal</button>
   </div>
-
-  <app-modal
-    [isOpen]="isOpen"
-    (close)="closeModal()"
-    className="max-w-[700px] p-6 lg:p-10"
-  >
-    <div class="flex flex-col px-2 overflow-y-auto custom-scrollbar">
-      <div>
-        <h5 class="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl">
-          {{ selectedEvent ? 'Edit Event' : 'Add Event' }}
-        </h5>
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-          Plan your next big moment: schedule or edit an event to stay on track
-        </p>
-      </div>
-      <div class="mt-8">
-        <div>
-          <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-            Event Title
-          </label>
-          <input
-            id="event-title"
-            type="text"
-            [(ngModel)]="eventTitle"
-            class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-          />
-        </div>
-      </div>
-
-      <div class="mt-6">
-        <label class="block mb-4 text-sm font-medium text-gray-700 dark:text-gray-400">
-          Event Color
-        </label>
-        <div class="flex flex-wrap items-center gap-4 sm:gap-5">
-          @for (entry of (calendarsEvents | keyvalue); track $index) {
-            <div
-              class="n-chk"
-            >
-              <div class="form-check form-check-inline" [class]="'form-check-' + entry.value">
-                <label
-                  class="flex items-center text-sm text-gray-700 form-check-label dark:text-gray-400"
-                  [for]="'modal' + entry.key"
-                >
-                  <span class="relative">
-                    <input
-                      class="sr-only form-check-input"
-                      type="radio"
-                      name="event-level"
-                      [value]="entry.key"
-                      [id]="'modal' + entry.key"
-                      [(ngModel)]="eventLevel"
-                    />
-                    <span
-                      class="rounded-full flex items-center justify-center w-5 h-5 mr-2 border border-gray-300 box dark:border-gray-700"
-                    >
-                      <span
-                        class="h-2 w-2 rounded-full bg-white"
-                        [class.block]="eventLevel === entry.key"
-                        [class.hidden]="eventLevel !== entry.key"
-                      ></span>
-                    </span>
-                  </span>
-                  {{ entry.key }}
-                </label>
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-
-      <div class="mt-6">
-        <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-          Enter Start Date
-        </label>
-        <input
-          id="event-start-date"
-          type="date"
-          [(ngModel)]="eventStartDate"
-          class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
-        />
-      </div>
-
-      <div class="mt-6">
-        <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-          Enter End Date
-        </label>
-        <input
-          id="event-end-date"
-          type="date"
-          [(ngModel)]="eventEndDate"
-          class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
-        />
-      </div>
-
-      <div class="flex items-center gap-3 mt-6 modal-footer sm:justify-end">
-        <button
-          (click)="closeModal()"
-          type="button"
-          class="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 sm:w-auto"
-        >
-          Close
-        </button>
-        <button
-          (click)="handleAddOrUpdateEvent()"
-          type="button"
-          class="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
-        >
-          {{ selectedEvent ? 'Update Changes' : 'Add Event' }}
-        </button>
-      </div>
-    </div>
-  </app-modal>
+  @if(vue==='calendrier'){<div class="custom-calendar p-3"><full-calendar #calendar [options]="calendarOptions"></full-calendar></div>}
+  @if(vue==='remplacements'){<div class="overflow-x-auto p-4"><table class="w-full text-left text-sm"><thead class="bg-gray-50 text-xs uppercase text-gray-500"><tr><th class="p-3">Date</th><th class="p-3">Cours</th><th class="p-3">Enseignant initial</th><th class="p-3">Remplaçant</th><th class="p-3">Statut</th><th></th></tr></thead><tbody><tr *ngFor="let r of remplacements" class="border-t"><td class="p-3">{{r.rem_date|date:'dd/MM/yyyy'}}</td><td class="p-3">{{r.edt_code}}</td><td class="p-3">{{r.enseignant_initial}}</td><td class="p-3">{{r.enseignant_remplacant}}</td><td class="p-3">{{r.rem_statut}}</td><td class="p-3"><button *ngIf="r.rem_statut!=='ANNULE'" (click)="supprimerRemplacement(r.uu_id)" class="text-error-600">Annuler</button></td></tr></tbody></table></div>}
+  @if(vue==='disponibilites'){<div class="p-4"><div class="mb-3 text-right"><button (click)="ouvrirDisponibilite()" class="rounded-lg bg-brand-500 px-3 py-2 text-sm text-white">+ Ajouter une plage</button></div><div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50 text-xs uppercase text-gray-500"><tr><th class="p-3">Enseignant</th><th class="p-3">Jour</th><th class="p-3">Plage</th><th class="p-3">État</th><th class="p-3">Motif</th><th></th></tr></thead><tbody><tr *ngFor="let d of disponibilites" class="border-t"><td class="p-3">{{d.enseignant}}</td><td class="p-3">{{d.dis_jour}}</td><td class="p-3">{{d.dis_debut}} – {{d.dis_fin}}</td><td class="p-3">{{d.dis_disponible?'Disponible':'Indisponible'}}</td><td class="p-3">{{d.dis_motif||'—'}}</td><td class="p-3"><button (click)="supprimerDisponibilite(d.uu_id)" class="text-error-600">Supprimer</button></td></tr></tbody></table></div></div>}
+  @if(vue==='absences'){<div class="overflow-x-auto p-4"><table class="w-full text-left text-sm"><thead class="bg-gray-50 text-xs uppercase text-gray-500"><tr><th class="p-3">Date</th><th class="p-3">Cours</th><th class="p-3">Personne</th><th class="p-3">Type</th><th class="p-3">Justification</th><th class="p-3">Notification</th><th></th></tr></thead><tbody><tr *ngFor="let a of absences" class="border-t"><td class="p-3">{{a.abs_date|date:'dd/MM/yyyy'}}</td><td class="p-3">{{a.edt_code}}</td><td class="p-3">{{a.abs_nom_personne}}</td><td class="p-3">{{a.abs_type}}</td><td class="p-3">{{a.abs_justifiee?'Justifiée':'Non justifiée'}}</td><td class="p-3">{{a.abs_notification_envoyee?'Envoyée':'En attente'}}</td><td class="p-3"><button *ngIf="!a.abs_justifiee" (click)="justifier(a)" class="text-brand-600">Justifier</button></td></tr></tbody></table></div>}
+  @if(vue==='journal'){<div class="overflow-x-auto p-4"><table class="w-full text-left text-sm"><thead class="bg-gray-50 text-xs uppercase text-gray-500"><tr><th class="p-3">Date</th><th class="p-3">Utilisateur</th><th class="p-3">Action</th><th class="p-3">Entité</th><th class="p-3">Détails</th></tr></thead><tbody><tr *ngFor="let j of journal" class="border-t"><td class="p-3">{{j['journal_date']|date:'dd/MM/yyyy HH:mm'}}</td><td class="p-3">{{j['journal_utilisateur']}}</td><td class="p-3">{{j['journal_action']}}</td><td class="p-3">{{j['journal_entite']}}</td><td class="p-3">{{j['journal_details']}}</td></tr></tbody></table></div>}
+ </div>
 </div>
+
+<app-modal [isOpen]="isOpen" (close)="isOpen=false" className="max-w-[760px] p-6 lg:p-8"><div class="max-h-[80vh] overflow-y-auto"><h2 class="text-xl font-semibold">{{selection?'Modifier le créneau':'Planifier un cours'}}</h2><p class="mb-5 text-sm text-gray-500">Le moteur vérifie la classe, l’enseignant, la salle et les indisponibilités déclarées.</p><div class="grid gap-4 sm:grid-cols-2">
+ <label class="text-sm">Classe<select [(ngModel)]="form.classeId" class="mt-1 h-11 w-full rounded-lg border px-3"><option [ngValue]="0">Choisir</option><option *ngFor="let x of classes" [ngValue]="x.id">{{x.label}}</option></select></label><label class="text-sm">Matière<select [(ngModel)]="form.matiereId" class="mt-1 h-11 w-full rounded-lg border px-3"><option [ngValue]="0">Choisir</option><option *ngFor="let x of matieres" [ngValue]="x.id">{{x.label}}</option></select></label>
+ <label class="text-sm">Enseignant<select [(ngModel)]="form.enseignantId" class="mt-1 h-11 w-full rounded-lg border px-3"><option [ngValue]="0">Choisir</option><option *ngFor="let x of enseignants" [ngValue]="x.id">{{x.label}}</option></select></label><label class="text-sm">Salle<select [(ngModel)]="form.salleId" class="mt-1 h-11 w-full rounded-lg border px-3"><option [ngValue]="0">Choisir</option><option *ngFor="let x of salles" [ngValue]="x.id">{{x.label}}</option></select></label>
+ <label class="text-sm">Jour<select [(ngModel)]="form.jour" class="mt-1 h-11 w-full rounded-lg border px-3"><option *ngFor="let x of jours" [value]="x.value">{{x.label}}</option></select></label><label class="text-sm">Couleur<input [(ngModel)]="form.couleur" type="color" class="mt-1 h-11 w-full rounded-lg border p-1"></label><label class="text-sm">Début<input [(ngModel)]="form.heureDebut" type="time" class="mt-1 h-11 w-full rounded-lg border px-3"></label><label class="text-sm">Fin<input [(ngModel)]="form.heureFin" type="time" class="mt-1 h-11 w-full rounded-lg border px-3"></label><label class="text-sm sm:col-span-2">Notes<textarea [(ngModel)]="form.notes" rows="2" class="mt-1 w-full rounded-lg border p-3"></textarea></label>
+ </div>@if(suggestions.length){<div class="mt-4 rounded-xl border border-warning-200 bg-warning-50 p-3"><p class="mb-2 text-sm font-medium">Solutions disponibles</p><button *ngFor="let s of suggestions" (click)="appliquer(s)" class="mr-2 mt-2 rounded-lg border bg-white px-3 py-2 text-sm">{{s.libelle}}</button></div>}
+ <div class="mt-6 flex flex-wrap justify-between gap-2"><div class="flex gap-2"><button *ngIf="selection" (click)="annuler()" class="rounded-lg px-3 py-2 text-sm text-error-600">Annuler le cours</button><button *ngIf="selection" (click)="ouvrirRemplacement()" class="rounded-lg border px-3 py-2 text-sm">Remplacement</button><button *ngIf="selection" (click)="ouvrirAbsence()" class="rounded-lg border px-3 py-2 text-sm">Saisir une absence</button></div><div class="flex gap-2"><button (click)="isOpen=false" class="rounded-lg border px-4 py-2 text-sm">Fermer</button><button (click)="enregistrer()" [disabled]="!form.classeId||!form.matiereId||!form.enseignantId||!form.salleId" class="rounded-lg bg-brand-500 px-4 py-2 text-sm text-white disabled:opacity-40">Enregistrer</button></div></div></div></app-modal>
+
+<app-modal [isOpen]="modalRemplacement" (close)="modalRemplacement=false" className="max-w-[560px] p-6"><h2 class="text-xl font-semibold">Planifier un remplacement</h2><div class="mt-5 grid gap-4"><label class="text-sm">Remplaçant<select [(ngModel)]="remplacement.enseignantRemplacantId" class="mt-1 h-11 w-full rounded-lg border px-3"><option [ngValue]="0">Choisir</option><option *ngFor="let x of enseignants" [ngValue]="x.id">{{x.label}}</option></select></label><label class="text-sm">Date<input [(ngModel)]="remplacement.date" type="date" class="mt-1 h-11 w-full rounded-lg border px-3"></label><label class="text-sm">Motif<textarea [(ngModel)]="remplacement.motif" class="mt-1 w-full rounded-lg border p-3"></textarea></label></div><div class="mt-6 flex justify-end gap-2"><button (click)="modalRemplacement=false" class="rounded-lg border px-4 py-2">Fermer</button><button (click)="enregistrerRemplacement()" [disabled]="!remplacement.enseignantRemplacantId||!remplacement.date" class="rounded-lg bg-brand-500 px-4 py-2 text-white disabled:opacity-40">Planifier</button></div></app-modal>
+
+<app-modal [isOpen]="modalDisponibilite" (close)="modalDisponibilite=false" className="max-w-[620px] p-6"><h2 class="text-xl font-semibold">Disponibilité d’un enseignant</h2><div class="mt-5 grid gap-4 sm:grid-cols-2"><label class="text-sm sm:col-span-2">Enseignant<select [(ngModel)]="disponibilite.enseignantId" class="mt-1 h-11 w-full rounded-lg border px-3"><option [ngValue]="0">Choisir</option><option *ngFor="let x of enseignants" [ngValue]="x.id">{{x.label}}</option></select></label><label class="text-sm">Jour<select [(ngModel)]="disponibilite.jour" class="mt-1 h-11 w-full rounded-lg border px-3"><option *ngFor="let x of jours" [value]="x.value">{{x.label}}</option></select></label><label class="text-sm">État<select [(ngModel)]="disponibilite.disponible" class="mt-1 h-11 w-full rounded-lg border px-3"><option [ngValue]="true">Disponible</option><option [ngValue]="false">Indisponible</option></select></label><label class="text-sm">Début<input [(ngModel)]="disponibilite.heureDebut" type="time" class="mt-1 h-11 w-full rounded-lg border px-3"></label><label class="text-sm">Fin<input [(ngModel)]="disponibilite.heureFin" type="time" class="mt-1 h-11 w-full rounded-lg border px-3"></label><label class="text-sm sm:col-span-2">Motif<input [(ngModel)]="disponibilite.motif" class="mt-1 h-11 w-full rounded-lg border px-3"></label></div><div class="mt-6 flex justify-end gap-2"><button (click)="modalDisponibilite=false" class="rounded-lg border px-4 py-2">Fermer</button><button (click)="enregistrerDisponibilite()" [disabled]="!disponibilite.enseignantId" class="rounded-lg bg-brand-500 px-4 py-2 text-white disabled:opacity-40">Enregistrer</button></div></app-modal>
+
+<app-modal [isOpen]="modalAbsence" (close)="modalAbsence=false" className="max-w-[620px] p-6"><h2 class="text-xl font-semibold">Saisir une absence au cours</h2><div class="mt-5 grid gap-4 sm:grid-cols-2"><label class="text-sm">Date<input [(ngModel)]="absence.date" type="date" class="mt-1 h-11 w-full rounded-lg border px-3"></label><label class="text-sm">Type<select [(ngModel)]="absence.type" class="mt-1 h-11 w-full rounded-lg border px-3"><option value="ELEVE">Élève</option><option value="ENSEIGNANT">Enseignant</option></select></label><label class="text-sm sm:col-span-2">Nom de la personne<input [(ngModel)]="absence.nomPersonne" class="mt-1 h-11 w-full rounded-lg border px-3"></label><label class="text-sm sm:col-span-2">Motif<textarea [(ngModel)]="absence.motif" class="mt-1 w-full rounded-lg border p-3"></textarea></label><label class="flex items-center gap-2 text-sm sm:col-span-2"><input [(ngModel)]="absence.justifiee" type="checkbox"> Absence déjà justifiée</label></div><p class="mt-3 text-xs text-gray-500">Une absence non justifiée est automatiquement publiée vers le service de notifications.</p><div class="mt-6 flex justify-end gap-2"><button (click)="modalAbsence=false" class="rounded-lg border px-4 py-2">Fermer</button><button (click)="enregistrerAbsence()" [disabled]="!absence.date||!absence.nomPersonne" class="rounded-lg bg-brand-500 px-4 py-2 text-white disabled:opacity-40">Enregistrer</button></div></app-modal>

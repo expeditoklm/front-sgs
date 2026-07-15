@@ -43,8 +43,18 @@ export class AppSidebarComponent {
     },
     {
       icon: `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M8 2C8.41421 2 8.75 2.33579 8.75 2.75V3.75H15.25V2.75C15.25 2.33579 15.5858 2 16 2C16.4142 2 16.75 2.33579 16.75 2.75V3.75H18.5C19.7426 3.75 20.75 4.75736 20.75 6V9V19C20.75 20.2426 19.7426 21.25 18.5 21.25H5.5C4.25736 21.25 3.25 20.2426 3.25 19V9V6C3.25 4.75736 4.25736 3.75 5.5 3.75H7.25V2.75C7.25 2.33579 7.58579 2 8 2ZM8 5.25H5.5C5.08579 5.25 4.75 5.58579 4.75 6V8.25H19.25V6C19.25 5.58579 18.9142 5.25 18.5 5.25H16H8ZM19.25 9.75H4.75V19C4.75 19.4142 5.08579 19.75 5.5 19.75H18.5C18.9142 19.75 19.25 19.4142 19.25 19V9.75Z" fill="currentColor"></path></svg>`,
-      name: "Calendar",
-      path: "/calendar",
+      name: "Emploi du temps",
+      path: "/emploi-du-temps",
+    },
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+      name: "Personnel",
+      path: "/personnel",
+    },
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><path d="M3 20v-8l9-7 9 7v8h-6v-6H9v6H3Z" stroke="currentColor" stroke-width="1.5"/></svg>`,
+      name: "Portail famille",
+      path: "/portail",
     },
     {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.5 6.75C3.5 5.09315 4.84315 3.75 6.5 3.75H17.5C19.1569 3.75 20.5 5.09315 20.5 6.75V17.25C20.5 18.9069 19.1569 20.25 17.5 20.25H6.5C4.84315 20.25 3.5 18.9069 3.5 17.25V6.75ZM6.5 5.25C5.67157 5.25 5 5.92157 5 6.75V17.25C5 18.0784 5.67157 18.75 6.5 18.75H17.5C18.3284 18.75 19 18.0784 19 17.25V6.75C19 5.92157 18.3284 5.25 17.5 5.25H6.5ZM7.75 8.25C7.75 7.83579 8.08579 7.5 8.5 7.5H15.5C15.9142 7.5 16.25 7.83579 16.25 8.25C16.25 8.66421 15.9142 9 15.5 9H8.5C8.08579 9 7.75 8.66421 7.75 8.25ZM7.75 12C7.75 11.5858 8.08579 11.25 8.5 11.25H15.5C15.9142 11.25 16.25 11.5858 16.25 12C16.25 12.4142 15.9142 12.75 15.5 12.75H8.5C8.08579 12.75 7.75 12.4142 7.75 12ZM7.75 15.75C7.75 15.3358 8.08579 15 8.5 15H12.5C12.9142 15 13.25 15.3358 13.25 15.75C13.25 16.1642 12.9142 16.5 12.5 16.5H8.5C8.08579 16.5 7.75 16.1642 7.75 15.75Z" fill="currentColor"></path></svg>`,
@@ -181,6 +191,15 @@ export class AppSidebarComponent {
     }
     if (item.name === "Journal d'audit") {
       return this.authService.hasAnyRole(['SADM', 'ADM']) ? item : null;
+    }
+    if (item.name === 'Emploi du temps') {
+      return this.authService.hasAnyRole(['SADM','ADM','ENS','SUR','SEC']) ? item : null;
+    }
+    if (item.name === 'Personnel') {
+      return this.authService.hasAnyRole(['SADM','ADM']) ? item : null;
+    }
+    if (item.name === 'Portail famille') {
+      return this.authService.hasAnyRole(['PAR','ELV']) ? item : null;
     }
     if (item.name === 'Inscription des Élèves') {
       return this.authService.hasAnyRole(['SEC', 'SADM', 'ADM']) ? item : null;

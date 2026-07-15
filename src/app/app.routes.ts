@@ -19,6 +19,8 @@ import { SignInComponent } from './pages/auth-pages/sign-in/sign-in.component';
 import { AccountRequestComponent } from './pages/auth-pages/account-request/account-request.component';
 import { ResetPasswordComponent } from './pages/auth-pages/reset-password/reset-password.component';
 import { CalenderComponent } from './pages/calender/calender.component';
+import { PersonnelDashboardComponent } from './pages/personnel/personnel-dashboard.component';
+import { PortailComponent } from './pages/portail/portail.component';
 import { AuditLogComponent } from './pages/audit/audit-log.component';
 import { ReferentielPageComponent } from './pages/referentiels/referentiel-page.component';
 import { REFERENTIEL_CRUD_ENTITIES } from './core/models/referentiel-crud.models';
@@ -62,9 +64,22 @@ export const routes: Routes = [
           'Angular Ecommerce Dashboard | TailAdmin - Angular Admin Dashboard Template',
       },
       {
-        path:'calendar',
+        path:'emploi-du-temps',
         component:CalenderComponent,
-        title:'Angular Calender | TailAdmin - Angular Admin Dashboard Template'
+        canActivate:[roleGuard],
+        data:{roles:['SADM','ADM','ENS','SUR','SEC']},
+        title:'Emploi du temps | SGS'
+      },
+      {
+        path:'personnel',
+        component:PersonnelDashboardComponent,
+        canActivate:[roleGuard],
+        data:{roles:['SADM','ADM']},
+        title:'Personnel | SGS'
+      },
+      {
+        path:'portail',component:PortailComponent,canActivate:[roleGuard],
+        data:{roles:['PAR','ELV']},title:'Portail Parents & Élèves | SGS'
       },
       {
         path:'profile',
@@ -194,14 +209,14 @@ export const routes: Routes = [
         data: { roles: ['ENS', 'SADM', 'ADM'] },
         title: 'Saisie des notes | SGS'
       },
-      // Consultation en lecture seule - ouverte aussi à PAR/ELV, cf. MoyenneController
-      // (@PreAuthorize ENS/SEC/SADM/ADM/PAR/ELV) ; la restriction "un parent ne voit que ses
-      // enfants" reste une lacune backend documentée (MODULE_PEDAGOGIE.md section 8).
+      // Consultation interne des moyennes. Le portail PAR/ELV (phase 4) utilisera des endpoints
+      // dédiés avec contrôle d'appartenance parent/enfant ; ne jamais exposer cette vue de classe
+      // aux comptes portail avant ce contrôle backend.
       {
         path: 'pedagogie/moyennes',
         component: MoyennesConsultationComponent,
         canActivate: [roleGuard],
-        data: { roles: ['ENS', 'SEC', 'SADM', 'ADM', 'PAR', 'ELV'] },
+        data: { roles: ['ENS', 'SEC', 'SADM', 'ADM'] },
         title: 'Notes et moyennes | SGS'
       },
       {

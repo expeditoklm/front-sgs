@@ -198,7 +198,8 @@ export class AuthenticationService {
   }
 
   get isAuthenticated(): boolean {
-    return localStorage.getItem('user') !== null;
+    return localStorage.getItem('user') !== null &&
+      (localStorage.getItem('access_token') !== null || localStorage.getItem('refresh_token') !== null);
   }
 
   get currentProfile(): string | null {

@@ -34,7 +34,15 @@ export function isAuthEndpoint(url: string): boolean {
     'account-request',
     'frontend-errors'
   ];
-  return endpointsToSkip.some((endpoint) => url.includes(endpoint));
+  // Comparer des segments de route complets. Un simple includes('login') classait par erreur
+  // /emplois-du-temps/planning comme endpoint public, car "planning" contient "login" :
+  // l'intercepteur retirait alors implicitement le JWT et le service répondait 403.
+  const pathname = new URL(url, window.location.origin).pathname;
+  if (pathname === '/monitoring/frontend-errors') return true;
+  return endpointsToSkip.some((endpoint) =>
+    pathname === `/authentication/${endpoint}` ||
+    pathname.startsWith(`/authentication/${endpoint}/`)
+  );
 }
 
 export function frontendUrl(path: string): string {

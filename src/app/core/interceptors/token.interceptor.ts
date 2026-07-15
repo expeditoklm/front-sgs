@@ -1,6 +1,6 @@
 import { HttpErrorResponse, HttpHandlerFn, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { BehaviorSubject, Observable, catchError, of, switchMap, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, filter, of, switchMap, take, throwError } from 'rxjs';
 import { AuthenticationService } from '../services/authentication.service';
 import { completeLogout, httpHeaders, isAuthEndpoint } from '../helpers/auth.helpers';
 
@@ -21,7 +21,12 @@ export const tokenInterceptor: HttpInterceptorFn = (request, next) => {
 
   return next(authorizedRequest).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status !== 401) {
+      // Les microservices SGS renvoient actuellement un 403 sans corps lorsqu'aucune
+      // Authentication n'a été créée par GlobalAuthenticationFilter. Fonctionnellement,
+      // c'est le même cas qu'un 401 : tenter une fois le refresh avant d'abandonner.
+      const authenticationMissing = error.status === 401 ||
+        (error.status === 403 && (error.error === null || error.error === '' || error.error === undefined));
+      if (!authenticationMissing) {
         return throwError(() => error);
       }
       if (localStorage.getItem('refresh_token') !== null) {
@@ -59,6 +64,10 @@ function handleRefreshToken(
   }
 
   return refreshTokenSubject.pipe(
+    // BehaviorSubject émet immédiatement sa valeur initiale null. Sans ce filtre, les requêtes
+    // parallèles repartent aussitôt avec le jeton expiré pendant que la première le renouvelle.
+    filter((status): status is string => status !== null),
+    take(1),
     switchMap(() => next(request.clone({ withCredentials: true, setHeaders: httpHeaders() })))
   );
 }
