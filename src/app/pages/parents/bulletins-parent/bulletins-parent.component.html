@@ -1,0 +1,46 @@
+<app-page-breadcrumb pageTitle="Bulletins" />
+
+<app-component-card title="Bulletins archivés" desc="Bulletins scolaires disponibles pour vos enfants.">
+  @if (loading) {
+    <p class="text-sm text-gray-500 dark:text-gray-400">Chargement des bulletins...</p>
+  } @else if (error) {
+    <p class="text-sm text-error-500">{{ error }}</p>
+  } @else {
+    <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+      <div class="max-w-full overflow-x-auto">
+        <table class="min-w-full">
+          <thead class="border-b border-gray-100 dark:border-white/[0.05]">
+            <tr>
+              <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Élève</th>
+              <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Classe</th>
+              <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Période</th>
+              <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Année</th>
+              <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Généré le</th>
+              <th class="px-5 py-3 font-medium text-gray-500 text-end text-theme-xs dark:text-gray-400">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
+            @if (bulletins.length === 0) {
+              <tr>
+                <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="6">Aucun bulletin archivé pour le moment.</td>
+              </tr>
+            } @else {
+              @for (bulletin of bulletins; track bulletin.uuid) {
+                <tr>
+                  <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ bulletin.eleveNomComplet }}</td>
+                  <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ bulletin.classeLibelle }}</td>
+                  <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ bulletin.periodeLibelle }}</td>
+                  <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ bulletin.anneeScolaireCode || '—' }}</td>
+                  <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ bulletin.genereLe | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td class="px-5 py-4 text-end">
+                    <app-button size="sm" variant="outline" (btnClick)="download(bulletin)">Télécharger</app-button>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</app-component-card>

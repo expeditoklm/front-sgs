@@ -35,6 +35,7 @@ import { MoyennesConsultationComponent } from './pages/pedagogie/moyennes-consul
 import { DeliberationListComponent } from './pages/pedagogie/deliberation-list/deliberation-list.component';
 import { DeliberationDetailComponent } from './pages/pedagogie/deliberation-detail/deliberation-detail.component';
 import { StatistiquesClasseComponent } from './pages/pedagogie/statistiques-classe/statistiques-classe.component';
+import { BulletinsParentComponent } from './pages/parents/bulletins-parent/bulletins-parent.component';
 import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
 import { roleGuard } from './core/guards/role.guard';
@@ -240,6 +241,13 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['SADM', 'ADM'] },
         title: 'Session de délibération | SGS'
+      },
+      {
+        path: 'parents/bulletins',
+        component: BulletinsParentComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['PAR'] },
+        title: 'Bulletins | SGS'
       },
       ...referentielRoutes,
     ]
