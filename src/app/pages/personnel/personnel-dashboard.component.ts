@@ -22,6 +22,8 @@ export class PersonnelDashboardComponent implements OnInit {
  rechercher(){this.service.employes(this.recherche).subscribe(v=>this.employes=v);}
  filtrerStatistiques(){this.service.statistiques(this.filtreAnnee,this.filtreCategorie).subscribe({next:v=>this.statistiques=v,error:e=>this.erreur=this.message(e)});}
  largeur(v:any,liste:any[],champ:string){const max=Math.max(...liste.map(x=>Number(x[champ])||0),1);return Math.round((Number(v)||0)*100/max);}
+ dateValue(value:unknown):string|number|Date|null{return typeof value==='string'||typeof value==='number'||value instanceof Date?value:null;}
+ noteWidth(value:unknown):number{return Math.max(0,Math.min(100,(Number(value)||0)*5));}
  ouvrir(e?:Employe){this.selection=e;this.form=e?{nom:e.nom,prenom:e.prenom,email:e.email,telephone:e.telephone??'',categorie:e.categorie,specialite:e.specialite??'',dateEmbauche:e.dateEmbauche}:this.vide();this.modalEmploye=true;}
  enregistrer(){this.service.enregistrer(this.form,this.selection?.uuid).subscribe({next:()=>{this.modalEmploye=false;this.ok(this.selection?'Dossier mis à jour.':'Collaborateur ajouté.');},error:e=>this.erreur=this.message(e)});}
  etat(e:Employe){this.service.changerEtat(e.uuid).subscribe({next:()=>this.charger(),error:x=>this.erreur=this.message(x)});}

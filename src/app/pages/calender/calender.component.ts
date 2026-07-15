@@ -71,5 +71,6 @@ export class CalenderComponent implements OnInit {
  private formVide():CoursPayload{return{anneeScolaireId:0,classeId:0,matiereId:0,enseignantId:0,salleId:0,jour:'MONDAY',heureDebut:'08:00',heureFin:'09:00',couleur:'#465fff',notes:''};}
  private indice(j:JourSemaine){return this.jours.findIndex(x=>x.value===j)+1;}private jour(n:number){return (['MONDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'][n]??'MONDAY') as JourSemaine;}
  private horaire(d:Date){return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}private minutes(s:string){const[a,b]=s.split(':').map(Number);return a*60+b;}
+ dateValue(value:unknown):string|number|Date|null{return typeof value==='string'||typeof value==='number'||value instanceof Date?value:null;}
  private message(e:any){return e?.error?.message??e?.error?.errors?.[0]?.message??'Une erreur est survenue.';}
 }

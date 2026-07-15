@@ -7,5 +7,5 @@
 @if(onglet==='absences'){<div class="p-4"><div *ngFor="let a of absences" class="flex items-center justify-between border-b py-3"><div><b>{{a.matiere}}</b><p class="text-sm text-gray-500">{{a.abs_date|date:'dd/MM/yyyy'}} · {{a.abs_motif||'Aucun motif'}}</p></div><span class="rounded-full px-3 py-1 text-xs" [class.bg-success-50]="a.abs_justifiee" [class.bg-warning-50]="!a.abs_justifiee">{{a.abs_justifiee?'Justifiée':'À justifier'}}</span></div></div>}
 @if(onglet==='paiements'){<div class="p-4"><div *ngFor="let p of paiements" class="flex items-center justify-between border-b py-3"><div><b>{{p.pai_montant|number:'1.0-0'}}</b><p class="text-sm text-gray-500">{{p.pai_date_paiement|date:'dd/MM/yyyy'}} · {{p.pai_mode}}</p></div><span>{{p.pai_statut}}</span></div></div>}
 @if(onglet==='bulletins'){<div class="grid gap-3 p-4 sm:grid-cols-2"><div *ngFor="let b of bulletins" class="flex items-center justify-between rounded-xl border p-4"><div><b>Bulletin période {{b.arb_periode_id}}</b><p class="text-sm text-gray-500">Généré le {{b.arb_genere_le|date:'dd/MM/yyyy'}}</p></div><button (click)="telecharger(b)" class="rounded-lg bg-brand-500 px-3 py-2 text-sm text-white">PDF</button></div></div>}
-</div>}}
+</div>}
 </div>
