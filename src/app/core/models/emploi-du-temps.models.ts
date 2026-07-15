@@ -9,5 +9,6 @@ export interface Remplacement { uu_id:string;cours_uuid:string;edt_code:string;r
 export interface RemplacementPayload { enseignantRemplacantId:number;date:string;motif?:string; }
 export interface AbsenceCours { uu_id:string;cours_uuid:string;edt_code:string;abs_date:string;abs_type:'ELEVE'|'ENSEIGNANT';abs_personne_id?:number;abs_nom_personne:string;abs_justifiee:boolean;abs_motif?:string;abs_notification_envoyee:boolean; }
 export interface AbsencePayload { date:string;type:'ELEVE'|'ENSEIGNANT';personneId?:number;nomPersonne:string;justifiee:boolean;motif?:string; }
+export interface EleveCoursOption { id:number;uuid:string;label:string; }
 export interface SuggestionConflit { type:'SALLE'|'HORAIRE';libelle:string;enseignantId:number;salleId:number;jour:JourSemaine;heureDebut:string;heureFin:string; }
 export interface StatutPublication { publie:boolean;publicationActive?:Record<string,unknown>;historique:Record<string,unknown>[]; }

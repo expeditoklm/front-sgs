@@ -7,7 +7,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { ModalComponent } from '../../shared/components/ui/modal/modal.component';
-import { AbsenceCours, AbsencePayload, CoursPayload, CoursPlanifie, DisponibiliteEnseignant, DisponibilitePayload, JourSemaine, OptionRef, Remplacement, RemplacementPayload, SuggestionConflit } from '../../core/models/emploi-du-temps.models';
+import { AbsenceCours, AbsencePayload, CoursPayload, CoursPlanifie, DisponibiliteEnseignant, DisponibilitePayload, EleveCoursOption, JourSemaine, OptionRef, Remplacement, RemplacementPayload, SuggestionConflit } from '../../core/models/emploi-du-temps.models';
 import { EmploiDuTempsService } from '../../core/services/emploi-du-temps.service';
 
 @Component({selector:'app-calender',imports:[CommonModule,FormsModule,FullCalendarModule,ModalComponent],templateUrl:'./calender.component.html'})
@@ -21,6 +21,7 @@ export class CalenderComponent implements OnInit {
  remplacement:RemplacementPayload={enseignantRemplacantId:0,date:'',motif:''};
  disponibilite:DisponibilitePayload={enseignantId:0,jour:'MONDAY',heureDebut:'08:00',heureFin:'18:00',disponible:false,motif:''};
  absence:AbsencePayload={date:'',type:'ELEVE',nomPersonne:'',justifiee:false,motif:''};
+ elevesCours:EleveCoursOption[]=[];
  readonly jours:{value:JourSemaine;label:string}[]=[['MONDAY','Lundi'],['TUESDAY','Mardi'],['WEDNESDAY','Mercredi'],['THURSDAY','Jeudi'],['FRIDAY','Vendredi'],['SATURDAY','Samedi']].map(x=>({value:x[0] as JourSemaine,label:x[1]}));
  calendarOptions:CalendarOptions={plugins:[dayGridPlugin,timeGridPlugin,interactionPlugin],initialView:'timeGridWeek',locale:'fr',firstDay:1,weekends:true,allDaySlot:false,slotMinTime:'07:00:00',slotMaxTime:'20:00:00',slotDuration:'00:30:00',height:'auto',editable:true,selectable:true,nowIndicator:true,headerToolbar:{left:'prev,next today',center:'title',right:'timeGridWeek,timeGridDay,dayGridMonth'},buttonText:{today:"Aujourd'hui",week:'Semaine',day:'Jour',month:'Mois'},select:i=>this.selectionnerPlage(i),eventClick:i=>this.editer(i),eventDrop:i=>this.deplacer(i),eventResize:i=>this.deplacer(i),events:[]};
  constructor(private edt:EmploiDuTempsService){}
@@ -53,7 +54,9 @@ export class CalenderComponent implements OnInit {
  ouvrirDisponibilite(){this.disponibilite={enseignantId:this.enseignantFiltre||0,jour:'MONDAY',heureDebut:'08:00',heureFin:'18:00',disponible:false,motif:''};this.modalDisponibilite=true;}
  enregistrerDisponibilite(){this.edt.enregistrerDisponibilite(this.disponibilite).subscribe({next:()=>{this.modalDisponibilite=false;this.succes='Disponibilité enregistrée.';this.chargerAnnexes();},error:e=>this.erreur=this.message(e)});}
  supprimerDisponibilite(uuid:string){this.edt.supprimerDisponibilite(uuid).subscribe({next:()=>this.chargerAnnexes(),error:e=>this.erreur=this.message(e)});}
- ouvrirAbsence(){if(!this.selection)return;this.absence={date:'',type:'ELEVE',nomPersonne:'',justifiee:false,motif:''};this.modalAbsence=true;}
+ ouvrirAbsence(){if(!this.selection)return;this.elevesCours=[];this.absence={date:'',type:'ELEVE',nomPersonne:'',justifiee:false,motif:''};this.modalAbsence=true;this.edt.elevesDuCours(this.selection.uuid).subscribe({next:r=>this.elevesCours=r,error:e=>this.erreur=this.message(e)});}
+ changerTypeAbsence(){if(this.absence.type==='ENSEIGNANT'&&this.selection){this.absence.personneId=this.selection.enseignantId;this.absence.nomPersonne=this.selection.enseignant;}else{this.absence.personneId=undefined;this.absence.nomPersonne='';}}
+ choisirEleve(){const e=this.elevesCours.find(x=>x.id===Number(this.absence.personneId));this.absence.nomPersonne=e?.label??'';}
  enregistrerAbsence(){if(!this.selection)return;this.edt.saisirAbsence(this.selection.uuid,this.absence).subscribe({next:()=>{this.modalAbsence=false;this.isOpen=false;this.succes='Absence enregistrée.';this.chargerAnnexes();},error:e=>this.erreur=this.message(e)});}
  justifier(a:AbsenceCours){this.edt.justifierAbsence(a.uu_id,a.abs_motif).subscribe({next:()=>this.chargerAnnexes(),error:e=>this.erreur=this.message(e)});}
  deplacer(i:any){const c=this.cours.find(x=>x.uuid===i.event.id);if(!c||!i.event.start||!i.event.end){i.revert();return;}const p:CoursPayload={anneeScolaireId:c.anneeScolaireId,classeId:c.classeId,matiereId:c.matiereId,enseignantId:c.enseignantId,salleId:c.salleId,jour:this.jour(i.event.start.getDay()),heureDebut:this.horaire(i.event.start),heureFin:this.horaire(i.event.end),couleur:c.couleur,notes:c.notes};this.edt.modifier(c.uuid,p).subscribe({next:()=>this.chargerDepuisServeur(),error:e=>{i.revert();this.erreur=this.message(e);}});}

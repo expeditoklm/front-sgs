@@ -10,7 +10,7 @@ import { PersonnelService } from '../../core/services/personnel.service';
 export class PersonnelDashboardComponent implements OnInit {
  stats:RhDashboard={effectif_actif:0,enseignants:0,contrats_actifs:0,conges_en_attente:0};statistiques:StatistiquesRh={categories:[],chargeEnseignants:[],presence:[],evaluations:[]};options:RhOptions={annees:[],matieres:[],niveaux:[],classes:[]};
  employes:Employe[]=[];conges:Conge[]=[];contrats:Contrat[]=[];affectations:Affectation[]=[];soldes:SoldeConge[]=[];evaluations:EvaluationRh[]=[];
- recherche='';onglet:'equipe'|'contrats'|'conges'|'affectations'|'evaluations'|'statistiques'='equipe';modalEmploye=false;modalConge=false;modalContrat=false;modalAffectation=false;modalSolde=false;modalEvaluation=false;selection?:Employe;erreur='';succes='';
+ recherche='';onglet:'equipe'|'contrats'|'conges'|'affectations'|'evaluations'|'statistiques'='equipe';modalEmploye=false;modalConge=false;modalContrat=false;modalClotureContrat=false;modalAffectation=false;modalSolde=false;modalEvaluation=false;selection?:Employe;selectionContrat?:Contrat;contratACloturer?:Contrat;motifCloture='';erreur='';succes='';
  form:EmployePayload=this.vide();conge={employeUuid:'',type:'ANNUEL',dateDebut:'',dateFin:'',motif:''};contrat={employeUuid:'',type:'CDI',dateDebut:'',dateFin:'',remuneration:null as number|null};
  affectation={employeUuid:'',anneeId:0,matiereId:null as number|null,niveauId:null as number|null,classeId:null as number|null,heuresHebdo:0,dateDebut:'',dateFin:''};
  solde={employeUuid:'',annee:new Date().getFullYear(),type:'ANNUEL',joursAcquis:30,joursReportes:0};
@@ -22,8 +22,10 @@ export class PersonnelDashboardComponent implements OnInit {
  enregistrer(){this.service.enregistrer(this.form,this.selection?.uuid).subscribe({next:()=>{this.modalEmploye=false;this.ok(this.selection?'Dossier mis à jour.':'Collaborateur ajouté.');},error:e=>this.erreur=this.message(e)});}
  etat(e:Employe){this.service.changerEtat(e.uuid).subscribe({next:()=>this.charger(),error:x=>this.erreur=this.message(x)});}
  demander(){this.service.demanderConge(this.conge).subscribe({next:()=>{this.modalConge=false;this.ok('Demande de congé enregistrée.');},error:e=>this.erreur=this.message(e)});}
- creerContrat(){this.service.creerContrat({...this.contrat,dateFin:this.contrat.dateFin||null}).subscribe({next:()=>{this.modalContrat=false;this.ok('Contrat enregistré.');},error:e=>this.erreur=this.message(e)});}
- cloturer(c:Contrat){this.service.cloturerContrat(c.uu_id,'Clôture administrative').subscribe({next:()=>this.ok('Contrat clôturé.'),error:e=>this.erreur=this.message(e)});}
+ ouvrirContrat(c?:Contrat){this.selectionContrat=c;this.contrat=c?{employeUuid:c.employe_uuid,type:c.con_type,dateDebut:c.con_date_debut.slice(0,10),dateFin:c.con_date_fin?.slice(0,10)??'',remuneration:c.con_remuneration??null}:{employeUuid:'',type:'CDI',dateDebut:'',dateFin:'',remuneration:null};this.modalContrat=true;}
+ creerContrat(){const v={...this.contrat,dateFin:this.contrat.dateFin||null};const req=this.selectionContrat?this.service.modifierContrat(this.selectionContrat.uu_id,v):this.service.creerContrat(v);req.subscribe({next:()=>{this.modalContrat=false;this.ok(this.selectionContrat?'Contrat modifié.':'Contrat enregistré.');},error:e=>this.erreur=this.message(e)});}
+ demanderCloture(c:Contrat){this.contratACloturer=c;this.motifCloture='';this.modalClotureContrat=true;}
+ cloturer(){if(!this.contratACloturer||!this.motifCloture.trim())return;this.service.cloturerContrat(this.contratACloturer.uu_id,this.motifCloture.trim()).subscribe({next:()=>{this.modalClotureContrat=false;this.ok('Contrat clôturé.');},error:e=>this.erreur=this.message(e)});}
  decider(c:Conge,s:string){this.service.decider(c.uu_id,s).subscribe({next:()=>this.charger(),error:e=>this.erreur=this.message(e)});}
  creerAffectation(){const v={...this.affectation,dateFin:this.affectation.dateFin||null};this.service.creerAffectation(v).subscribe({next:()=>{this.modalAffectation=false;this.ok('Affectation enregistrée.');},error:e=>this.erreur=this.message(e)});}
  supprimerAffectation(a:Affectation){this.service.supprimerAffectation(a.uu_id).subscribe({next:()=>this.ok('Affectation supprimée.'),error:e=>this.erreur=this.message(e)});}

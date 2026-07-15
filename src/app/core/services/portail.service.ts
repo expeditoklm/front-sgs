@@ -14,4 +14,8 @@ export class PortailService {
  absences(u:string){return this.http.get<ApiResponse<any[]>>(`${this.url}/eleves/${u}/absences`).pipe(map(r=>r.data));}
  bulletins(u:string){return this.http.get<ApiResponse<any[]>>(`${this.url}/eleves/${u}/bulletins`).pipe(map(r=>r.data));}
  telechargerBulletin(e:string,b:string){return this.http.get(`${this.url}/eleves/${e}/bulletins/${b}.pdf`,{responseType:'blob'});}
+ optionsAdministration(){return this.http.get<ApiResponse<any>>(`${this.url}/administration/options`).pipe(map(r=>r.data));}
+ rattachements(){return this.http.get<ApiResponse<any[]>>(`${this.url}/administration/rattachements`).pipe(map(r=>r.data));}
+ rattacher(eleveUuid:string,utilisateurUuid:string){return this.http.post(`${this.url}/administration/rattachements`,{eleveUuid,utilisateurUuid});}
+ changerEtat(uuid:string,actif:boolean){return this.http.patch(`${this.url}/administration/rattachements/${uuid}`,null,{params:{actif}});}
 }
