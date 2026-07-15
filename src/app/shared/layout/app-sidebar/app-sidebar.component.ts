@@ -48,6 +48,16 @@ export class AppSidebarComponent {
       path: "/personnel",
     },
     {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><path d="M5 3h14v18H5V3Zm3 5h8M8 12h4m-4 4h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+      name: "Évaluations RH",
+      path: "/personnel/evaluations-detaillees",
+    },
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.5"/></svg>`,
+      name: "Mes congés",
+      path: "/mon-espace-personnel",
+    },
+    {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><path d="M3 20v-8l9-7 9 7v8h-6v-6H9v6H3Z" stroke="currentColor" stroke-width="1.5"/></svg>`,
       name: "Portail famille",
       path: "/portail",
@@ -199,7 +209,13 @@ export class AppSidebarComponent {
       return this.authService.hasAnyRole(['SADM','ADM','ENS','SUR','SEC']) ? item : null;
     }
     if (item.name === 'Personnel') {
-      return this.authService.hasAnyRole(['SADM','ADM']) ? item : null;
+      return this.authService.hasAnyRole(['SADM','ADM','RH']) ? item : null;
+    }
+    if (item.name === 'Évaluations RH') {
+      return this.authService.hasAnyRole(['SADM','ADM','RH']) ? item : null;
+    }
+    if (item.name === 'Mes congés') {
+      return this.authService.hasAnyRole(['ENS','SUR','SEC','RH','ADM','SADM']) ? item : null;
     }
     if (item.name === 'Portail famille') {
       return this.authService.hasAnyRole(['PAR','ELV']) ? item : null;

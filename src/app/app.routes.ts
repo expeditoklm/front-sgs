@@ -8,6 +8,8 @@ import { AccountRequestComponent } from './pages/auth-pages/account-request/acco
 import { ResetPasswordComponent } from './pages/auth-pages/reset-password/reset-password.component';
 import { CalenderComponent } from './pages/calender/calender.component';
 import { PersonnelDashboardComponent } from './pages/personnel/personnel-dashboard.component';
+import { MonEspacePersonnelComponent } from './pages/personnel/mon-espace-personnel.component';
+import { EvaluationsDetailleesComponent } from './pages/personnel/evaluations-detaillees.component';
 import { PortailComponent } from './pages/portail/portail.component';
 import { PortailAdministrationComponent } from './pages/portail/portail-administration.component';
 import { AuditLogComponent } from './pages/audit/audit-log.component';
@@ -63,13 +65,15 @@ export const routes: Routes = [
         path:'personnel',
         component:PersonnelDashboardComponent,
         canActivate:[roleGuard],
-        data:{roles:['SADM','ADM']},
+        data:{roles:['SADM','ADM','RH']},
         title:'Personnel | SGS'
       },
+      {path:'personnel/evaluations-detaillees',component:EvaluationsDetailleesComponent,canActivate:[roleGuard],data:{roles:['SADM','ADM','RH']},title:'Évaluations détaillées | SGS'},
       {
         path:'portail',component:PortailComponent,canActivate:[roleGuard],
         data:{roles:['PAR','ELV']},title:'Portail Parents & Élèves | SGS'
       },
+      {path:'mon-espace-personnel',component:MonEspacePersonnelComponent,canActivate:[roleGuard],data:{roles:['ENS','SUR','SEC','RH','ADM','SADM']},title:'Mes congés | SGS'},
       {
         path:'administration-portail',component:PortailAdministrationComponent,canActivate:[roleGuard],
         data:{roles:['SADM','ADM']},title:'Administration du portail | SGS'

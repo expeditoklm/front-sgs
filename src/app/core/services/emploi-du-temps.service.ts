@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/audit.models';
-import { AbsenceCours, AbsencePayload, CoursPayload, CoursPlanifie, DisponibiliteEnseignant, DisponibilitePayload, EleveCoursOption, EmploiDuTempsOptions, Remplacement, RemplacementPayload, StatutPublication, SuggestionConflit } from '../models/emploi-du-temps.models';
+import { AbsenceCours, AbsencePayload, CoursPayload, CoursPlanifie, DisponibiliteEnseignant, DisponibilitePayload, EleveCoursOption, EmploiDuTempsOptions, IndisponibiliteSalle, PlageHoraire, Remplacement, RemplacementPayload, StatutPublication, SuggestionConflit } from '../models/emploi-du-temps.models';
 
 @Injectable({providedIn:'root'})
 export class EmploiDuTempsService {
@@ -29,4 +29,9 @@ export class EmploiDuTempsService {
   suggestions(v:CoursPayload){return this.http.post<ApiResponse<SuggestionConflit[]>>(`${this.url}/conflits/suggestions`,v).pipe(map(r=>r.data));}
   journal(){return this.http.get<ApiResponse<Record<string,unknown>[]>>(`${this.url}/journal`).pipe(map(r=>r.data));}
   exporterPdf(anneeScolaireId:number,classeId?:number,enseignantId?:number,salleId?:number){let p=new HttpParams().set('anneeScolaireId',anneeScolaireId);if(classeId)p=p.set('classeId',classeId);if(enseignantId)p=p.set('enseignantId',enseignantId);if(salleId)p=p.set('salleId',salleId);return this.http.get(`${this.url}/export.pdf`,{params:p,responseType:'blob'});}
+  plages(){return this.http.get<ApiResponse<PlageHoraire[]>>(`${this.url}/plages-horaires`).pipe(map(r=>r.data));}
+  enregistrerPlage(v:any,uuid?:string){return uuid?this.http.put(`${this.url}/plages-horaires/${uuid}`,v):this.http.post(`${this.url}/plages-horaires`,v);}
+  indisponibilitesSalles(){return this.http.get<ApiResponse<IndisponibiliteSalle[]>>(`${this.url}/indisponibilites-salles`).pipe(map(r=>r.data));}
+  enregistrerIndisponibiliteSalle(v:any){return this.http.post(`${this.url}/indisponibilites-salles`,v);}
+  supprimerIndisponibiliteSalle(uuid:string){return this.http.delete(`${this.url}/indisponibilites-salles/${uuid}`);}
 }
