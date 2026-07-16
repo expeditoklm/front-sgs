@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { EcommerceComponent } from './pages/dashboard/ecommerce/ecommerce.component';
 import { ProfileComponent } from './pages/profile/profile.component';
+import { AccountSettingsComponent } from './pages/account-settings/account-settings.component';
+import { SupportComponent } from './pages/support/support.component';
 import { NotFoundComponent } from './pages/other-page/not-found/not-found.component';
 import { AppLayoutComponent } from './shared/layout/app-layout/app-layout.component';
 import { SignInComponent } from './pages/auth-pages/sign-in/sign-in.component';
@@ -82,6 +84,16 @@ export const routes: Routes = [
         path:'profile',
         component:ProfileComponent,
         title:'Mon profil | SGS'
+      },
+      {
+        path: 'parametres-compte',
+        component: AccountSettingsComponent,
+        title: 'Paramètres du compte | SGS'
+      },
+      {
+        path: 'assistance',
+        component: SupportComponent,
+        title: 'Assistance | SGS'
       },
       {
         path: 'audit',

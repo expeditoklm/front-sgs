@@ -5,6 +5,8 @@ import { AppSidebarComponent } from '../app-sidebar/app-sidebar.component';
 import { BackdropComponent } from '../backdrop/backdrop.component';
 import { RouterModule } from '@angular/router';
 import { AppHeaderComponent } from '../app-header/app-header.component';
+import { GlobalActionConfirmationComponent } from '../../components/common/global-action-confirmation/global-action-confirmation.component';
+import { SensitiveActionGuardService } from '../../../core/services/sensitive-action-guard.service';
 
 @Component({
   selector: 'app-layout',
@@ -13,7 +15,8 @@ import { AppHeaderComponent } from '../app-header/app-header.component';
     RouterModule,
     AppHeaderComponent,
     AppSidebarComponent,
-    BackdropComponent
+    BackdropComponent,
+    GlobalActionConfirmationComponent
   ],
   templateUrl: './app-layout.component.html',
 })
@@ -23,10 +26,14 @@ export class AppLayoutComponent {
   readonly isHovered$;
   readonly isMobileOpen$;
 
-  constructor(public sidebarService: SidebarService) {
+  constructor(
+    public sidebarService: SidebarService,
+    sensitiveActionGuard: SensitiveActionGuardService
+  ) {
     this.isExpanded$ = this.sidebarService.isExpanded$;
     this.isHovered$ = this.sidebarService.isHovered$;
     this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
+    sensitiveActionGuard.install();
   }
 
   get containerClasses() {

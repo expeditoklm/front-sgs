@@ -1,12 +1,11 @@
 
-import { Component } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 import {
   ApexNonAxisChartSeries,
   ApexChart,
   ApexPlotOptions,
   ApexFill,
   ApexStroke,
-  ApexOptions,
   NgApexchartsModule,
 } from 'ng-apexcharts';
 import { DropdownComponent } from '../../ui/dropdown/dropdown.component';
@@ -21,8 +20,12 @@ import { DropdownItemComponent } from '../../ui/dropdown/dropdown-item/dropdown-
 ],
   templateUrl: './monthly-target.component.html',
 })
-export class MonthlyTargetComponent {
-  public series: ApexNonAxisChartSeries = [75.55];
+export class MonthlyTargetComponent implements OnChanges {
+  @Input() taux = 0;
+  @Input() effectif = 0;
+  @Input() capacite = 0;
+
+  public series: ApexNonAxisChartSeries = [0];
   public chart: ApexChart = {
     fontFamily: 'Outfit, sans-serif',
     type: 'radialBar',
@@ -60,6 +63,14 @@ export class MonthlyTargetComponent {
   };
   public labels: string[] = ['Progress'];
   public colors: string[] = ['#465FFF'];
+
+  ngOnChanges(): void {
+    this.series = [this.taux];
+  }
+
+  get placesDisponibles(): number {
+    return Math.max(0, this.capacite - this.effectif);
+  }
 
   isOpen = false;
 

@@ -8,6 +8,8 @@
     disabledClasses
   "
   [disabled]="disabled"
+  [attr.data-confirm-skip]="confirmationHandled ? 'true' : null"
+  [attr.data-confirm-action]="confirmationAction || null"
   (click)="onClick($event)"
 >
   @if (startIcon) {

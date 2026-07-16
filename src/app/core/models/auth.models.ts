@@ -23,3 +23,25 @@ export interface User {
   profilCode: string;
   profilLibelle: string;
 }
+
+export interface MonProfil {
+  id: number;
+  uuid: string;
+  code: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  username: string;
+  phone: string | null;
+  actif: boolean;
+  profilCode: string;
+  profilLibelle: string;
+  keycloakId: string | null;
+}
+
+export interface MonProfilRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string | null;
+}

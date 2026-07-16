@@ -276,7 +276,11 @@ export class ReferentielPageComponent implements OnInit {
   private buildDefaultModel(): Record<string, any> {
     const model: Record<string, any> = {};
     this.entity.fields.forEach((field) => {
-      model[field.key] = field.type === 'multiselect' ? [] : field.type === 'checkbox' ? false : null;
+      model[field.key] = field.type === 'multiselect'
+        ? []
+        : field.type === 'checkbox'
+          ? this.entity.key === 'parametres-metier' && field.key === 'actif'
+          : null;
     });
     return model;
   }

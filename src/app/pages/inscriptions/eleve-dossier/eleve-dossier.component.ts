@@ -31,10 +31,6 @@ import {
 
 type DossierTab = 'infos' | 'pieces' | 'parents';
 
-function typeInscriptionOptions(): SelectOption[] {
-  return Object.entries(TYPE_INSCRIPTION_LABELS).map(([value, label]) => ({ value, label }));
-}
-
 @Component({
   selector: 'app-eleve-dossier',
   imports: [
@@ -63,7 +59,7 @@ export class EleveDossierComponent implements OnInit {
   savingInfos = false;
   uploadingPhoto = false;
 
-  readonly sexeOptions: SelectOption[] = [
+  sexeOptions: SelectOption[] = [
     { value: 'M', label: 'Masculin' },
     { value: 'F', label: 'Féminin' }
   ];
@@ -79,7 +75,7 @@ export class EleveDossierComponent implements OnInit {
   savingInscription = false;
   classeOptions: SelectOption[] = [];
   anneeScolaireOptions: SelectOption[] = [];
-  readonly typeInscriptionOptions = typeInscriptionOptions();
+  typeInscriptionOptions: SelectOption[] = [];
   generatingCertificat = false;
 
   // --- Paiement ---
@@ -90,7 +86,7 @@ export class EleveDossierComponent implements OnInit {
   paiementModel: Partial<PaiementRequest> = {};
   paiementError = '';
   savingPaiement = false;
-  readonly modePaiementOptions: SelectOption[] = Object.entries(MODE_PAIEMENT_LABELS).map(([value, label]) => ({ value, label }));
+  modePaiementOptions: SelectOption[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -148,6 +144,17 @@ export class EleveDossierComponent implements OnInit {
   }
 
   private loadReferentielOptions(): void {
+    this.referentielCrudService.businessParameterOptions('SEXE').subscribe({
+      next: (items) => (this.sexeOptions = items.map((item) => ({ value: item.code, label: item.libelle })))
+    });
+    this.referentielCrudService.businessParameterOptions('TYPE_INSCRIPTION').subscribe({
+      next: (items) => (this.typeInscriptionOptions = items.map((item) => ({ value: item.code, label: item.libelle }))),
+      error: () => (this.typeInscriptionOptions = Object.entries(TYPE_INSCRIPTION_LABELS).map(([value, label]) => ({ value, label })))
+    });
+    this.referentielCrudService.businessParameterOptions('MODE_PAIEMENT').subscribe({
+      next: (items) => (this.modePaiementOptions = items.map((item) => ({ value: item.code, label: item.libelle }))),
+      error: () => (this.modePaiementOptions = Object.entries(MODE_PAIEMENT_LABELS).map(([value, label]) => ({ value, label })))
+    });
     this.referentielCrudService
       .list('classes', { page: 1, size: 200, sortField: 'id', sortOrder: 'ASC', filter: '' })
       .subscribe({

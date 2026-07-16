@@ -1,8 +1,9 @@
 
-import { Component } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 import { NgApexchartsModule, ApexAxisChartSeries, ApexChart, ApexXAxis, ApexPlotOptions, ApexDataLabels, ApexStroke, ApexLegend, ApexYAxis, ApexGrid, ApexFill, ApexTooltip } from 'ng-apexcharts';
 import { DropdownComponent } from '../../ui/dropdown/dropdown.component';
 import { DropdownItemComponent } from '../../ui/dropdown/dropdown-item/dropdown-item.component';
+import { StatistiqueNiveau } from '../../../../core/models/inscription.models';
 
 @Component({
   selector: 'app-monthly-sales-chart',
@@ -14,11 +15,13 @@ import { DropdownItemComponent } from '../../ui/dropdown/dropdown-item/dropdown-
 ],
   templateUrl: './monthly-sales-chart.component.html'
 })
-export class MonthlySalesChartComponent {
+export class MonthlySalesChartComponent implements OnChanges {
+  @Input() niveaux: StatistiqueNiveau[] = [];
+
   public series: ApexAxisChartSeries = [
     {
-      name: 'Sales',
-      data: [168, 385, 201, 298, 187, 195, 291, 110, 215, 390, 280, 112],
+      name: 'Effectif',
+      data: [],
     },
   ];
   public chart: ApexChart = {
@@ -28,10 +31,7 @@ export class MonthlySalesChartComponent {
     toolbar: { show: false },
   };
   public xaxis: ApexXAxis = {
-    categories: [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ],
+    categories: [],
     axisBorder: { show: false },
     axisTicks: { show: false },
   };
@@ -63,6 +63,14 @@ export class MonthlySalesChartComponent {
     y: { formatter: (val: number) => `${val}` },
   };
   public colors: string[] = ['#465fff'];
+
+  ngOnChanges(): void {
+    this.series = [{ name: 'Effectif', data: this.niveaux.map((item) => item.effectif) }];
+    this.xaxis = {
+      ...this.xaxis,
+      categories: this.niveaux.map((item) => item.niveauCode || item.niveauLibelle)
+    };
+  }
 
   isOpen = false;
 

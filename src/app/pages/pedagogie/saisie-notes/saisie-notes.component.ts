@@ -11,6 +11,7 @@ import { PedagogieService } from '../../../core/services/pedagogie.service';
 import { InscriptionService } from '../../../core/services/inscription.service';
 import { AuthenticationService } from '../../../core/services/authentication.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { ReferentielCrudService } from '../../../core/services/referentiel-crud.service';
 import { Evaluation, NoteLotItem, STATUT_EVALUATION_LABELS, TYPE_EVALUATION_LABELS } from '../../../core/models/pedagogie.models';
 
 // Une ligne de la grille = un élève de la classe (roster récupéré via
@@ -48,19 +49,23 @@ export class SaisieNotesComponent implements OnInit {
   publishing = false;
 
   readonly statutLabels = STATUT_EVALUATION_LABELS;
-  readonly typeLabels = TYPE_EVALUATION_LABELS;
+  typeLabels: Record<string, string> = { ...TYPE_EVALUATION_LABELS };
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private pedagogieService: PedagogieService,
     private inscriptionService: InscriptionService,
+    private referentielCrudService: ReferentielCrudService,
     public authService: AuthenticationService,
     private toastService: ToastService
   ) {
   }
 
   ngOnInit(): void {
+    this.referentielCrudService.businessParameterOptions('TYPE_EVALUATION').subscribe({
+      next: (items) => (this.typeLabels = Object.fromEntries(items.map((item) => [item.code, item.libelle])))
+    });
     const uuid = this.route.snapshot.paramMap.get('uuid');
     if (!uuid) {
       this.router.navigate(['/pedagogie/evaluations']);

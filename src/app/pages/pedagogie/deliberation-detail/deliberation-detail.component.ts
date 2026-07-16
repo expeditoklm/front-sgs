@@ -11,6 +11,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/referentiel/c
 import { PedagogieService } from '../../../core/services/pedagogie.service';
 import { InscriptionService } from '../../../core/services/inscription.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { ReferentielCrudService } from '../../../core/services/referentiel-crud.service';
 import { SelectOption } from '../../../core/models/referentiel-crud.models';
 import {
   DECISION_DELIBERATION_LABELS,
@@ -67,27 +68,46 @@ export class DeliberationDetailComponent implements OnInit {
   opening = false;
 
   readonly statutLabels = STATUT_DELIBERATION_LABELS;
-  readonly decisionLabels = DECISION_DELIBERATION_LABELS;
-  readonly mentionLabels = MENTION_DELIBERATION_LABELS;
-  readonly decisionOptions: SelectOption[] = Object.entries(DECISION_DELIBERATION_LABELS).map(([value, label]) => ({ value, label }));
-  readonly mentionOptions: SelectOption[] = Object.entries(MENTION_DELIBERATION_LABELS).map(([value, label]) => ({ value, label }));
+  decisionLabels: Record<string, string> = { ...DECISION_DELIBERATION_LABELS };
+  mentionLabels: Record<string, string> = { ...MENTION_DELIBERATION_LABELS };
+  decisionOptions: SelectOption[] = [];
+  mentionOptions: SelectOption[] = [];
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private pedagogieService: PedagogieService,
     private inscriptionService: InscriptionService,
+    private referentielCrudService: ReferentielCrudService,
     private toastService: ToastService
   ) {
   }
 
   ngOnInit(): void {
+    this.loadBusinessParameters();
     const uuid = this.route.snapshot.paramMap.get('uuid');
     if (!uuid) {
       this.router.navigate(['/pedagogie/deliberations']);
       return;
     }
     this.load(uuid);
+  }
+
+  private loadBusinessParameters(): void {
+    this.referentielCrudService.businessParameterOptions('DECISION_DELIBERATION').subscribe({
+      next: (items) => {
+        this.decisionOptions = items.map((item) => ({ value: item.code, label: item.libelle }));
+        this.decisionLabels = Object.fromEntries(items.map((item) => [item.code, item.libelle]));
+      },
+      error: () => (this.decisionOptions = Object.entries(DECISION_DELIBERATION_LABELS).map(([value, label]) => ({ value, label })))
+    });
+    this.referentielCrudService.businessParameterOptions('MENTION_DELIBERATION').subscribe({
+      next: (items) => {
+        this.mentionOptions = items.map((item) => ({ value: item.code, label: item.libelle }));
+        this.mentionLabels = Object.fromEntries(items.map((item) => [item.code, item.libelle]));
+      },
+      error: () => (this.mentionOptions = Object.entries(MENTION_DELIBERATION_LABELS).map(([value, label]) => ({ value, label })))
+    });
   }
 
   get estModifiable(): boolean {

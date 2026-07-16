@@ -1,23 +1,34 @@
 <div class="grid grid-cols-12 gap-4 md:gap-6">
   <div class="col-span-12 space-y-6 xl:col-span-7">
-    <div><app-ecommerce-metrics /></div>
+    <div>
+      <app-ecommerce-metrics
+        [eleves]="totalEffectif"
+        [classes]="classes.length"
+        [personnel]="personnel.effectif_actif"
+        [enseignants]="personnel.enseignants"
+      />
+    </div>
 
-    <div><app-monthly-sales-chart /></div>
+    <div><app-monthly-sales-chart [niveaux]="niveaux" /></div>
   </div>
 
   <div class="col-span-12 xl:col-span-5">
-    <app-monthly-target />
+    <app-monthly-target
+      [taux]="tauxRemplissage"
+      [effectif]="totalEffectif"
+      [capacite]="totalCapacite"
+    />
   </div>
 
   <div class="col-span-12">
-    <app-statics-chart />
+    <app-statics-chart [classes]="classes" />
   </div>
 
   <div class="col-span-12 xl:col-span-5">
-    <app-demographic-card />
+    <app-demographic-card [repartition]="sexes" />
   </div>
 
   <div class="col-span-12 xl:col-span-7">
-    <app-recent-orders/>
+    <app-recent-orders [inscriptions]="inscriptionsRecentes" />
   </div>
 </div>

@@ -9,6 +9,7 @@ import { InputFieldComponent } from '../../../shared/components/form/input/input
 import { BadgeComponent } from '../../../shared/components/ui/badge/badge.component';
 import { InscriptionService } from '../../../core/services/inscription.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { ReferentielCrudService } from '../../../core/services/referentiel-crud.service';
 import { downloadBlob } from '../../../core/helpers/download.helpers';
 import { MetaResponse } from '../../../core/models/audit.models';
 import { SelectOption } from '../../../core/models/referentiel-crud.models';
@@ -49,19 +50,29 @@ export class PaiementSuiviComponent implements OnInit {
   downloadingUuid: string | null = null;
 
   readonly statutLabels = STATUT_PAIEMENT_LABELS;
-  readonly modeLabels = MODE_PAIEMENT_LABELS;
+  modeLabels: Record<string, string> = { ...MODE_PAIEMENT_LABELS };
   readonly statutOptions: SelectOption[] = Object.entries(STATUT_PAIEMENT_LABELS).map(([value, label]) => ({ value, label }));
-  readonly modeOptions: SelectOption[] = Object.entries(MODE_PAIEMENT_LABELS).map(([value, label]) => ({ value, label }));
+  modeOptions: SelectOption[] = [];
 
   constructor(
     private router: Router,
     private inscriptionService: InscriptionService,
+    private referentielCrudService: ReferentielCrudService,
     private toastService: ToastService
   ) {
   }
 
   ngOnInit(): void {
     this.load();
+    this.referentielCrudService.businessParameterOptions('MODE_PAIEMENT').subscribe({
+      next: (items) => {
+        this.modeOptions = items.map((item) => ({ value: item.code, label: item.libelle }));
+        this.modeLabels = Object.fromEntries(items.map((item) => [item.code, item.libelle]));
+      },
+      error: () => {
+        this.modeOptions = Object.entries(MODE_PAIEMENT_LABELS).map(([value, label]) => ({ value, label }));
+      }
+    });
   }
 
   private buildFilters(): FilterCriteria[] {

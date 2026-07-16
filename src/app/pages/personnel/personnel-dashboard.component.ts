@@ -24,10 +24,24 @@ export class PersonnelDashboardComponent implements OnInit {
  largeur(v:any,liste:any[],champ:string){const max=Math.max(...liste.map(x=>Number(x[champ])||0),1);return Math.round((Number(v)||0)*100/max);}
  dateValue(value:unknown):string|number|Date|null{return typeof value==='string'||typeof value==='number'||value instanceof Date?value:null;}
  noteWidth(value:unknown):number{return Math.max(0,Math.min(100,(Number(value)||0)*5));}
+ ouvrirConge(){this.erreur='';this.conge={employeUuid:'',type:'ANNUEL',dateDebut:'',dateFin:'',motif:''};this.modalConge=true;}
  ouvrir(e?:Employe){this.selection=e;this.form=e?{nom:e.nom,prenom:e.prenom,email:e.email,telephone:e.telephone??'',categorie:e.categorie,specialite:e.specialite??'',dateEmbauche:e.dateEmbauche}:this.vide();this.modalEmploye=true;}
  enregistrer(){this.service.enregistrer(this.form,this.selection?.uuid).subscribe({next:()=>{this.modalEmploye=false;this.ok(this.selection?'Dossier mis à jour.':'Collaborateur ajouté.');},error:e=>this.erreur=this.message(e)});}
  etat(e:Employe){this.service.changerEtat(e.uuid).subscribe({next:()=>this.charger(),error:x=>this.erreur=this.message(x)});}
- demander(){this.service.demanderConge(this.conge).subscribe({next:()=>{this.modalConge=false;this.ok('Demande de congé enregistrée.');},error:e=>this.erreur=this.message(e)});}
+ demander(){
+  this.erreur='';
+  if(!this.conge.employeUuid){this.erreur='Choisissez un collaborateur.';return;}
+  if(!this.conge.dateDebut||!this.conge.dateFin){this.erreur='Renseignez les dates de début et de fin.';return;}
+  if(this.conge.dateFin<this.conge.dateDebut){this.erreur='La date de fin ne peut pas précéder la date de début.';return;}
+  this.service.demanderConge(this.conge).subscribe({
+   next:()=>{
+    this.modalConge=false;
+    this.conge={employeUuid:'',type:'ANNUEL',dateDebut:'',dateFin:'',motif:''};
+    this.ok('Demande de congé enregistrée.');
+   },
+   error:e=>this.erreur=this.message(e)
+  });
+ }
  ouvrirContrat(c?:Contrat){this.selectionContrat=c;this.contrat=c?{employeUuid:c.employe_uuid,type:c.con_type,dateDebut:c.con_date_debut.slice(0,10),dateFin:c.con_date_fin?.slice(0,10)??'',remuneration:c.con_remuneration??null}:{employeUuid:'',type:'CDI',dateDebut:'',dateFin:'',remuneration:null};this.modalContrat=true;}
  creerContrat(){const v={...this.contrat,dateFin:this.contrat.dateFin||null};const req=this.selectionContrat?this.service.modifierContrat(this.selectionContrat.uu_id,v):this.service.creerContrat(v);req.subscribe({next:()=>{this.modalContrat=false;this.ok(this.selectionContrat?'Contrat modifié.':'Contrat enregistré.');},error:e=>this.erreur=this.message(e)});}
  demanderCloture(c:Contrat){this.contratACloturer=c;this.motifCloture='';this.modalClotureContrat=true;}
@@ -39,5 +53,5 @@ export class PersonnelDashboardComponent implements OnInit {
  evaluer(){this.service.evaluer(this.evaluation).subscribe({next:()=>{this.modalEvaluation=false;this.ok('Évaluation enregistrée.');},error:e=>this.erreur=this.message(e)});}
  private ok(m:string){this.succes=m;this.erreur='';this.charger();}
  private vide(){return{nom:'',prenom:'',email:'',telephone:'',categorie:'ENSEIGNANT',specialite:'',dateEmbauche:new Date().toISOString().slice(0,10)};}
- private message(e:any){return e?.error?.message??'Une erreur est survenue.';}
+ private message(e:any){return e?.error?.message??e?.error?.details??e?.error?.errors?.[0]?.message??'Une erreur est survenue.';}
 }

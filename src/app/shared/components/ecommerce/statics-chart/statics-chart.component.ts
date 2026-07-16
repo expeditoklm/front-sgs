@@ -1,7 +1,5 @@
 
-import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
-import flatpickr from 'flatpickr';
-import { Instance } from 'flatpickr/dist/types/instance';
+import { Component, Input, OnChanges } from '@angular/core';
 import { NgApexchartsModule } from 'ng-apexcharts';
 
 import {
@@ -17,41 +15,24 @@ import {
   ApexXAxis,
   ApexYAxis,
 } from 'ng-apexcharts';
-import { ChartTabComponent } from '../../common/chart-tab/chart-tab.component';
+import { StatistiqueClasse } from '../../../../core/models/inscription.models';
 
 @Component({
   selector: 'app-statics-chart',
-  imports: [NgApexchartsModule, ChartTabComponent],
+  imports: [NgApexchartsModule],
   templateUrl: './statics-chart.component.html',
 })
-export class StatisticsChartComponent implements AfterViewInit {
-  @ViewChild('datepicker') datepicker!: ElementRef<HTMLInputElement>;
+export class StatisticsChartComponent implements OnChanges {
+  @Input() classes: StatistiqueClasse[] = [];
 
-  ngAfterViewInit() {
-    flatpickr(this.datepicker.nativeElement, {
-      mode: 'range',
-      static: true,
-      monthSelectorType: 'static',
-      dateFormat: 'M j',
-      defaultDate: [new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), new Date()],
-      onReady: (selectedDates: Date[], dateStr: string, instance: Instance) => {
-        (instance.element as HTMLInputElement).value = dateStr.replace('to', '-');
-        const customClass = instance.element.getAttribute('data-class');
-        instance.calendarContainer?.classList.add(customClass!);
-      },
-      onChange: (selectedDates: Date[], dateStr: string, instance: Instance) => {
-        (instance.element as HTMLInputElement).value = dateStr.replace('to', '-');
-      },
-    });
-  }
   public series: ApexAxisChartSeries = [
     {
-      name: 'Sales',
-      data: [180, 190, 170, 160, 175, 165, 170, 205, 230, 210, 240, 235],
+      name: 'Effectif',
+      data: [],
     },
     {
-      name: 'Revenue',
-      data: [40, 30, 50, 40, 55, 40, 70, 100, 110, 120, 150, 140],
+      name: 'Capacité',
+      data: [],
     },
   ];
 
@@ -93,25 +74,12 @@ export class StatisticsChartComponent implements AfterViewInit {
 
   public tooltip: ApexTooltip = {
     enabled: true,
-    x: { format: 'dd MMM yyyy' },
+    y: { formatter: (value: number) => `${value} élève(s)` },
   };
 
   public xaxis: ApexXAxis = {
     type: 'category',
-    categories: [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ],
+    categories: [],
     axisBorder: { show: false },
     axisTicks: { show: false },
     tooltip: { enabled: false },
@@ -131,8 +99,19 @@ export class StatisticsChartComponent implements AfterViewInit {
   };
 
   public legend: ApexLegend = {
-    show: false,
+    show: true,
     position: 'top',
     horizontalAlign: 'left',
   };
+
+  ngOnChanges(): void {
+    this.series = [
+      { name: 'Effectif', data: this.classes.map((item) => item.effectif) },
+      { name: 'Capacité', data: this.classes.map((item) => item.capaciteMax ?? 0) }
+    ];
+    this.xaxis = {
+      ...this.xaxis,
+      categories: this.classes.map((item) => item.classeCode || item.classeLibelle)
+    };
+  }
 }

@@ -10,6 +10,7 @@ import { InputFieldComponent } from '../../form/input/input-field.component';
 import { InscriptionService } from '../../../../core/services/inscription.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { AuthenticationService } from '../../../../core/services/authentication.service';
+import { ReferentielCrudService } from '../../../../core/services/referentiel-crud.service';
 import { SelectOption } from '../../../../core/models/referentiel-crud.models';
 import {
   PieceJustificative,
@@ -48,15 +49,30 @@ export class PieceJustificativePanelComponent implements OnChanges {
   rejectMotif = '';
   rejectError = '';
 
-  readonly typeLabels = TYPE_DOCUMENT_LABELS;
+  typeLabels: Record<string, string> = { ...TYPE_DOCUMENT_LABELS };
   readonly statutLabels = STATUT_VALIDATION_PIECE_LABELS;
-  readonly typeOptions: SelectOption[] = Object.entries(TYPE_DOCUMENT_LABELS).map(([value, label]) => ({ value, label }));
+  typeOptions: SelectOption[] = [];
 
   constructor(
     private inscriptionService: InscriptionService,
     private toastService: ToastService,
-    private authenticationService: AuthenticationService
+    private authenticationService: AuthenticationService,
+    private referentielCrudService: ReferentielCrudService
   ) {
+    this.loadTypeOptions();
+  }
+
+  private loadTypeOptions(): void {
+    this.referentielCrudService.businessParameterOptions('TYPE_DOCUMENT_INSCRIPTION').subscribe({
+      next: (items) => {
+        this.typeOptions = items.map((item) => ({ value: item.code, label: item.libelle }));
+        this.typeLabels = Object.fromEntries(items.map((item) => [item.code, item.libelle]));
+        this.selectedType = this.typeOptions[0]?.value ?? '';
+      },
+      error: () => {
+        this.typeOptions = Object.entries(TYPE_DOCUMENT_LABELS).map(([value, label]) => ({ value, label }));
+      }
+    });
   }
 
   // Valider/rejeter une pièce est un acte de contrôle (SADM/ADM) - le secrétariat (SEC) constitue

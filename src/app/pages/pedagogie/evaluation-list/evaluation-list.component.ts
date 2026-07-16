@@ -65,9 +65,9 @@ export class EvaluationListComponent implements OnInit {
   periodeLabels: Record<number, string> = {};
 
   readonly statutLabels = STATUT_EVALUATION_LABELS;
-  readonly typeLabels = TYPE_EVALUATION_LABELS;
+  typeLabels: Record<string, string> = { ...TYPE_EVALUATION_LABELS };
   readonly statutOptions: SelectOption[] = Object.entries(STATUT_EVALUATION_LABELS).map(([value, label]) => ({ value, label }));
-  readonly typeOptions: SelectOption[] = Object.entries(TYPE_EVALUATION_LABELS).map(([value, label]) => ({ value, label }));
+  typeOptions: SelectOption[] = [];
 
   isFormOpen = false;
   isEditMode = false;
@@ -98,6 +98,16 @@ export class EvaluationListComponent implements OnInit {
   }
 
   private loadReferentielOptions(): void {
+    this.referentielCrudService.businessParameterOptions('TYPE_EVALUATION').subscribe({
+      next: (items) => {
+        this.typeOptions = items.map((item) => ({ value: item.code, label: item.libelle }));
+        this.typeLabels = Object.fromEntries(items.map((item) => [item.code, item.libelle]));
+        if (!this.formModel.type) this.formModel.type = this.typeOptions[0]?.value;
+      },
+      error: () => {
+        this.typeOptions = Object.entries(TYPE_EVALUATION_LABELS).map(([value, label]) => ({ value, label }));
+      }
+    });
     this.referentielCrudService
       .list('classes', { page: 1, size: 200, sortField: 'id', sortOrder: 'ASC', filter: '' })
       .subscribe({

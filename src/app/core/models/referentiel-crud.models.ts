@@ -9,6 +9,7 @@ export interface OptionsSource {
   path: string;
   valueField: string;
   labelField: string;
+  businessParameterGroup?: string;
 }
 
 export interface FieldConfig {
@@ -44,6 +45,49 @@ export interface EntityDefinition {
 // entité, pour éviter 8 pages quasi identiques.
 export const REFERENTIEL_CRUD_ENTITIES: EntityDefinition[] = [
   {
+    key: 'parametres-metier',
+    label: 'Paramètres métier',
+    path: 'parametres-metier',
+    roles: ['SADM', 'ADM'],
+    hint: "Toutes les listes de valeurs utilisées par les formulaires sont visibles ici. Le groupe et le code sont stables ; le libellé, l'ordre, l'activation et les métadonnées sont configurables.",
+    columns: [
+      { key: 'groupe', label: 'Groupe' },
+      { key: 'code', label: 'Code' },
+      { key: 'libelle', label: 'Libellé' },
+      { key: 'ordre', label: 'Ordre' },
+      { key: 'actif', label: 'Actif' }
+    ],
+    fields: [
+      { key: 'groupe', label: 'Groupe', type: 'text', required: true, readOnlyOnEdit: true },
+      { key: 'code', label: 'Code', type: 'text', required: true, readOnlyOnEdit: true },
+      { key: 'libelle', label: 'Libellé', type: 'text', required: true },
+      { key: 'description', label: 'Description', type: 'text' },
+      { key: 'ordre', label: "Ordre d'affichage", type: 'number', required: true },
+      { key: 'actif', label: 'Actif', type: 'checkbox' },
+      { key: 'metadonnees', label: 'Métadonnées JSON', type: 'text' }
+    ]
+  },
+  {
+    key: 'constantes',
+    label: 'Paramètres système',
+    path: 'constantes',
+    roles: ['SADM'],
+    hint: "Valeurs opérationnelles utilisées par les calculs et générations. Toute modification est auditée ; utilisez le format indiqué dans la description.",
+    columns: [
+      { key: 'code', label: 'Code' },
+      { key: 'libelle', label: 'Libellé' },
+      { key: 'valeur', label: 'Valeur' },
+      { key: 'source', label: 'Module' }
+    ],
+    fields: [
+      { key: 'code', label: 'Code', type: 'text', required: true, readOnlyOnEdit: true },
+      { key: 'libelle', label: 'Libellé', type: 'text', required: true },
+      { key: 'valeur', label: 'Valeur', type: 'text', required: true },
+      { key: 'source', label: 'Module', type: 'text' },
+      { key: 'description', label: 'Description', type: 'text' }
+    ]
+  },
+  {
     key: 'etablissements',
     label: 'Établissements',
     path: 'etablissements',
@@ -63,7 +107,12 @@ export const REFERENTIEL_CRUD_ENTITIES: EntityDefinition[] = [
       { key: 'email', label: 'Email', type: 'text' },
       {
         key: 'typeEtablissement', label: "Type d'établissement", type: 'select', required: true,
-        staticOptions: [{ value: 'PUBLIC', label: 'Public' }, { value: 'PRIVE', label: 'Privé' }]
+        optionsSource: {
+          path: 'parametres-metier-options',
+          valueField: 'code',
+          labelField: 'libelle',
+          businessParameterGroup: 'TYPE_ETABLISSEMENT'
+        }
       },
       { key: 'effectifCible', label: 'Effectif cible', type: 'number' },
       { key: 'logoUrl', label: 'URL du logo (en-tête des documents PDF)', type: 'text' }

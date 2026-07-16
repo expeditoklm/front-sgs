@@ -12,6 +12,18 @@ export interface ListCriteria {
   filter: string;
 }
 
+export interface BusinessParameterOption {
+  id: number;
+  uuid: string;
+  groupe: string;
+  code: string;
+  libelle: string;
+  description?: string;
+  ordre: number;
+  actif: boolean;
+  metadonnees?: string;
+}
+
 // Générique par construction : les 8 référentiels du Module 01 partagent exactement le même
 // contrat REST (MasterController/AbstractBaseService côté backend), donc un seul service
 // paramétré par path, plutôt que 8 sous-classes quasi identiques.
@@ -53,5 +65,13 @@ export class ReferentielCrudService {
     return this.http
       .delete<ApiResponse<boolean>>(`${this.endpoint}/${path}/${uuid}`)
       .pipe(map((response) => response.data));
+  }
+
+  businessParameterOptions(group: string): Observable<BusinessParameterOption[]> {
+    const params = new HttpParams().set('groupe', group);
+    return this.http.get<ApiResponse<BusinessParameterOption[]>>(
+      `${this.endpoint}/parametres-metier-options`,
+      { params }
+    ).pipe(map((response) => response.data));
   }
 }

@@ -9,6 +9,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { ModalComponent } from '../../shared/components/ui/modal/modal.component';
 import { AbsenceCours, AbsencePayload, CoursPayload, CoursPlanifie, DisponibiliteEnseignant, DisponibilitePayload, EleveCoursOption, IndisponibiliteSalle, JourSemaine, OptionRef, PlageHoraire, Remplacement, RemplacementPayload, SuggestionConflit } from '../../core/models/emploi-du-temps.models';
 import { EmploiDuTempsService } from '../../core/services/emploi-du-temps.service';
+import { downloadBlob } from '../../core/helpers/download.helpers';
 
 @Component({selector:'app-calender',imports:[CommonModule,FormsModule,FullCalendarModule,ModalComponent],templateUrl:'./calender.component.html'})
 export class CalenderComponent implements OnInit {
@@ -35,13 +36,25 @@ export class CalenderComponent implements OnInit {
  charger(){
   this.erreur='';
   this.cours=this.tousLesCours.filter(c=>c.anneeScolaireId===this.anneeId&&(!this.classeFiltre||c.classeId===this.classeFiltre)&&(!this.enseignantFiltre||c.enseignantId===this.enseignantFiltre)&&(!this.salleFiltre||c.salleId===this.salleFiltre));
-  const events=this.cours.map(c=>this.event(c));const api=this.calendar?.getApi();
-  if(api){api.removeAllEvents();api.addEventSource(events);}else this.calendarOptions={...this.calendarOptions,events};
+  const events=this.cours.map(c=>this.event(c));
+  // FullCalendar est détruit par le @if lorsque l'utilisateur ouvre un autre
+  // onglet. Conserver les événements dans calendarOptions permet à la nouvelle
+  // instance de les retrouver immédiatement lors du retour au calendrier.
+  this.calendarOptions={...this.calendarOptions,events};
   this.chargerAnnexes();
  }
  chargerDepuisServeur(){this.chargement=true;this.edt.options().subscribe({next:r=>{this.annees=r.annees;this.classes=r.classes;this.matieres=r.matieres;this.enseignants=r.enseignants;this.salles=r.salles;this.tousLesCours=r.cours??[];this.anneeId=this.anneeId||this.annees[0]?.id||0;this.chargement=false;this.charger();},error:e=>{this.erreur=this.message(e);this.chargement=false;}});}
  chargerAnnexes(){if(!this.anneeId)return;this.edt.statutPublication(this.anneeId).subscribe({next:r=>this.publication=r.publie?`Publié · version ${(r.publicationActive as any)?.pub_version??''}`:'Non publié'});this.edt.remplacements(this.anneeId).subscribe({next:r=>this.remplacements=r});this.edt.disponibilites(this.enseignantFiltre||undefined).subscribe({next:r=>this.disponibilites=r});this.edt.absences().subscribe({next:r=>this.absences=r});this.edt.plages().subscribe({next:r=>this.plages=r});this.edt.indisponibilitesSalles().subscribe({next:r=>this.indisponibilitesSalles=r});if(this.vue==='journal')this.edt.journal().subscribe({next:r=>this.journal=r});}
- changerVue(v:'calendrier'|'remplacements'|'disponibilites'|'salles'|'plages'|'absences'|'journal'){this.vue=v;this.chargerAnnexes();}
+ changerVue(v:'calendrier'|'remplacements'|'disponibilites'|'salles'|'plages'|'absences'|'journal'){
+  this.vue=v;
+  this.chargerAnnexes();
+  if(v==='calendrier'){
+   // Attendre que Angular recrée <full-calendar>, puis recalculer sa largeur.
+   // Sans cela, un calendrier recréé dans un conteneur auparavant masqué peut
+   // conserver une géométrie vide ou incorrecte.
+   setTimeout(()=>this.calendar?.getApi().updateSize());
+  }
+ }
  ouvrir(){this.selection=undefined;this.suggestions=[];this.form={...this.formVide(),anneeScolaireId:this.anneeId};this.isOpen=true;}
  selectionnerPlage(i:DateSelectArg){this.ouvrir();this.form.jour=this.jour(i.start.getDay());this.form.heureDebut=this.horaire(i.start);this.form.heureFin=this.horaire(i.end);}
  editer(i:EventClickArg){const c=this.cours.find(x=>x.uuid===i.event.id);if(c){this.selection=c;this.suggestions=[];this.form={anneeScolaireId:c.anneeScolaireId,classeId:c.classeId,matiereId:c.matiereId,enseignantId:c.enseignantId,salleId:c.salleId,plageId:c.plageId??null,jour:c.jour,heureDebut:c.heureDebut.slice(0,5),heureFin:c.heureFin.slice(0,5),dateException:c.dateException??null,couleur:c.couleur,notes:c.notes};this.isOpen=true;}}
@@ -49,7 +62,17 @@ export class CalenderComponent implements OnInit {
  appliquer(s:SuggestionConflit){this.form={...this.form,salleId:s.salleId,enseignantId:s.enseignantId,jour:s.jour,heureDebut:s.heureDebut.slice(0,5),heureFin:s.heureFin.slice(0,5)};this.suggestions=[];}
  annuler(){if(!this.selection)return;this.edt.annuler(this.selection.uuid).subscribe({next:()=>{this.isOpen=false;this.succes='Créneau annulé.';this.chargerDepuisServeur();},error:e=>this.erreur=this.message(e)});}
  publier(){this.edt.publier(this.anneeId).subscribe({next:r=>{this.succes=`Emploi du temps publié, version ${r['version']}.`;this.chargerDepuisServeur();},error:e=>this.erreur=this.message(e)});}
- exporter(){this.edt.exporterPdf(this.anneeId,this.classeFiltre||undefined,this.enseignantFiltre||undefined,this.salleFiltre||undefined).subscribe({next:b=>{const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='emploi-du-temps.pdf';a.click();URL.revokeObjectURL(u);},error:e=>this.erreur=this.message(e)});}
+ exporter(){
+  this.erreur='';
+  if(!this.anneeId){this.erreur='Sélectionnez une année scolaire avant l’export.';return;}
+  this.edt.exporterPdf(this.anneeId,this.classeFiltre||undefined,this.enseignantFiltre||undefined,this.salleFiltre||undefined).subscribe({
+   next:b=>{
+    if(!b?.size){this.erreur='Le serveur a généré un fichier PDF vide.';return;}
+    downloadBlob(b,'emploi-du-temps.pdf');
+   },
+   error:e=>this.messageBlob(e).then(message=>this.erreur=message)
+  });
+ }
  ouvrirRemplacement(){if(!this.selection)return;this.remplacement={enseignantRemplacantId:0,date:'',motif:''};this.modalRemplacement=true;}
  enregistrerRemplacement(){if(!this.selection)return;this.edt.remplacer(this.selection.uuid,this.remplacement).subscribe({next:()=>{this.modalRemplacement=false;this.isOpen=false;this.succes='Remplacement planifié.';this.chargerAnnexes();},error:e=>this.erreur=this.message(e)});}
  supprimerRemplacement(uuid:string){this.edt.annulerRemplacement(uuid).subscribe({next:()=>this.chargerAnnexes(),error:e=>this.erreur=this.message(e)});}
@@ -72,5 +95,14 @@ export class CalenderComponent implements OnInit {
  private indice(j:JourSemaine){return this.jours.findIndex(x=>x.value===j)+1;}private jour(n:number){return (['MONDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'][n]??'MONDAY') as JourSemaine;}
  private horaire(d:Date){return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}private minutes(s:string){const[a,b]=s.split(':').map(Number);return a*60+b;}
  dateValue(value:unknown):string|number|Date|null{return typeof value==='string'||typeof value==='number'||value instanceof Date?value:null;}
+ private async messageBlob(e:any){
+  if(e?.error instanceof Blob){
+   try{
+    const texte=await e.error.text();
+    if(texte){const corps=JSON.parse(texte);return corps?.message??corps?.details??texte;}
+   }catch{}
+  }
+  return this.message(e);
+ }
  private message(e:any){return e?.error?.message??e?.error?.errors?.[0]?.message??'Une erreur est survenue.';}
 }

@@ -19,7 +19,7 @@
           <app-button size="sm" [disabled]="opening" (btnClick)="ouvrir()">Ouvrir la session</app-button>
         }
         @if (estModifiable) {
-          <app-button size="sm" [disabled]="cloturing" (btnClick)="askCloturer()">Clôturer définitivement</app-button>
+          <app-button size="sm" [confirmationHandled]="true" [disabled]="cloturing" (btnClick)="askCloturer()">Clôturer définitivement</app-button>
         }
       </div>
     </div>

@@ -2,7 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, catchError, map, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ApiResponse, ProfileOption, User, UserSummary } from '../models/auth.models';
+import { ApiResponse, MonProfil, ProfileOption, User, UserSummary } from '../models/auth.models';
 import { completeLogout } from '../helpers/auth.helpers';
 
 interface LoginStepData {
@@ -209,6 +209,22 @@ export class AuthenticationService {
   hasAnyRole(roles: string[]): boolean {
     const profile = this.currentProfile;
     return profile !== null && roles.includes(profile);
+  }
+
+  synchroniserProfil(profile: MonProfil): void {
+    const current = this.user();
+    if (!current) return;
+
+    const updated: User = {
+      ...current,
+      email: profile.email,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      profilCode: profile.profilCode || current.profilCode,
+      profilLibelle: profile.profilLibelle || current.profilLibelle
+    };
+    localStorage.setItem('user', JSON.stringify(updated));
+    this.user.set(updated);
   }
 
   private get userFromStorage(): User | null {

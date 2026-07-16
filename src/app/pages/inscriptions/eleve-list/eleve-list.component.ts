@@ -53,7 +53,7 @@ export class EleveListComponent implements OnInit {
   deleteError = '';
   deleting = false;
 
-  readonly sexeOptions: SelectOption[] = [
+  sexeOptions: SelectOption[] = [
     { value: 'M', label: 'Masculin' },
     { value: 'F', label: 'Féminin' }
   ];
@@ -69,6 +69,9 @@ export class EleveListComponent implements OnInit {
   ngOnInit(): void {
     this.load();
     this.loadEtablissements();
+    this.referentielCrudService.businessParameterOptions('SEXE').subscribe({
+      next: (items) => (this.sexeOptions = items.map((item) => ({ value: item.code, label: item.libelle })))
+    });
   }
 
   load(): void {

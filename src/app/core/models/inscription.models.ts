@@ -29,7 +29,7 @@ export interface EleveRequest {
   etablissementId?: number;
 }
 
-export type TypeInscription = 'PREMIERE_INSCRIPTION' | 'REDOUBLEMENT' | 'TRANSFERT';
+export type TypeInscription = string;
 
 export const TYPE_INSCRIPTION_LABELS: Record<TypeInscription, string> = {
   PREMIERE_INSCRIPTION: 'Première inscription',
@@ -92,7 +92,7 @@ export interface ParentTuteurRequest {
   adresse?: string | null;
 }
 
-export type TypeRelation = 'PERE' | 'MERE' | 'TUTEUR_LEGAL' | 'AUTRE';
+export type TypeRelation = string;
 
 export const TYPE_RELATION_LABELS: Record<TypeRelation, string> = {
   PERE: 'Père',
@@ -118,7 +118,7 @@ export interface EleveParentRequest {
   contactPrincipal: boolean;
 }
 
-export type TypeDocument = 'ACTE_NAISSANCE' | 'CERTIFICAT_SCOLARITE' | 'PHOTO' | 'CNI_PARENT' | 'AUTRE';
+export type TypeDocument = string;
 
 export const TYPE_DOCUMENT_LABELS: Record<TypeDocument, string> = {
   ACTE_NAISSANCE: 'Acte de naissance',
@@ -158,7 +158,7 @@ export interface PieceValidationRequest {
   commentaireRejet?: string | null;
 }
 
-export type ModePaiement = 'ESPECES' | 'MOBILE_MONEY' | 'VIREMENT' | 'CHEQUE';
+export type ModePaiement = string;
 
 export const MODE_PAIEMENT_LABELS: Record<ModePaiement, string> = {
   ESPECES: 'Espèces',

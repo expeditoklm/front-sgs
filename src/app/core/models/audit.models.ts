@@ -59,6 +59,7 @@ export function emptyAuditLogFilters(): AuditLogFilters {
 // Les 9 entités du Module 01 + Constante (paramétrage système) : toutes @Audited côté backend,
 // donc toutes exposées par le même endpoint générique GET /referentiels/{path}/{id}/history.
 export const REFERENTIEL_ENTITIES: ReferentielEntityDescriptor[] = [
+  { key: 'parametres-metier', label: 'Paramètres métier', path: 'parametres-metier' },
   { key: 'etablissements', label: 'Établissements', path: 'etablissements' },
   { key: 'annees-scolaires', label: 'Années scolaires', path: 'annees-scolaires' },
   { key: 'niveaux', label: 'Niveaux', path: 'niveaux' },

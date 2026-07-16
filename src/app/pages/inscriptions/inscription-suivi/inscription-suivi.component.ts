@@ -58,9 +58,9 @@ export class InscriptionSuiviComponent implements OnInit {
   anneeScolaireOptions: SelectOption[] = [];
 
   readonly statutLabels = STATUT_INSCRIPTION_LABELS;
-  readonly typeLabels = TYPE_INSCRIPTION_LABELS;
+  typeLabels: Record<string, string> = { ...TYPE_INSCRIPTION_LABELS };
   readonly statutOptions: SelectOption[] = Object.entries(STATUT_INSCRIPTION_LABELS).map(([value, label]) => ({ value, label }));
-  readonly typeOptions: SelectOption[] = Object.entries(TYPE_INSCRIPTION_LABELS).map(([value, label]) => ({ value, label }));
+  typeOptions: SelectOption[] = [];
 
   isMotifOpen = false;
   motifValue = '';
@@ -83,6 +83,15 @@ export class InscriptionSuiviComponent implements OnInit {
   }
 
   private loadReferentielOptions(): void {
+    this.referentielCrudService.businessParameterOptions('TYPE_INSCRIPTION').subscribe({
+      next: (items) => {
+        this.typeOptions = items.map((item) => ({ value: item.code, label: item.libelle }));
+        this.typeLabels = Object.fromEntries(items.map((item) => [item.code, item.libelle]));
+      },
+      error: () => {
+        this.typeOptions = Object.entries(TYPE_INSCRIPTION_LABELS).map(([value, label]) => ({ value, label }));
+      }
+    });
     this.referentielCrudService
       .list('classes', { page: 1, size: 200, sortField: 'id', sortOrder: 'ASC', filter: '' })
       .subscribe({

@@ -42,6 +42,18 @@ export class EntityFormComponent implements OnChanges {
       .filter((field) => field.optionsSource)
       .forEach((field) => {
         const source = field.optionsSource!;
+        if (source.businessParameterGroup) {
+          this.crudService.businessParameterOptions(source.businessParameterGroup).subscribe({
+            next: (items) => {
+              this.dynamicOptions[field.key] = items.map((item) => ({
+                value: String(item[source.valueField as keyof typeof item]),
+                label: String(item[source.labelField as keyof typeof item])
+              }));
+            },
+            error: () => (this.dynamicOptions[field.key] = [])
+          });
+          return;
+        }
         this.crudService
           .list(source.path, { page: 1, size: 200, sortField: 'id', sortOrder: 'ASC', filter: '' })
           .subscribe({

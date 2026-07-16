@@ -5,12 +5,11 @@
     </div>
     <div class="flex items-end justify-between mt-5">
       <div>
-        <span class="text-sm text-gray-500 dark:text-gray-400">Customers</span>
-        <h4 class="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">3,782</h4>
+        <span class="text-sm text-gray-500 dark:text-gray-400">Élèves inscrits</span>
+        <h4 class="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">{{ eleves }}</h4>
       </div>
       <app-badge color="success">
-        <span [innerHTML]="icons.arrowUpIcon | safeHtml"></span>
-        11.01%
+        {{ classes }} classes
       </app-badge>
     </div>
   </div>
@@ -22,12 +21,11 @@
     </div>
     <div class="flex items-end justify-between mt-5">
       <div>
-        <span class="text-sm text-gray-500 dark:text-gray-400">Orders</span>
-        <h4 class="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">5,359</h4>
+        <span class="text-sm text-gray-500 dark:text-gray-400">Personnel actif</span>
+        <h4 class="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">{{ personnel }}</h4>
       </div>
-      <app-badge color="error">
-        <span [innerHTML]="icons.arrowDownIcon | safeHtml"></span>
-        9.05%
+      <app-badge color="light">
+        {{ enseignants }} enseignants
       </app-badge>
     </div>
   </div>

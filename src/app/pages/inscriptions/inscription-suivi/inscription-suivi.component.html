@@ -78,12 +78,12 @@
                       <button type="button" (click)="applyTransition(row, 'VALIDEE')" class="text-sm font-medium text-success-500 hover:text-success-600">
                         Valider
                       </button>
-                      <button type="button" (click)="applyTransition(row, 'REJETEE')" class="text-sm font-medium text-error-500 hover:text-error-600">
+                      <button type="button" data-confirm-skip="true" (click)="applyTransition(row, 'REJETEE')" class="text-sm font-medium text-error-500 hover:text-error-600">
                         Rejeter
                       </button>
                     }
                     @if (canCancel(row)) {
-                      <button type="button" (click)="applyTransition(row, 'ANNULEE')" class="text-sm font-medium text-error-500 hover:text-error-600">
+                      <button type="button" data-confirm-skip="true" (click)="applyTransition(row, 'ANNULEE')" class="text-sm font-medium text-error-500 hover:text-error-600">
                         Annuler
                       </button>
                     }
@@ -126,6 +126,6 @@
   }
   <div class="flex items-center justify-end w-full gap-3 mt-6">
     <app-button size="sm" variant="outline" (btnClick)="closeMotifModal()">Annuler</app-button>
-    <app-button size="sm" [disabled]="applyingTransition" (btnClick)="confirmMotifTransition()">Confirmer</app-button>
+    <app-button size="sm" [confirmationHandled]="true" [disabled]="applyingTransition" (btnClick)="confirmMotifTransition()">Confirmer</app-button>
   </div>
 </app-modal>

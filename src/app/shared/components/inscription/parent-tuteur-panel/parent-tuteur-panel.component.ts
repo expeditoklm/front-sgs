@@ -9,6 +9,7 @@ import { CheckboxComponent } from '../../form/input/checkbox.component';
 import { ConfirmDialogComponent } from '../../referentiel/confirm-dialog/confirm-dialog.component';
 import { InscriptionService } from '../../../../core/services/inscription.service';
 import { ToastService } from '../../../../core/services/toast.service';
+import { ReferentielCrudService } from '../../../../core/services/referentiel-crud.service';
 import { SelectOption } from '../../../../core/models/referentiel-crud.models';
 import { EleveParent, ParentTuteurRequest, TYPE_RELATION_LABELS, TypeRelation } from '../../../../core/models/inscription.models';
 
@@ -37,8 +38,8 @@ export class ParentTuteurPanelComponent implements OnChanges {
   loading = false;
   loadError = '';
 
-  readonly typeRelationLabels = TYPE_RELATION_LABELS;
-  readonly typeRelationOptions: SelectOption[] = Object.entries(TYPE_RELATION_LABELS).map(([value, label]) => ({ value, label }));
+  typeRelationLabels: Record<string, string> = { ...TYPE_RELATION_LABELS };
+  typeRelationOptions: SelectOption[] = [];
 
   isFormOpen = false;
   formModel: AttachFormModel = emptyForm();
@@ -50,7 +51,20 @@ export class ParentTuteurPanelComponent implements OnChanges {
   detachError = '';
   detaching = false;
 
-  constructor(private inscriptionService: InscriptionService, private toastService: ToastService) {
+  constructor(
+    private inscriptionService: InscriptionService,
+    private toastService: ToastService,
+    private referentielCrudService: ReferentielCrudService
+  ) {
+    this.referentielCrudService.businessParameterOptions('TYPE_RELATION').subscribe({
+      next: (items) => {
+        this.typeRelationOptions = items.map((item) => ({ value: item.code, label: item.libelle }));
+        this.typeRelationLabels = Object.fromEntries(items.map((item) => [item.code, item.libelle]));
+      },
+      error: () => {
+        this.typeRelationOptions = Object.entries(TYPE_RELATION_LABELS).map(([value, label]) => ({ value, label }));
+      }
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {

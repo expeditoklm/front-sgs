@@ -2,7 +2,7 @@
 // (bj.sgs.pedagogie.dto.*). Pas de couplage aux référentiels (Classe, Matière, Période, Année
 // scolaire) au-delà d'un id "à plat" (classeId, matiereId...), même choix que côté backend.
 
-export type TypeEvaluation = 'DEVOIR' | 'COMPOSITION' | 'INTERROGATION';
+export type TypeEvaluation = string;
 
 export const TYPE_EVALUATION_LABELS: Record<TypeEvaluation, string> = {
   DEVOIR: 'Devoir',
@@ -101,7 +101,7 @@ export interface MoyenneGenerale {
   rangClasse: number | null;
 }
 
-export type DecisionDeliberation = 'PASSAGE' | 'PASSAGE_CONDITIONNEL' | 'REDOUBLEMENT';
+export type DecisionDeliberation = string;
 
 export const DECISION_DELIBERATION_LABELS: Record<DecisionDeliberation, string> = {
   PASSAGE: 'Passage',
@@ -109,7 +109,7 @@ export const DECISION_DELIBERATION_LABELS: Record<DecisionDeliberation, string> 
   REDOUBLEMENT: 'Redoublement'
 };
 
-export type MentionDeliberation = 'TABLEAU_HONNEUR' | 'ENCOURAGEMENTS' | 'FELICITATIONS';
+export type MentionDeliberation = string;
 
 export const MENTION_DELIBERATION_LABELS: Record<MentionDeliberation, string> = {
   TABLEAU_HONNEUR: "Tableau d'honneur",

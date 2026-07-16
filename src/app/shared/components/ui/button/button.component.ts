@@ -22,6 +22,10 @@ export class ButtonComponent {
   @Input() className = '';
   @Input() startIcon?: string; // SVG or icon class, or use ng-content for more flexibility
   @Input() endIcon?: string;
+  // À activer lorsque le composant parent ouvre déjà sa propre modale de confirmation.
+  @Input() confirmationHandled = false;
+  // Permet de décrire explicitement une action sensible lorsque le libellé du bouton est ambigu.
+  @Input() confirmationAction = '';
 
   @Output() btnClick = new EventEmitter<Event>();
 
