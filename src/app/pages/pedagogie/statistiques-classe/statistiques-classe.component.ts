@@ -24,6 +24,8 @@ import { ReferentielCrudService } from '../../../core/services/referentiel-crud.
 import { ToastService } from '../../../core/services/toast.service';
 import { SelectOption } from '../../../core/models/referentiel-crud.models';
 import { StatistiqueClassePedagogie, StatistiqueMatierePedagogie } from '../../../core/models/pedagogie.models';
+import { PaginationComponent } from '../../../shared/components/ui/pagination/pagination.component';
+import { PaginatePipe } from '../../../shared/pipes/paginate.pipe';
 
 // Tableau de bord des résultats d'une classe (min/max/moyenne, taux de réussite) - mêmes
 // conventions graphiques que StatistiquesDashboardComponent (inscriptions) : ng-apexcharts,
@@ -32,10 +34,16 @@ import { StatistiqueClassePedagogie, StatistiqueMatierePedagogie } from '../../.
 // JAMAIS deux unités sur un même graphique (moyenne /20 vs taux %) - deux graphiques séparés.
 @Component({
   selector: 'app-statistiques-classe',
-  imports: [NgApexchartsModule, PageBreadcrumbComponent, ComponentCardComponent, ButtonComponent, LabelComponent, SelectComponent],
-  templateUrl: './statistiques-classe.component.html'
+  imports: [NgApexchartsModule, PageBreadcrumbComponent, ComponentCardComponent, ButtonComponent, LabelComponent, SelectComponent, PaginationComponent, PaginatePipe],
+  templateUrl: './statistiques-classe.component.html',
+  host: { class: 'sgs-dark-view block' }
 })
 export class StatistiquesClasseComponent implements OnInit {
+  page = 1;
+  pageSize = 10;
+  get totalPages(): number { return Math.max(1, Math.ceil(this.matiereRows.length / this.pageSize)); }
+  changePage(page: number): void { this.page = Math.min(Math.max(page, 1), this.totalPages); }
+  changePageSize(pageSize: number): void { this.pageSize = pageSize; this.page = 1; }
   loading = false;
   loadError = '';
   rechercheEffectuee = false;

@@ -14,6 +14,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { Eleve, EleveRequest, Sexe } from '../../../core/models/inscription.models';
 import { MetaResponse } from '../../../core/models/audit.models';
 import { SelectOption } from '../../../core/models/referentiel-crud.models';
+import { PaginationComponent } from '../../../shared/components/ui/pagination/pagination.component';
 
 function emptyEleveRequest(): EleveRequest {
   return { nom: '', prenom: '', dateNaissance: '', lieuNaissance: '', sexe: 'M' as Sexe, etablissementId: undefined };
@@ -29,7 +30,8 @@ function emptyEleveRequest(): EleveRequest {
     InputFieldComponent,
     LabelComponent,
     SelectComponent,
-    ConfirmDialogComponent
+    ConfirmDialogComponent,
+    PaginationComponent
   ],
   templateUrl: './eleve-list.component.html'
 })
@@ -37,6 +39,7 @@ export class EleveListComponent implements OnInit {
   rows: Eleve[] = [];
   meta: MetaResponse | null = null;
   page = 1;
+  pageSize = 10;
   filterText = '';
   loading = false;
   listError = '';
@@ -78,7 +81,7 @@ export class EleveListComponent implements OnInit {
     this.loading = true;
     this.listError = '';
     this.inscriptionService
-      .listEleves({ page: this.page, size: 10, sortField: 'id', sortOrder: 'DESC', filter: this.filterText })
+      .listEleves({ page: this.page, size: this.pageSize, sortField: 'id', sortOrder: 'DESC', filter: this.filterText })
       .subscribe({
         next: (result) => {
           this.rows = result.content;
@@ -116,6 +119,12 @@ export class EleveListComponent implements OnInit {
       return;
     }
     this.page = page;
+    this.load();
+  }
+
+  changePageSize(pageSize: number): void {
+    this.pageSize = pageSize;
+    this.page = 1;
     this.load();
   }
 

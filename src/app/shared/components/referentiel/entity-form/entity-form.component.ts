@@ -2,10 +2,11 @@ import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from
 import { LabelComponent } from '../../form/label/label.component';
 import { InputFieldComponent } from '../../form/input/input-field.component';
 import { CheckboxComponent } from '../../form/input/checkbox.component';
-import { SelectComponent } from '../../form/select/select.component';
+import { SelectComponent, SelectSearchFn } from '../../form/select/select.component';
 import { MultiSelectComponent } from '../../form/multi-select/multi-select.component';
 import { FieldConfig, SelectOption } from '../../../../core/models/referentiel-crud.models';
 import { ReferentielCrudService } from '../../../../core/services/referentiel-crud.service';
+import { map } from 'rxjs';
 
 @Component({
   selector: 'app-entity-form',
@@ -27,6 +28,7 @@ export class EntityFormComponent implements OnChanges {
   @Output() modelChange = new EventEmitter<Record<string, any>>();
 
   dynamicOptions: Record<string, SelectOption[]> = {};
+  dynamicSearch: Record<string, SelectSearchFn<string>> = {};
 
   constructor(private crudService: ReferentielCrudService) {
   }
@@ -54,8 +56,14 @@ export class EntityFormComponent implements OnChanges {
           });
           return;
         }
+        this.dynamicSearch[field.key] = (term, limit) => this.crudService
+          .list(source.path, { page: 1, size: limit, sortField: 'id', sortOrder: 'ASC', filter: term })
+          .pipe(map(page => page.content.map(item => ({
+            value: String(item[source.valueField]),
+            label: String(item[source.labelField])
+          }))));
         this.crudService
-          .list(source.path, { page: 1, size: 200, sortField: 'id', sortOrder: 'ASC', filter: '' })
+          .list(source.path, { page: 1, size: field.type === 'multiselect' ? 200 : 10, sortField: 'id', sortOrder: 'ASC', filter: '' })
           .subscribe({
             next: (page) => {
               this.dynamicOptions[field.key] = page.content.map((item) => ({
@@ -70,6 +78,10 @@ export class EntityFormComponent implements OnChanges {
 
   optionsFor(field: FieldConfig): SelectOption[] {
     return field.staticOptions ?? this.dynamicOptions[field.key] ?? [];
+  }
+
+  searchFor(field: FieldConfig): SelectSearchFn<string> | undefined {
+    return this.dynamicSearch[field.key];
   }
 
   multiSelectOptions(field: FieldConfig): { value: string; text: string }[] {

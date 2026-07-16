@@ -25,7 +25,7 @@
                 <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="6">Aucun bulletin archivé pour le moment.</td>
               </tr>
             } @else {
-              @for (bulletin of bulletins; track bulletin.uuid) {
+              @for (bulletin of bulletins | paginate:page:pageSize; track bulletin.uuid) {
                 <tr>
                   <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ bulletin.eleveNomComplet }}</td>
                   <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ bulletin.classeLibelle }}</td>
@@ -42,5 +42,15 @@
         </table>
       </div>
     </div>
+    <app-pagination
+      class="mt-4 block"
+      [currentPage]="page"
+      [totalPages]="totalPages"
+      [totalItems]="bulletins.length"
+      [pageSize]="pageSize"
+      itemLabel="bulletin"
+      (pageChange)="changePage($event)"
+      (pageSizeChange)="changePageSize($event)"
+    />
   }
 </app-component-card>

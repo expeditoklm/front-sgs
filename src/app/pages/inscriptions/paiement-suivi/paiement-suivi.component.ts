@@ -7,6 +7,7 @@ import { LabelComponent } from '../../../shared/components/form/label/label.comp
 import { SelectComponent } from '../../../shared/components/form/select/select.component';
 import { InputFieldComponent } from '../../../shared/components/form/input/input-field.component';
 import { BadgeComponent } from '../../../shared/components/ui/badge/badge.component';
+import { PaginationComponent } from '../../../shared/components/ui/pagination/pagination.component';
 import { InscriptionService } from '../../../core/services/inscription.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ReferentielCrudService } from '../../../core/services/referentiel-crud.service';
@@ -30,7 +31,8 @@ import {
     LabelComponent,
     SelectComponent,
     InputFieldComponent,
-    BadgeComponent
+    BadgeComponent,
+    PaginationComponent
   ],
   templateUrl: './paiement-suivi.component.html'
 })
@@ -38,6 +40,7 @@ export class PaiementSuiviComponent implements OnInit {
   rows: Paiement[] = [];
   meta: MetaResponse | null = null;
   page = 1;
+  pageSize = 10;
   loading = false;
   listError = '';
 
@@ -92,7 +95,7 @@ export class PaiementSuiviComponent implements OnInit {
     this.loading = true;
     this.listError = '';
     this.inscriptionService
-      .filterPaiements(this.buildFilters(), { page: this.page, size: 10, sortField: 'id', sortOrder: 'DESC', filter: '' })
+      .filterPaiements(this.buildFilters(), { page: this.page, size: this.pageSize, sortField: 'id', sortOrder: 'DESC', filter: '' })
       .subscribe({
         next: (result) => {
           this.rows = result.content;
@@ -127,6 +130,12 @@ export class PaiementSuiviComponent implements OnInit {
       return;
     }
     this.page = page;
+    this.load();
+  }
+
+  changePageSize(pageSize: number): void {
+    this.pageSize = pageSize;
+    this.page = 1;
     this.load();
   }
 

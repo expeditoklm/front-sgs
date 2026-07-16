@@ -69,7 +69,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
-            @for (row of classeRows; track row.classeId) {
+            @for (row of classeRows | paginate:page:pageSize; track row.classeId) {
               <tr>
                 <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.classeLibelle }}</td>
                 <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.niveauLibelle }}</td>
@@ -84,6 +84,7 @@
         </table>
       </div>
     </div>
+    <app-pagination class="mt-4 block" [currentPage]="page" [totalPages]="totalPages" [totalItems]="classeRows.length" [pageSize]="pageSize" itemLabel="classe" (pageChange)="changePage($event)" (pageSizeChange)="changePageSize($event)"/>
   }
 </app-component-card>
 

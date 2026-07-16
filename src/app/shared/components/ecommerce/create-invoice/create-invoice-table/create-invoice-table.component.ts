@@ -4,6 +4,7 @@ import { InputFieldComponent } from '../../../form/input/input-field.component';
 import { LabelComponent } from '../../../form/label/label.component';
 import { ButtonComponent } from '../../../ui/button/button.component';
 import { FormsModule } from '@angular/forms';
+import { SelectComponent } from '../../../form/select/select.component';
 
 
 interface Product {
@@ -29,6 +30,7 @@ interface FormData {
     InputFieldComponent,
     LabelComponent,
     FormsModule,
+    SelectComponent,
   ],
   templateUrl: './create-invoice-table.component.html',
   styles: ``
@@ -36,6 +38,7 @@ interface FormData {
 
 
 export class CreateInvoiceTableComponent {
+  readonly discountOptions = [0, 10, 20, 50].map(value => ({ value, label: `${value}%` }));
 
    products: Product[] = [
     { name: 'Macbook pro 13”', price: 1200, quantity: 1, discount: 0, total: (1200 * 1).toFixed(2) },

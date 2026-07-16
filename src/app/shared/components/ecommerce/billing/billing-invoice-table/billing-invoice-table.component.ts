@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { ButtonComponent } from '../../../ui/button/button.component';
+import { PaginationComponent } from '../../../ui/pagination/pagination.component';
 
 interface Invoice {
   id: number;
@@ -15,6 +16,7 @@ interface Invoice {
   selector: 'app-billing-invoice-table',
   imports: [
     CommonModule,
+    PaginationComponent,
   ],
   templateUrl: './billing-invoice-table.component.html',
 })
@@ -171,6 +173,11 @@ export class BillingInvoiceTableComponent {
     if (this.currentPage > 1) {
       this.currentPage--;
     }
+  }
+
+  changePageSize(pageSize: number): void {
+    this.itemsPerPage = pageSize;
+    this.currentPage = 1;
   }
 
   onDownloadAll(): void {

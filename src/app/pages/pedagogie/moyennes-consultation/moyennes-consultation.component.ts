@@ -11,6 +11,8 @@ import { ToastService } from '../../../core/services/toast.service';
 import { SelectOption } from '../../../core/models/referentiel-crud.models';
 import { Inscription } from '../../../core/models/inscription.models';
 import { MoyenneGenerale, MoyenneMatiere } from '../../../core/models/pedagogie.models';
+import { PaginationComponent } from '../../../shared/components/ui/pagination/pagination.component';
+import { PaginatePipe } from '../../../shared/pipes/paginate.pipe';
 
 type ConsultationTab = 'eleve' | 'classe';
 
@@ -33,11 +35,23 @@ interface LigneClasse {
     ComponentCardComponent,
     ButtonComponent,
     LabelComponent,
-    SelectComponent
+    SelectComponent,
+    PaginationComponent,
+    PaginatePipe
   ],
-  templateUrl: './moyennes-consultation.component.html'
+  templateUrl: './moyennes-consultation.component.html',
+  host: { class: 'sgs-dark-view block' }
 })
 export class MoyennesConsultationComponent implements OnInit {
+  pageMatieres = 1;
+  pagePalmares = 1;
+  pageSize = 10;
+  totalPages(liste: unknown[]): number { return Math.max(1, Math.ceil(liste.length / this.pageSize)); }
+  changePage(type: 'matieres' | 'palmares', page: number, liste: unknown[]): void {
+    const value = Math.min(Math.max(page, 1), this.totalPages(liste));
+    type === 'matieres' ? this.pageMatieres = value : this.pagePalmares = value;
+  }
+  changePageSize(pageSize: number): void { this.pageSize = pageSize; this.pageMatieres = 1; this.pagePalmares = 1; }
   activeTab: ConsultationTab = 'eleve';
 
   classeOptions: SelectOption[] = [];

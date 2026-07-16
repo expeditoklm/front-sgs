@@ -9,6 +9,7 @@ import { SelectComponent } from '../../../shared/components/form/select/select.c
 import { CheckboxComponent } from '../../../shared/components/form/input/checkbox.component';
 import { BadgeComponent } from '../../../shared/components/ui/badge/badge.component';
 import { ConfirmDialogComponent } from '../../../shared/components/referentiel/confirm-dialog/confirm-dialog.component';
+import { PaginationComponent } from '../../../shared/components/ui/pagination/pagination.component';
 import { PedagogieService } from '../../../core/services/pedagogie.service';
 import { ReferentielCrudService } from '../../../core/services/referentiel-crud.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -32,14 +33,17 @@ function emptyDeliberationRequest(): Partial<DeliberationRequest> {
     SelectComponent,
     CheckboxComponent,
     BadgeComponent,
-    ConfirmDialogComponent
+    ConfirmDialogComponent,
+    PaginationComponent
   ],
-  templateUrl: './deliberation-list.component.html'
+  templateUrl: './deliberation-list.component.html',
+  host: { class: 'sgs-dark-view block' }
 })
 export class DeliberationListComponent implements OnInit {
   rows: Deliberation[] = [];
   meta: MetaResponse | null = null;
   page = 1;
+  pageSize = 10;
   loading = false;
   listError = '';
 
@@ -119,7 +123,7 @@ export class DeliberationListComponent implements OnInit {
     this.loading = true;
     this.listError = '';
     this.pedagogieService
-      .filterDeliberations(this.buildFilters(), { page: this.page, size: 10, sortField: 'id', sortOrder: 'DESC', filter: '' })
+      .filterDeliberations(this.buildFilters(), { page: this.page, size: this.pageSize, sortField: 'id', sortOrder: 'DESC', filter: '' })
       .subscribe({
         next: (result) => {
           this.rows = result.content;
@@ -152,6 +156,12 @@ export class DeliberationListComponent implements OnInit {
       return;
     }
     this.page = page;
+    this.load();
+  }
+
+  changePageSize(pageSize: number): void {
+    this.pageSize = pageSize;
+    this.page = 1;
     this.load();
   }
 

@@ -36,4 +36,6 @@ import { Affectation,Conge,Contrat,Employe,EmployePayload,EvaluationRh,RhDashboa
  demanderConfidentialite(type:string,motif=''){return this.http.post(`${this.url}/moi/demandes-confidentialite`,null,{params:{type,motif}});}
  grillesEvaluation(){return this.http.get<ApiResponse<any[]>>(`${this.url}/evaluations/grilles`).pipe(map(r=>r.data));}
  evaluerDetaille(v:any){return this.http.post(`${this.url}/evaluations/detaillees`,v);}
+ evaluationDetaillee(uuid:string){return this.http.get<ApiResponse<any>>(`${this.url}/evaluations/${uuid}`).pipe(map(r=>r.data));}
+ modifierEvaluationDetaillee(uuid:string,v:any){return this.http.put(`${this.url}/evaluations/detaillees/${uuid}`,v);}
 }

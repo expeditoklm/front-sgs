@@ -13,6 +13,7 @@ import { MetaResponse } from '../../core/models/audit.models';
 import { ReferentielCrudService } from '../../core/services/referentiel-crud.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AuthenticationService } from '../../core/services/authentication.service';
+import { PaginationComponent } from '../../shared/components/ui/pagination/pagination.component';
 
 @Component({
   selector: 'app-referentiel-page',
@@ -24,7 +25,8 @@ import { AuthenticationService } from '../../core/services/authentication.servic
     InputFieldComponent,
     EntityTableComponent,
     EntityFormComponent,
-    ConfirmDialogComponent
+    ConfirmDialogComponent,
+    PaginationComponent
   ],
   templateUrl: './referentiel-page.component.html',
   styles: ``
@@ -35,6 +37,7 @@ export class ReferentielPageComponent implements OnInit {
   rows: Record<string, any>[] = [];
   meta: MetaResponse | null = null;
   page = 1;
+  pageSize = 10;
   filterText = '';
   loading = false;
   listError = '';
@@ -92,7 +95,7 @@ export class ReferentielPageComponent implements OnInit {
     this.loading = true;
     this.listError = '';
     this.crudService
-      .list(this.entity.path, { page: this.page, size: 10, sortField: 'id', sortOrder: 'DESC', filter: this.filterText })
+      .list(this.entity.path, { page: this.page, size: this.pageSize, sortField: 'id', sortOrder: 'DESC', filter: this.filterText })
       .subscribe({
         next: (result) => {
           this.rows = result.content;
@@ -119,6 +122,12 @@ export class ReferentielPageComponent implements OnInit {
       return;
     }
     this.page = page;
+    this.load();
+  }
+
+  changePageSize(pageSize: number): void {
+    this.pageSize = pageSize;
+    this.page = 1;
     this.load();
   }
 
@@ -291,7 +300,9 @@ export class ReferentielPageComponent implements OnInit {
       // Profil.droits arrive du backend comme une liste d'objets {code, libelle, ...}, pas de
       // simples codes - le formulaire (multiselect) attend un tableau de codes.
       if (this.entity.key === 'profils' && field.key === 'droits') {
-        model[field.key] = (row['droits'] ?? []).map((droit: any) => droit.code);
+        model[field.key] = (row['droits'] ?? []).map((droit: any) => String(droit.id));
+      } else if (this.entity.key === 'utilisateurs' && field.key === 'profilCodes') {
+        model[field.key] = row['profilCodes'] ?? (row['profilCode'] ? [row['profilCode']] : []);
       } else {
         model[field.key] = row[field.key];
       }

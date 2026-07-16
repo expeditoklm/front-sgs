@@ -121,34 +121,7 @@
         <div class="w-full lg:col-span-2">
           <app-label>Discount</app-label>
 
-          <div class="relative">
-            <select
-              name="discount"
-              [(ngModel)]="form.discount"
-              class="dark:bg-dark-900 shadow-theme-xs bg-none appearance-none focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 pr-11 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
-            >
-              <option [value]="0">0%</option>
-              <option [value]="10">10%</option>
-              <option [value]="20">20%</option>
-              <option [value]="50">50%</option>
-            </select>
-            <svg
-              class="absolute text-gray-700 dark:text-gray-400 right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M4.79175 8.02075L10.0001 13.2291L15.2084 8.02075"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </div>
+          <app-select name="discount" [(ngModel)]="form.discount" [options]="discountOptions" [searchable]="false" />
         </div>
         <div class="flex w-full items-end lg:col-span-2">
           <button class="inline-flex items-center justify-center gap-2 rounded-lg transition w-full h-11 px-5 py-3.5 text-sm bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300 ">Save Product</button>

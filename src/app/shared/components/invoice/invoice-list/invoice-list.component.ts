@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, HostListener } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TableDropdownComponent } from '../../common/table-dropdown/table-dropdown.component';
+import { PaginationComponent } from '../../ui/pagination/pagination.component';
 
 interface Invoice {
   id: number;
@@ -23,6 +24,7 @@ interface SortState {
     CommonModule,
     FormsModule,
     TableDropdownComponent,
+    PaginationComponent,
   ],
   templateUrl: './invoice-list.component.html',
   styles: ``
@@ -366,6 +368,11 @@ export class InvoiceListComponent {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
     }
+  }
+
+  changePageSize(pageSize: number): void {
+    this.itemsPerPage = pageSize;
+    this.currentPage = 1;
   }
 
   nextPage(): void {

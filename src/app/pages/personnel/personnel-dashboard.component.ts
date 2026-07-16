@@ -3,29 +3,65 @@ import { Component,OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ModalComponent } from '../../shared/components/ui/modal/modal.component';
+import { PaginationComponent } from '../../shared/components/ui/pagination/pagination.component';
+import { PaginatePipe } from '../../shared/pipes/paginate.pipe';
 import { Affectation,Conge,Contrat,Employe,EmployePayload,EvaluationRh,RhDashboard,RhOptions,SoldeConge,StatistiquesRh } from '../../core/models/personnel.models';
 import { PersonnelService } from '../../core/services/personnel.service';
+import { SelectComponent } from '../../shared/components/form/select/select.component';
+import { map } from 'rxjs';
 
-@Component({selector:'app-personnel-dashboard',standalone:true,imports:[CommonModule,FormsModule,ModalComponent],templateUrl:'./personnel-dashboard.component.html'})
+@Component({selector:'app-personnel-dashboard',standalone:true,imports:[CommonModule,FormsModule,ModalComponent,PaginationComponent,PaginatePipe,SelectComponent],templateUrl:'./personnel-dashboard.component.html',host:{class:'sgs-dark-view block'}})
 export class PersonnelDashboardComponent implements OnInit {
- stats:RhDashboard={effectif_actif:0,enseignants:0,contrats_actifs:0,conges_en_attente:0};statistiques:StatistiquesRh={categories:[],contrats:[],chargeEnseignants:[],presence:[],evaluations:[]};options:RhOptions={annees:[],matieres:[],niveaux:[],classes:[]};
+ stats:RhDashboard={effectif_actif:0,enseignants:0,contrats_actifs:0,conges_en_attente:0};statistiques:StatistiquesRh={categories:[],contrats:[],chargeEnseignants:[],presence:[],evaluations:[]};options:RhOptions={annees:[],matieres:[],niveaux:[],classes:[],utilisateurs:[]};
  employes:Employe[]=[];conges:Conge[]=[];contrats:Contrat[]=[];affectations:Affectation[]=[];soldes:SoldeConge[]=[];evaluations:EvaluationRh[]=[];
  tauxPresence:any[]=[];
+ pageConges=1;
+ taillePageConges=10;
+ readonly taillesPageConges=[10,20,50];
+ pagination:Record<string,{page:number;size:number}>={equipe:{page:1,size:10},contrats:{page:1,size:10},conges:{page:1,size:10},soldes:{page:1,size:10},affectations:{page:1,size:10},evaluations:{page:1,size:10}};
  filtreAnnee?:number;filtreCategorie='';readonly anneesStatistiques=Array.from({length:6},(_,i)=>new Date().getFullYear()-i);
  recherche='';onglet:'equipe'|'contrats'|'conges'|'affectations'|'evaluations'|'statistiques'='equipe';modalEmploye=false;modalConge=false;modalContrat=false;modalClotureContrat=false;modalAffectation=false;modalSolde=false;modalEvaluation=false;selection?:Employe;selectionContrat?:Contrat;contratACloturer?:Contrat;motifCloture='';erreur='';succes='';
  form:EmployePayload=this.vide();conge={employeUuid:'',type:'ANNUEL',dateDebut:'',dateFin:'',motif:''};contrat={employeUuid:'',type:'CDI',dateDebut:'',dateFin:'',remuneration:null as number|null};
  affectation={employeUuid:'',anneeId:0,matiereId:null as number|null,niveauId:null as number|null,classeId:null as number|null,heuresHebdo:0,dateDebut:'',dateFin:''};
  solde={employeUuid:'',annee:new Date().getFullYear(),type:'ANNUEL',joursAcquis:30,joursReportes:0};
  evaluation={employeUuid:'',date:new Date().toISOString().slice(0,10),periode:'Année '+new Date().getFullYear(),note:10,objectifs:'',appreciation:''};
+ readonly categorieOptions=['ENSEIGNANT','SURVEILLANT','ADMINISTRATIF','DIRECTION'].map(value=>({value,label:value}));
+ readonly typeCongeOptions=['ANNUEL','MALADIE','MATERNITE','FORMATION'].map(value=>({value,label:value}));
+ readonly typeContratOptions=['CDI','CDD','VACATAIRE'].map(value=>({value,label:value}));
+ get employeOptions(){return this.employes.map(e=>({value:e.uuid,label:`${e.prenom} ${e.nom} · ${e.matricule}`}));}
+ get utilisateurOptions(){return [{value:null,label:'Association automatique par e-mail'},...this.options.utilisateurs.map(o=>({value:o.id,label:o.label}))];}
+ get anneeOptions(){return this.options.annees.map(o=>({value:o.id,label:o.label}));}
+ get matiereOptions(){return [{value:null,label:'Aucune'},...this.options.matieres.map(o=>({value:o.id,label:o.label}))];}
+ get niveauOptions(){return [{value:null,label:'Aucun'},...this.options.niveaux.map(o=>({value:o.id,label:o.label}))];}
+ get classeOptions(){return [{value:null,label:'Aucune'},...this.options.classes.map(o=>({value:o.id,label:o.label}))];}
+ get anneeStatistiqueOptions(){return [{value:undefined,label:'Toutes les années'},...this.options.annees.map(o=>({value:o.id,label:o.label}))];}
+ readonly rechercherEmployesSelect=(term:string,limit:number)=>this.service.employes(term).pipe(map(items=>items.slice(0,limit).map(e=>({value:e.uuid,label:`${e.prenom} ${e.nom} · ${e.matricule}`}))));
  constructor(private service:PersonnelService){}ngOnInit(){this.charger();}
- charger(){forkJoin({stats:this.service.dashboard(),employes:this.service.employes(this.recherche),conges:this.service.conges(),contrats:this.service.contrats(),options:this.service.options(),affectations:this.service.affectations(),soldes:this.service.soldes(),evaluations:this.service.evaluations(),statistiques:this.service.statistiques(),tauxPresence:this.service.tauxPresence()}).subscribe({next:r=>{Object.assign(this,r);},error:e=>this.erreur=this.message(e)});}
+ charger(){forkJoin({stats:this.service.dashboard(),employes:this.service.employes(this.recherche),conges:this.service.conges(),contrats:this.service.contrats(),options:this.service.options(),affectations:this.service.affectations(),soldes:this.service.soldes(),evaluations:this.service.evaluations(),statistiques:this.service.statistiques(),tauxPresence:this.service.tauxPresence()}).subscribe({next:r=>{Object.assign(this,r);this.normaliserPageConges();},error:e=>this.erreur=this.message(e)});}
  rechercher(){this.service.employes(this.recherche).subscribe(v=>this.employes=v);}
  filtrerStatistiques(){this.service.statistiques(this.filtreAnnee,this.filtreCategorie).subscribe({next:v=>this.statistiques=v,error:e=>this.erreur=this.message(e)});}
  largeur(v:any,liste:any[],champ:string){const max=Math.max(...liste.map(x=>Number(x[champ])||0),1);return Math.round((Number(v)||0)*100/max);}
  dateValue(value:unknown):string|number|Date|null{return typeof value==='string'||typeof value==='number'||value instanceof Date?value:null;}
  noteWidth(value:unknown):number{return Math.max(0,Math.min(100,(Number(value)||0)*5));}
+ get totalPagesConges(){return Math.max(1,Math.ceil(this.conges.length/this.taillePageConges));}
+ get congesPagines(){const debut=(this.pageConges-1)*this.taillePageConges;return this.conges.slice(debut,debut+this.taillePageConges);}
+ get debutConges(){return this.conges.length?(this.pageConges-1)*this.taillePageConges+1:0;}
+ get finConges(){return Math.min(this.pageConges*this.taillePageConges,this.conges.length);}
+ get pagesConges(){
+  const total=this.totalPagesConges;
+  const debut=Math.max(1,Math.min(this.pageConges-2,total-4));
+  const fin=Math.min(total,debut+4);
+  return Array.from({length:fin-debut+1},(_,i)=>debut+i);
+ }
+ changerPageConges(page:number){this.pageConges=Math.min(Math.max(page,1),this.totalPagesConges);}
+ changerTaillePageConges(){this.pageConges=1;}
+ pageDe(cle:string){return this.pagination[cle]?.page??1;}
+ tailleDe(cle:string){return this.pagination[cle]?.size??10;}
+ totalPages(liste:unknown[],cle:string){return Math.max(1,Math.ceil(liste.length/this.tailleDe(cle)));}
+ changerPage(cle:string,page:number,liste:unknown[]){this.pagination[cle].page=Math.min(Math.max(page,1),this.totalPages(liste,cle));}
+ changerTaille(cle:string,taille:number){this.pagination[cle]={page:1,size:taille};}
  ouvrirConge(){this.erreur='';this.conge={employeUuid:'',type:'ANNUEL',dateDebut:'',dateFin:'',motif:''};this.modalConge=true;}
- ouvrir(e?:Employe){this.selection=e;this.form=e?{nom:e.nom,prenom:e.prenom,email:e.email,telephone:e.telephone??'',categorie:e.categorie,specialite:e.specialite??'',dateEmbauche:e.dateEmbauche}:this.vide();this.modalEmploye=true;}
+ ouvrir(e?:Employe){this.selection=e;this.form=e?{nom:e.nom,prenom:e.prenom,email:e.email,telephone:e.telephone??'',categorie:e.categorie,specialite:e.specialite??'',dateEmbauche:e.dateEmbauche,utilisateurId:e.utilisateurId??null}:this.vide();this.modalEmploye=true;}
  enregistrer(){this.service.enregistrer(this.form,this.selection?.uuid).subscribe({next:()=>{this.modalEmploye=false;this.ok(this.selection?'Dossier mis à jour.':'Collaborateur ajouté.');},error:e=>this.erreur=this.message(e)});}
  etat(e:Employe){this.service.changerEtat(e.uuid).subscribe({next:()=>this.charger(),error:x=>this.erreur=this.message(x)});}
  demander(){
@@ -51,7 +87,8 @@ export class PersonnelDashboardComponent implements OnInit {
  supprimerAffectation(a:Affectation){this.service.supprimerAffectation(a.uu_id).subscribe({next:()=>this.ok('Affectation supprimée.'),error:e=>this.erreur=this.message(e)});}
  enregistrerSolde(){this.service.enregistrerSolde(this.solde).subscribe({next:()=>{this.modalSolde=false;this.ok('Solde de congé enregistré.');},error:e=>this.erreur=this.message(e)});}
  evaluer(){this.service.evaluer(this.evaluation).subscribe({next:()=>{this.modalEvaluation=false;this.ok('Évaluation enregistrée.');},error:e=>this.erreur=this.message(e)});}
+ private normaliserPageConges(){this.pageConges=Math.min(Math.max(this.pageConges,1),this.totalPagesConges);}
  private ok(m:string){this.succes=m;this.erreur='';this.charger();}
- private vide(){return{nom:'',prenom:'',email:'',telephone:'',categorie:'ENSEIGNANT',specialite:'',dateEmbauche:new Date().toISOString().slice(0,10)};}
- private message(e:any){return e?.error?.message??e?.error?.details??e?.error?.errors?.[0]?.message??'Une erreur est survenue.';}
+ private vide(){return{nom:'',prenom:'',email:'',telephone:'',categorie:'ENSEIGNANT',specialite:'',dateEmbauche:new Date().toISOString().slice(0,10),utilisateurId:null};}
+ private message(e:any){return e?.error?.errors?.[0]?.detail??e?.error?.details??e?.error?.message??e?.error?.errors?.[0]?.message??'Une erreur est survenue.';}
 }

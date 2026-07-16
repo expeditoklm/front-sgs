@@ -9,19 +9,22 @@
   @if(succes){<div class="rounded-lg border border-success-200 bg-success-50 p-3 text-sm text-success-700">{{succes}}</div>}
 
   <section class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+    @if(brouillonUuid){
+      <div class="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning-300 bg-warning-50 p-3 text-sm text-warning-800">
+        <span>Vous modifiez un brouillon existant. L’enregistrement mettra à jour ce même brouillon.</span>
+        <button type="button" (click)="annulerReprise()" class="rounded-lg border border-warning-400 px-3 py-1.5">Quitter le brouillon</button>
+      </div>
+    }
+
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <label class="text-sm">Collaborateur
-        <select [(ngModel)]="employeUuid" class="mt-1 h-11 w-full rounded-lg border border-gray-300 px-3">
-          <option value="">Sélectionner</option><option *ngFor="let e of employes" [value]="e.uuid">{{e.prenom}} {{e.nom}} · {{e.matricule}}</option>
-        </select>
+        <app-select [(ngModel)]="employeUuid" [options]="employeOptions" [searchFn]="rechercherEmployes" placeholder="Sélectionner" className="mt-1" />
       </label>
       <label class="text-sm">Grille
-        <select [(ngModel)]="grilleId" (ngModelChange)="initialiserNotes()" class="mt-1 h-11 w-full rounded-lg border border-gray-300 px-3">
-          <option *ngFor="let g of grilles" [ngValue]="g.id">{{g.libelle}}</option>
-        </select>
+        <app-select [(ngModel)]="grilleId" [options]="grilleOptions" placeholder="Sélectionner" (ngModelChange)="initialiserNotes()" className="mt-1" />
       </label>
       <label class="text-sm">Trimestre
-        <select [(ngModel)]="trimestre" class="mt-1 h-11 w-full rounded-lg border border-gray-300 px-3"><option [ngValue]="1">Trimestre 1</option><option [ngValue]="2">Trimestre 2</option><option [ngValue]="3">Trimestre 3</option></select>
+        <app-select [(ngModel)]="trimestre" [options]="trimestreOptions" [searchable]="false" className="mt-1" />
       </label>
       <label class="text-sm">Date
         <input type="date" [(ngModel)]="date" class="mt-1 h-11 w-full rounded-lg border border-gray-300 px-3">
@@ -30,8 +33,8 @@
 
     <div class="mt-6 overflow-x-auto">
       <table class="w-full text-left text-sm">
-        <thead class="bg-gray-50 text-xs uppercase text-gray-500"><tr><th class="p-3">Critère</th><th class="p-3">Coefficient</th><th class="w-40 p-3">Note / 20</th></tr></thead>
-        <tbody><tr *ngFor="let c of grilleSelectionnee?.criteres" class="border-t"><td class="p-3"><span class="font-medium">{{c.libelle}}</span><span class="ml-2 text-xs text-gray-400">{{c.code}}</span></td><td class="p-3">{{c.coefficient}}</td><td class="p-3"><input type="number" min="0" max="20" step="0.25" [(ngModel)]="notes[c.id]" class="h-10 w-28 rounded-lg border border-gray-300 px-3"></td></tr></tbody>
+        <thead class="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-white/[0.04]"><tr><th class="p-3">Critère</th><th class="p-3">Coefficient</th><th class="w-40 p-3">Note / 20</th></tr></thead>
+        <tbody><tr *ngFor="let c of grilleSelectionnee?.criteres" class="border-t border-gray-200 dark:border-gray-800"><td class="p-3"><span class="font-medium">{{c.libelle}}</span><span class="ml-2 text-xs text-gray-400">{{c.code}}</span></td><td class="p-3">{{c.coefficient}}</td><td class="p-3"><input type="number" min="0" max="20" step="0.25" [(ngModel)]="notes[c.id]" class="h-10 w-28 rounded-lg border border-gray-300 px-3"></td></tr></tbody>
       </table>
     </div>
 
@@ -41,8 +44,36 @@
     </div>
 
     <div class="mt-5 flex flex-wrap items-center justify-between gap-3">
-      <div class="rounded-lg bg-gray-50 px-4 py-2 text-sm">Moyenne pondérée : <strong>{{moyenne()===null?'—':(moyenne()|number:'1.2-2')+' / 20'}}</strong></div>
-      <div class="flex gap-2"><button [disabled]="enregistrement" (click)="enregistrer(false)" class="rounded-lg border border-brand-500 px-4 py-2 text-sm text-brand-500 disabled:opacity-50">Enregistrer le brouillon</button><button [disabled]="enregistrement" (click)="enregistrer(true)" class="rounded-lg bg-brand-500 px-4 py-2 text-sm text-white disabled:opacity-50">Valider l’évaluation</button></div>
+      <div class="rounded-lg bg-gray-50 px-4 py-2 text-sm dark:bg-white/[0.04]">Moyenne pondérée : <strong>{{moyenne()===null?'—':(moyenne()|number:'1.2-2')+' / 20'}}</strong></div>
+      <div class="flex gap-2"><button [disabled]="enregistrement" (click)="enregistrer(false)" class="rounded-lg border border-brand-500 px-4 py-2 text-sm text-brand-500 disabled:opacity-50">{{brouillonUuid?'Mettre à jour le brouillon':'Enregistrer le brouillon'}}</button><button [disabled]="enregistrement" (click)="enregistrer(true)" class="rounded-lg bg-brand-500 px-4 py-2 text-sm text-white disabled:opacity-50">Valider l’évaluation</button></div>
     </div>
+  </section>
+
+  <section class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+    <div class="mb-4">
+      <h2 class="font-semibold text-gray-900 dark:text-white">Brouillons enregistrés</h2>
+      <p class="text-sm text-gray-500">Utilisez « Reprendre » pour continuer une évaluation non validée.</p>
+    </div>
+    @if(!brouillons.length){
+      <p class="rounded-xl bg-gray-50 p-4 text-sm text-gray-500 dark:bg-white/[0.04]">Aucun brouillon en attente.</p>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-white/[0.04]">
+            <tr><th class="p-3">Collaborateur</th><th class="p-3">Trimestre</th><th class="p-3">Date</th><th class="p-3">Moyenne</th><th class="p-3"></th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let b of brouillons | paginate:pageBrouillons:tailleBrouillons" class="border-t border-gray-200 dark:border-gray-800">
+              <td class="p-3 font-medium">{{b.employe}}</td>
+              <td class="p-3">Trimestre {{b.eva_trimestre}}</td>
+              <td class="p-3">{{b.eva_date|date:'dd/MM/yyyy'}}</td>
+              <td class="p-3">{{b.eva_note|number:'1.2-2'}} / 20</td>
+              <td class="p-3 text-right"><button type="button" (click)="reprendre(b.uu_id)" class="rounded-lg border border-brand-500 px-3 py-2 text-brand-500">Reprendre</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <app-pagination class="mt-4 block" [currentPage]="pageBrouillons" [totalPages]="totalPagesBrouillons" [totalItems]="brouillons.length" [pageSize]="tailleBrouillons" itemLabel="brouillon" (pageChange)="changerPageBrouillons($event)" (pageSizeChange)="changerTailleBrouillons($event)"/>
+    }
   </section>
 </div>

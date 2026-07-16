@@ -60,7 +60,7 @@
                   <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="9">Aucune décision.</td>
                 </tr>
               } @else {
-                @for (ligne of lignes; track ligne.decision.uuid) {
+                @for (ligne of lignes | paginate:page:pageSize; track ligne.decision.uuid) {
                   <tr>
                     <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                       {{ ligne.eleveNomComplet }}
@@ -131,6 +131,7 @@
           </table>
         </div>
       </div>
+      <app-pagination class="mt-4 block" [currentPage]="page" [totalPages]="totalPages" [totalItems]="lignes.length" [pageSize]="pageSize" itemLabel="décision" (pageChange)="changePage($event)" (pageSizeChange)="changePageSize($event)"/>
     }
   </app-component-card>
 }

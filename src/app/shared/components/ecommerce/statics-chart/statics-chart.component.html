@@ -16,6 +16,7 @@
     </div>
   </div>
 
+  @if (hasData) {
   <div class="max-w-full overflow-x-auto custom-scrollbar">
     <div class="min-w-[1000px] xl:min-w-full">
       <apx-chart [series]="series" [chart]="chart" [colors]="colors" [stroke]="stroke" [fill]="fill" [markers]="markers"
@@ -23,4 +24,9 @@
         [legend]="legend"></apx-chart>
     </div>
   </div>
+  } @else {
+  <div class="flex h-[310px] items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+    Aucune statistique de classe disponible.
+  </div>
+  }
 </div>

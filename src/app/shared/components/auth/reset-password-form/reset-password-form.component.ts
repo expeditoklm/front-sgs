@@ -33,6 +33,9 @@ export class ResetPasswordFormComponent {
   }
 
   onRequestReset(): void {
+    if (this.isSubmitting) {
+      return;
+    }
     if (!this.login.trim()) {
       return;
     }
@@ -45,6 +48,9 @@ export class ResetPasswordFormComponent {
   }
 
   onConfirmReset(): void {
+    if (this.isSubmitting) {
+      return;
+    }
     if (!this.token) {
       return;
     }
@@ -59,10 +65,10 @@ export class ResetPasswordFormComponent {
 
     this.errorMessage = '';
     this.isSubmitting = true;
-    this.authService.resetPasswordConfirm$(this.token, this.newPassword).subscribe((success) => {
+    this.authService.resetPasswordConfirm$(this.token, this.newPassword).subscribe((result) => {
       this.isSubmitting = false;
-      if (!success) {
-        this.errorMessage = 'Ce lien de réinitialisation est invalide ou a expiré.';
+      if (!result.success) {
+        this.errorMessage = result.message;
         return;
       }
       this.toastService.success('Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.', 'Mot de passe réinitialisé');

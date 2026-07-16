@@ -23,6 +23,7 @@
     </div>
   </div>
 
+  @if (hasData) {
   <div class="max-w-full overflow-x-auto custom-scrollbar">
     <div class="-ml-5 min-w-[650px] xl:min-w-full pl-2">
       <apx-chart [series]="series" [chart]="chart" [xaxis]="xaxis" [plotOptions]="plotOptions" [dataLabels]="dataLabels"
@@ -30,4 +31,9 @@
         [colors]="colors"></apx-chart>
     </div>
   </div>
+  } @else {
+  <div class="flex h-[180px] items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+    Aucun effectif par niveau disponible.
+  </div>
+  }
 </div>

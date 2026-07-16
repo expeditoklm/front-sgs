@@ -22,6 +22,7 @@ export interface User {
   lastName: string;
   profilCode: string;
   profilLibelle: string;
+  permissions: string[];
 }
 
 export interface MonProfil {
@@ -36,6 +37,8 @@ export interface MonProfil {
   actif: boolean;
   profilCode: string;
   profilLibelle: string;
+  profilCodes?: string[];
+  profilLibelles?: string[];
   keycloakId: string | null;
 }
 

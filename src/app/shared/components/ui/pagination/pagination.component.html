@@ -1,0 +1,67 @@
+<nav
+  class="flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-theme-xs dark:border-gray-800 dark:bg-white/[0.03] sm:flex-row sm:items-center sm:justify-between"
+  aria-label="Pagination"
+>
+  <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+    <span>
+      <strong class="font-semibold text-gray-800 dark:text-white/90">{{ firstItem }}–{{ lastItem }}</strong>
+      sur
+      <strong class="font-semibold text-gray-800 dark:text-white/90">{{ totalItems }}</strong>
+      {{ displayedItemLabel }}
+    </span>
+
+    @if (showPageSize) {
+      <label class="flex items-center gap-2">
+        <span class="sr-only">Nombre d'éléments par page</span>
+        <app-select [ngModel]="pageSize" [options]="pageSizeSelectOptions" [searchable]="false" (ngModelChange)="changePageSize($event)" className="h-9 min-w-28" />
+      </label>
+    }
+  </div>
+
+  <div class="flex items-center justify-between gap-2 sm:justify-end">
+    <button
+      type="button"
+      class="inline-flex h-9 items-center gap-1 rounded-lg border border-gray-300 px-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.05]"
+      [disabled]="currentPage <= 1"
+      (click)="goTo(currentPage - 1)"
+    >
+      <svg class="size-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <path d="M12.5 15 7.5 10l5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="hidden sm:inline">Précédent</span>
+    </button>
+
+    <div class="flex items-center gap-1">
+      @for (item of pageItems; track $index) {
+        @if (item === 'ellipsis') {
+          <span class="inline-flex size-9 items-center justify-center text-gray-400">…</span>
+        } @else {
+          <button
+            type="button"
+            class="inline-flex size-9 items-center justify-center rounded-lg text-sm font-semibold transition"
+            [ngClass]="item === currentPage
+              ? 'bg-brand-500 text-white shadow-theme-xs'
+              : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/[0.06]'"
+            [attr.aria-current]="item === currentPage ? 'page' : null"
+            [attr.aria-label]="'Aller à la page ' + item"
+            (click)="goTo($any(item))"
+          >
+            {{ item }}
+          </button>
+        }
+      }
+    </div>
+
+    <button
+      type="button"
+      class="inline-flex h-9 items-center gap-1 rounded-lg border border-gray-300 px-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.05]"
+      [disabled]="currentPage >= normalizedTotalPages"
+      (click)="goTo(currentPage + 1)"
+    >
+      <span class="hidden sm:inline">Suivant</span>
+      <svg class="size-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <path d="m7.5 5 5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+</nav>

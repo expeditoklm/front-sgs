@@ -1,5 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { SelectComponent } from '../../select/select.component';
 
 export interface CountryCode {
   code: string;
@@ -10,6 +12,8 @@ export interface CountryCode {
   selector: 'app-phone-input',
   imports: [
     CommonModule,
+    FormsModule,
+    SelectComponent,
   ],
   templateUrl: './phone-input.component.html',
   styles: ``
@@ -26,6 +30,13 @@ export class PhoneInputComponent {
 
   countryCodes: { [key: string]: string } = {};
 
+  get countryOptions() {
+    return this.countries.map(country => ({
+      value: country.code,
+      label: `${country.code} · ${country.label}`
+    }));
+  }
+
   ngOnInit() {
     if (this.countries.length > 0) {
       this.selectedCountry = this.countries[0].code;
@@ -37,8 +48,7 @@ export class PhoneInputComponent {
     }
   }
 
-  handleCountryChange(event: Event) {
-    const newCountry = (event.target as HTMLSelectElement).value;
+  handleCountryChange(newCountry: string) {
     this.selectedCountry = newCountry;
     this.phoneNumber = this.countryCodes[newCountry] || '';
     this.phoneChange.emit(this.phoneNumber);

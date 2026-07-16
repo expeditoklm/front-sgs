@@ -29,6 +29,7 @@ export class MonthlySalesChartComponent implements OnChanges {
     type: 'bar',
     height: 180,
     toolbar: { show: false },
+    animations: { enabled: false },
   };
   public xaxis: ApexXAxis = {
     categories: [],
@@ -65,11 +66,18 @@ export class MonthlySalesChartComponent implements OnChanges {
   public colors: string[] = ['#465fff'];
 
   ngOnChanges(): void {
-    this.series = [{ name: 'Effectif', data: this.niveaux.map((item) => item.effectif) }];
+    this.series = [{
+      name: 'Effectif',
+      data: this.niveaux.map((item) => Number(item.effectif ?? 0))
+    }];
     this.xaxis = {
       ...this.xaxis,
       categories: this.niveaux.map((item) => item.niveauCode || item.niveauLibelle)
     };
+  }
+
+  get hasData(): boolean {
+    return this.niveaux.length > 0;
   }
 
   isOpen = false;

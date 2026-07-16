@@ -242,12 +242,12 @@ export const REFERENTIEL_CRUD_ENTITIES: EntityDefinition[] = [
     label: 'Utilisateurs',
     path: 'utilisateurs',
     roles: ['SADM', 'ADM'],
-    hint: "Crée uniquement la fiche annuaire. Les identifiants de connexion (compte Keycloak) sont gérés séparément.",
+    hint: "Associez un ou plusieurs rôles applicatifs. Les identifiants de connexion du compte Keycloak restent gérés séparément.",
     columns: [
       { key: 'firstName', label: 'Prénom' },
       { key: 'lastName', label: 'Nom' },
       { key: 'email', label: 'Email' },
-      { key: 'profilLibelle', label: 'Profil' },
+      { key: 'profilLibelles', label: 'Rôles' },
       { key: 'actif', label: 'Actif' }
     ],
     fields: [
@@ -257,7 +257,7 @@ export const REFERENTIEL_CRUD_ENTITIES: EntityDefinition[] = [
       { key: 'username', label: "Nom d'utilisateur", type: 'text', required: true, readOnlyOnEdit: true },
       { key: 'phone', label: 'Téléphone', type: 'text' },
       {
-        key: 'profilCode', label: 'Profil', type: 'select', required: true,
+        key: 'profilCodes', label: 'Rôles', type: 'multiselect', required: true,
         optionsSource: { path: 'profils', valueField: 'code', labelField: 'libelle' }
       }
     ]
@@ -277,7 +277,7 @@ export const REFERENTIEL_CRUD_ENTITIES: EntityDefinition[] = [
       { key: 'libelle', label: 'Libellé', type: 'text', required: true },
       {
         key: 'droits', label: 'Droits', type: 'multiselect',
-        optionsSource: { path: 'droits', valueField: 'code', labelField: 'libelle' }
+        optionsSource: { path: 'droits', valueField: 'id', labelField: 'libelle' }
       }
     ]
   }

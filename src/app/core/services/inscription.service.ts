@@ -14,6 +14,7 @@ import {
   InscriptionRequest,
   Paiement,
   PaiementRequest,
+  PaiementVerification,
   ParentTuteur,
   ParentTuteurRequest,
   PieceJustificative,
@@ -221,6 +222,12 @@ export class InscriptionService {
     return this.http.get(`${this.base}/paiements/${uuid}/recu`, { responseType: 'blob' });
   }
 
+  verifierPaiement(code: string): Observable<PaiementVerification> {
+    return this.http
+      .get<ApiResponse<PaiementVerification>>(`${this.publicApiBase()}/inscriptions/paiements/verification/${encodeURIComponent(code)}/details`)
+      .pipe(map((response) => response.data));
+  }
+
   // --- Statistiques d'inscription (tableau de bord) ----------------------
 
   statistiquesParClasse(anneeScolaireId?: number): Observable<StatistiqueClasse[]> {
@@ -261,5 +268,21 @@ export class InscriptionService {
       params = params.set('filter', criteria.filter);
     }
     return params;
+  }
+
+  private publicApiBase(): string {
+    // En consultation depuis un téléphone, "localhost" dans environment.apiUrl désignerait le
+    // téléphone. On conserve le port du gateway mais on reprend le nom/IP utilisé pour ouvrir
+    // le frontend.
+    if (typeof window === 'undefined') return environment.apiUrl;
+    try {
+      const api = new URL(environment.apiUrl, window.location.origin);
+      if (api.hostname === 'localhost' && window.location.hostname !== 'localhost') {
+        api.hostname = window.location.hostname;
+      }
+      return api.toString().replace(/\/$/, '');
+    } catch {
+      return environment.apiUrl;
+    }
   }
 }

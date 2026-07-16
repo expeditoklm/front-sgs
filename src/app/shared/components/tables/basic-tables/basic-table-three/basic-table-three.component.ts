@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { ButtonComponent } from '../../../ui/button/button.component';
 import { TableDropdownComponent } from '../../../common/table-dropdown/table-dropdown.component';
 import { BadgeComponent } from '../../../ui/badge/badge.component';
+import { PaginationComponent } from '../../../ui/pagination/pagination.component';
 
 interface Transaction {
   image: string;
@@ -20,6 +21,7 @@ interface Transaction {
     ButtonComponent,
     TableDropdownComponent,
     BadgeComponent,
+    PaginationComponent,
   ],
   templateUrl: './basic-table-three.component.html',
   styles: ``
@@ -168,6 +170,11 @@ export class BasicTableThreeComponent {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
     }
+  }
+
+  changePageSize(pageSize: number): void {
+    this.itemsPerPage = pageSize;
+    this.currentPage = 1;
   }
 
   handleViewMore(item: Transaction) {

@@ -1,0 +1,101 @@
+<div class="mx-auto max-w-7xl space-y-5">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <p class="text-sm font-medium text-brand-500">Administration</p>
+      <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Demandes de compte</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Approuvez la demande, attribuez les rôles et créez automatiquement le compte SGS et Keycloak.</p>
+    </div>
+    <label class="text-sm text-gray-700 dark:text-gray-300">État
+      <app-select [(ngModel)]="status" [options]="statusOptions" [searchable]="false" (ngModelChange)="load()" className="ml-2 min-w-44" />
+    </label>
+  </div>
+
+  @if(error){<div class="rounded-xl border border-error-200 bg-error-50 p-4 text-sm text-error-700">{{error}}</div>}
+
+  <section class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-white/[0.04]">
+          <tr>
+            <th class="p-4">Demandeur</th><th class="p-4">Contact</th><th class="p-4">Établissement</th>
+            <th class="p-4">Demande</th><th class="p-4">État</th><th class="p-4"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let request of requests | paginate:page:pageSize" class="border-t border-gray-200 dark:border-gray-800">
+            <td class="p-4"><strong>{{request.first_name}} {{request.last_name}}</strong><br><span class="text-xs text-gray-500">{{request.requested_at|date:'dd/MM/yyyy HH:mm'}}</span></td>
+            <td class="p-4">{{request.email}}<br><span class="text-xs text-gray-500">{{request.phone || '—'}}</span></td>
+            <td class="p-4">{{request.institution}}</td>
+            <td class="max-w-xs p-4 text-gray-600 dark:text-gray-300">{{request.applicant_message || '—'}}</td>
+            <td class="p-4">
+              <span class="rounded-full px-2.5 py-1 text-xs"
+                    [class.bg-warning-50]="request.status==='PENDING'"
+                    [class.text-warning-700]="request.status==='PENDING'"
+                    [class.bg-success-50]="request.status==='APPROVED'"
+                    [class.text-success-700]="request.status==='APPROVED'"
+                    [class.bg-error-50]="request.status==='REJECTED'"
+                    [class.text-error-700]="request.status==='REJECTED'">
+                {{request.status==='PENDING'?'En attente':request.status==='APPROVED'?'Approuvée':'Refusée'}}
+              </span>
+              <div *ngIf="request.role_codes" class="mt-2 text-xs text-gray-500">{{request.role_codes}}</div>
+            </td>
+            <td class="p-4 text-right">
+              <div *ngIf="request.status==='PENDING'" class="flex justify-end gap-2">
+                <button type="button" (click)="openReject(request)" class="rounded-lg border border-error-300 px-3 py-2 text-error-600">Refuser</button>
+                <button type="button" (click)="openApprove(request)" class="rounded-lg bg-brand-500 px-3 py-2 text-white">Approuver</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      @if(!loading&&!requests.length){<p class="p-8 text-center text-sm text-gray-500">Aucune demande pour ce filtre.</p>}
+      @if(loading){<p class="p-8 text-center text-sm text-gray-500">Chargement…</p>}
+    </div>
+    <app-pagination
+      class="m-4 block"
+      [currentPage]="page"
+      [totalPages]="totalPages"
+      [totalItems]="requests.length"
+      [pageSize]="pageSize"
+      itemLabel="demande"
+      (pageChange)="changePage($event)"
+      (pageSizeChange)="changePageSize($event)"
+    />
+  </section>
+</div>
+
+<app-modal [isOpen]="approveOpen" (close)="approveOpen=false" className="max-w-[620px] p-6">
+  <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Approuver la demande</h2>
+  <p class="mt-2 text-sm text-gray-500">Le compte sera créé dans SGS et Keycloak. Le demandeur recevra son mot de passe par e-mail.</p>
+  <label class="mt-5 block text-sm">Nom d’utilisateur
+    <input [(ngModel)]="username" class="mt-1 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 dark:border-gray-700">
+  </label>
+  <fieldset class="mt-5">
+    <legend class="text-sm font-medium">Rôles à attribuer</legend>
+    <div class="mt-2 grid gap-2 sm:grid-cols-2">
+      <label *ngFor="let role of roles" class="flex items-center gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+        <input type="checkbox" [checked]="selectedRoles.includes(role.code)" (change)="toggleRole(role.code,$any($event.target).checked)">
+        <span><strong>{{role.code}}</strong> · {{role.label}}</span>
+      </label>
+    </div>
+  </fieldset>
+  <label class="mt-5 block text-sm">Commentaire interne
+    <textarea [(ngModel)]="comment" rows="3" class="mt-1 w-full rounded-lg border border-gray-300 bg-transparent p-3 dark:border-gray-700"></textarea>
+  </label>
+  <div class="mt-6 flex justify-end gap-2">
+    <button type="button" (click)="approveOpen=false" class="rounded-lg border px-4 py-2">Annuler</button>
+    <button type="button" data-confirm-skip="true" (click)="approve()" [disabled]="processing||!selectedRoles.length||!username.trim()" class="rounded-lg bg-brand-500 px-4 py-2 text-white disabled:opacity-40">Confirmer et créer</button>
+  </div>
+</app-modal>
+
+<app-modal [isOpen]="rejectOpen" (close)="rejectOpen=false" className="max-w-[520px] p-6">
+  <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Refuser la demande</h2>
+  <p class="mt-2 text-sm text-gray-500">Le motif sera envoyé au demandeur par e-mail.</p>
+  <label class="mt-5 block text-sm">Motif du refus
+    <textarea [(ngModel)]="rejectReason" rows="4" class="mt-1 w-full rounded-lg border border-gray-300 bg-transparent p-3 dark:border-gray-700"></textarea>
+  </label>
+  <div class="mt-6 flex justify-end gap-2">
+    <button type="button" (click)="rejectOpen=false" class="rounded-lg border px-4 py-2">Annuler</button>
+    <button type="button" data-confirm-skip="true" (click)="reject()" [disabled]="processing||!rejectReason.trim()" class="rounded-lg bg-error-600 px-4 py-2 text-white disabled:opacity-40">Confirmer le refus</button>
+  </div>
+</app-modal>

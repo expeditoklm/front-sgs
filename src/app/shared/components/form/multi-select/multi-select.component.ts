@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, OnInit, SimpleChanges, ElementRef, HostListener } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
 export interface Option {
   value: string;
@@ -10,11 +11,12 @@ export interface Option {
   selector: 'app-multi-select',
   imports: [
     CommonModule,
+    FormsModule,
   ],
   templateUrl: './multi-select.component.html',
   styles: ``
 })
-export class MultiSelectComponent {
+export class MultiSelectComponent implements OnInit, OnChanges {
 
   @Input() label: string = '';
   @Input() options: Option[] = [];
@@ -24,13 +26,37 @@ export class MultiSelectComponent {
 
   selectedOptions: string[] = [];
   isOpen = false;
+  query = '';
+  @Input() resultLimit = 10;
+
+  constructor(private readonly elementRef: ElementRef<HTMLElement>) {}
 
   ngOnInit() {
     this.selectedOptions = [...this.defaultSelected];
   }
 
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['defaultSelected']) {
+      this.selectedOptions = [...(this.defaultSelected ?? [])];
+    }
+  }
+
   toggleDropdown() {
     if (!this.disabled) this.isOpen = !this.isOpen;
+  }
+
+  @HostListener('document:click', ['$event'])
+  closeOnOutsideClick(event: MouseEvent) {
+    if (!this.elementRef.nativeElement.contains(event.target as Node)) {
+      this.isOpen = false;
+    }
+  }
+
+  get displayedOptions(): Option[] {
+    const term = this.normalize(this.query);
+    return this.options
+      .filter(option => !term || this.normalize(option.text).includes(term))
+      .slice(0, Math.max(1, this.resultLimit));
   }
 
   handleSelect(optionValue: string) {
@@ -51,5 +77,9 @@ export class MultiSelectComponent {
     return this.selectedOptions
       .map(value => this.options.find(option => option.value === value)?.text || '')
       .filter(Boolean);
+  }
+
+  private normalize(value: string): string {
+    return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
   }
 }

@@ -10,6 +10,8 @@ import { CheckboxComponent } from '../../../shared/components/form/input/checkbo
 import { PedagogieService } from '../../../core/services/pedagogie.service';
 import { InscriptionService } from '../../../core/services/inscription.service';
 import { AuthenticationService } from '../../../core/services/authentication.service';
+import { PaginationComponent } from '../../../shared/components/ui/pagination/pagination.component';
+import { PaginatePipe } from '../../../shared/pipes/paginate.pipe';
 import { ToastService } from '../../../core/services/toast.service';
 import { ReferentielCrudService } from '../../../core/services/referentiel-crud.service';
 import { Evaluation, NoteLotItem, STATUT_EVALUATION_LABELS, TYPE_EVALUATION_LABELS } from '../../../core/models/pedagogie.models';
@@ -36,11 +38,19 @@ interface GridRow {
     ButtonComponent,
     BadgeComponent,
     InputFieldComponent,
-    CheckboxComponent
+    CheckboxComponent,
+    PaginationComponent,
+    PaginatePipe
   ],
-  templateUrl: './saisie-notes.component.html'
+  templateUrl: './saisie-notes.component.html',
+  host: { class: 'sgs-dark-view block' }
 })
 export class SaisieNotesComponent implements OnInit {
+  page = 1;
+  pageSize = 10;
+  get totalPages(): number { return Math.max(1, Math.ceil(this.rows.length / this.pageSize)); }
+  changePage(page: number): void { this.page = Math.min(Math.max(page, 1), this.totalPages); }
+  changePageSize(pageSize: number): void { this.pageSize = pageSize; this.page = 1; }
   evaluation: Evaluation | null = null;
   rows: GridRow[] = [];
   loading = false;

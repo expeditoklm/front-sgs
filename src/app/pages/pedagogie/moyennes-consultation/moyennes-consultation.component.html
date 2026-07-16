@@ -67,7 +67,7 @@
                   <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="3">Aucune moyenne calculée pour cette période.</td>
                 </tr>
               } @else {
-                @for (m of moyennesMatiere; track m.matiereId) {
+                @for (m of moyennesMatiere | paginate:pageMatieres:pageSize; track m.matiereId) {
                   <tr>
                     <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ matiereLabel(m.matiereId) }}</td>
                     <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ m.valeur }}</td>
@@ -79,6 +79,7 @@
           </table>
         </div>
       </div>
+      <app-pagination class="mt-4 block" [currentPage]="pageMatieres" [totalPages]="totalPages(moyennesMatiere)" [totalItems]="moyennesMatiere.length" [pageSize]="pageSize" itemLabel="matière" (pageChange)="changePage('matieres',$event,moyennesMatiere)" (pageSizeChange)="changePageSize($event)"/>
 
       <div class="mt-4 flex items-center gap-6 text-sm">
         <span class="font-semibold text-gray-800 dark:text-white/90">
@@ -115,7 +116,7 @@
                   <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="3">Aucune moyenne calculée pour cette classe/période.</td>
                 </tr>
               } @else {
-                @for (ligne of palmares; track ligne.inscriptionId) {
+                @for (ligne of palmares | paginate:pagePalmares:pageSize; track ligne.inscriptionId) {
                   <tr>
                     <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ ligne.rangClasse ?? '—' }}</td>
                     <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ ligne.eleveNomComplet }}</td>
@@ -127,6 +128,7 @@
           </table>
         </div>
       </div>
+      <app-pagination class="mt-4 block" [currentPage]="pagePalmares" [totalPages]="totalPages(palmares)" [totalItems]="palmares.length" [pageSize]="pageSize" itemLabel="élève" (pageChange)="changePage('palmares',$event,palmares)" (pageSizeChange)="changePageSize($event)"/>
     }
   }
 </app-component-card>

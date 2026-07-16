@@ -8,6 +8,8 @@ import { BadgeComponent } from '../../../shared/components/ui/badge/badge.compon
 import { InputFieldComponent } from '../../../shared/components/form/input/input-field.component';
 import { SelectComponent } from '../../../shared/components/form/select/select.component';
 import { ConfirmDialogComponent } from '../../../shared/components/referentiel/confirm-dialog/confirm-dialog.component';
+import { PaginationComponent } from '../../../shared/components/ui/pagination/pagination.component';
+import { PaginatePipe } from '../../../shared/pipes/paginate.pipe';
 import { PedagogieService } from '../../../core/services/pedagogie.service';
 import { InscriptionService } from '../../../core/services/inscription.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -52,11 +54,19 @@ interface LigneDecision {
     BadgeComponent,
     InputFieldComponent,
     SelectComponent,
-    ConfirmDialogComponent
+    ConfirmDialogComponent,
+    PaginationComponent,
+    PaginatePipe
   ],
-  templateUrl: './deliberation-detail.component.html'
+  templateUrl: './deliberation-detail.component.html',
+  host: { class: 'sgs-dark-view block' }
 })
 export class DeliberationDetailComponent implements OnInit {
+  page = 1;
+  pageSize = 10;
+  get totalPages(): number { return Math.max(1, Math.ceil(this.lignes.length / this.pageSize)); }
+  changePage(page: number): void { this.page = Math.min(Math.max(page, 1), this.totalPages); }
+  changePageSize(pageSize: number): void { this.pageSize = pageSize; this.page = 1; }
   deliberation: Deliberation | null = null;
   lignes: LigneDecision[] = [];
   loading = false;

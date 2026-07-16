@@ -1,10 +1,10 @@
-export interface Employe { uuid:string;matricule:string;nom:string;prenom:string;email:string;telephone?:string;categorie:string;specialite?:string;dateEmbauche:string;actif:boolean; }
-export interface EmployePayload { nom:string;prenom:string;email:string;telephone:string;categorie:string;specialite:string;dateEmbauche:string; }
+export interface Employe { uuid:string;matricule:string;nom:string;prenom:string;email:string;telephone?:string;categorie:string;specialite?:string;dateEmbauche:string;actif:boolean;utilisateurId?:number|null;utilisateur?:string|null; }
+export interface EmployePayload { nom:string;prenom:string;email:string;telephone:string;categorie:string;specialite:string;dateEmbauche:string;utilisateurId:number|null; }
 export interface Conge { uu_id:string;employe_uuid:string;employe:string;cng_type:string;cng_date_debut:string;cng_date_fin:string;cng_motif?:string;cng_statut:string;cng_commentaire?:string; }
 export interface Contrat { uu_id:string;employe_uuid:string;employe:string;con_type:string;con_date_debut:string;con_date_fin?:string;con_remuneration?:number;con_actif:boolean; }
 export interface RhDashboard { effectif_actif:number;enseignants:number;contrats_actifs:number;conges_en_attente:number; }
 export interface RhOption { id:number;label:string; }
-export interface RhOptions { annees:RhOption[];matieres:RhOption[];niveaux:RhOption[];classes:RhOption[]; }
+export interface RhOptions { annees:RhOption[];matieres:RhOption[];niveaux:RhOption[];classes:RhOption[];utilisateurs:RhOption[]; }
 export interface Affectation { uu_id:string;employe_uuid:string;employe:string;aff_annee_id:number;annee:string;matiere?:string;niveau?:string;classe?:string;aff_heures_hebdo:number;aff_date_debut:string;aff_date_fin?:string; }
 export interface SoldeConge { uu_id:string;employe_uuid:string;employe:string;sol_annee:number;sol_type:string;sol_jours_acquis:number;sol_jours_reportes:number;jours_pris:number;solde:number; }
 export interface EvaluationRh { uu_id:string;employe_uuid:string;employe:string;eva_date:string;eva_periode:string;eva_note:number;eva_objectifs?:string;eva_appreciation?:string;eva_evaluateur:string; }

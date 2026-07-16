@@ -99,13 +99,15 @@
     </div>
   </div>
 
-  @if (meta && meta.totalPages > 1) {
-    <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mt-4">
-      <span>Page {{ meta.pageNumber }} / {{ meta.totalPages }} — {{ meta.totalElements }} paiement(s)</span>
-      <div class="flex gap-2">
-        <app-button size="sm" variant="outline" [disabled]="!meta.hasPrev" (btnClick)="goToPage(page - 1)">Précédent</app-button>
-        <app-button size="sm" variant="outline" [disabled]="!meta.hasNext" (btnClick)="goToPage(page + 1)">Suivant</app-button>
-      </div>
-    </div>
+  @if (meta) {
+    <app-pagination
+      [currentPage]="meta.pageNumber"
+      [totalPages]="meta.totalPages"
+      [totalItems]="meta.totalElements"
+      [pageSize]="pageSize"
+      itemLabel="paiement"
+      (pageChange)="goToPage($event)"
+      (pageSizeChange)="changePageSize($event)"
+    />
   }
 </app-component-card>

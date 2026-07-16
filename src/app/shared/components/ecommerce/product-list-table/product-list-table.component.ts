@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { TableDropdownComponent } from '../../common/table-dropdown/table-dropdown.component';
 import { ButtonComponent } from '../../ui/button/button.component';
 import { RouterModule } from '@angular/router';
+import { PaginationComponent } from '../../ui/pagination/pagination.component';
 
 interface Product {
   id: number;
@@ -26,6 +27,7 @@ interface Sort {
     TableDropdownComponent,
     ButtonComponent,
     RouterModule,
+    PaginationComponent,
   ],
   templateUrl: './product-list-table.component.html',
   styles: ``
@@ -284,6 +286,11 @@ export class ProductListTableComponent {
     if (this.page < this.totalPages()) {
       this.page++;
     }
+  }
+
+  changePageSize(pageSize: number): void {
+    this.perPage = pageSize;
+    this.page = 1;
   }
 
   toggleSelect(id: number): void {

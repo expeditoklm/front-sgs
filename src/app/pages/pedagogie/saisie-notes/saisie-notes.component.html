@@ -39,7 +39,7 @@
                 <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="4">Aucun élève inscrit (VALIDEE) dans cette classe.</td>
               </tr>
             } @else {
-              @for (row of rows; track row.inscriptionUuid) {
+              @for (row of rows | paginate:page:pageSize; track row.inscriptionUuid) {
                 <tr>
                   <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     {{ row.eleveNomComplet }}
@@ -73,6 +73,7 @@
         </table>
       </div>
     </div>
+    <app-pagination class="mt-4 block" [currentPage]="page" [totalPages]="totalPages" [totalItems]="rows.length" [pageSize]="pageSize" itemLabel="élève" (pageChange)="changePage($event)" (pageSizeChange)="changePageSize($event)"/>
 
     @if (gridEditable && rows.length > 0) {
       <div class="flex items-center justify-end w-full gap-3 mt-6">

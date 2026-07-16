@@ -9,13 +9,20 @@ import { ReferentielCrudService } from '../../../core/services/referentiel-crud.
 import { ToastService } from '../../../core/services/toast.service';
 import { SelectOption } from '../../../core/models/referentiel-crud.models';
 import { StatistiqueClasse, StatistiqueNiveau, StatistiqueSexe } from '../../../core/models/inscription.models';
+import { PaginationComponent } from '../../../shared/components/ui/pagination/pagination.component';
+import { PaginatePipe } from '../../../shared/pipes/paginate.pipe';
 
 @Component({
   selector: 'app-statistiques-dashboard',
-  imports: [NgApexchartsModule, PageBreadcrumbComponent, ComponentCardComponent, LabelComponent, SelectComponent],
+  imports: [NgApexchartsModule, PageBreadcrumbComponent, ComponentCardComponent, LabelComponent, SelectComponent, PaginationComponent, PaginatePipe],
   templateUrl: './statistiques-dashboard.component.html'
 })
 export class StatistiquesDashboardComponent implements OnInit {
+  page = 1;
+  pageSize = 10;
+  get totalPages(): number { return Math.max(1, Math.ceil(this.classeRows.length / this.pageSize)); }
+  changePage(page: number): void { this.page = Math.min(Math.max(page, 1), this.totalPages); }
+  changePageSize(pageSize: number): void { this.pageSize = pageSize; this.page = 1; }
   loading = false;
   loadError = '';
 

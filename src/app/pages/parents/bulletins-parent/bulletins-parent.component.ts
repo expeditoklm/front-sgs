@@ -6,6 +6,8 @@ import { ButtonComponent } from '../../../shared/components/ui/button/button.com
 import { ArchivedBulletin, ReportService } from '../../../core/services/report.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { downloadBlob } from '../../../core/helpers/download.helpers';
+import { PaginationComponent } from '../../../shared/components/ui/pagination/pagination.component';
+import { PaginatePipe } from '../../../shared/pipes/paginate.pipe';
 
 @Component({
   selector: 'app-bulletins-parent',
@@ -13,7 +15,9 @@ import { downloadBlob } from '../../../core/helpers/download.helpers';
     CommonModule,
     PageBreadcrumbComponent,
     ComponentCardComponent,
-    ButtonComponent
+    ButtonComponent,
+    PaginationComponent,
+    PaginatePipe
   ],
   templateUrl: './bulletins-parent.component.html'
 })
@@ -21,6 +25,21 @@ export class BulletinsParentComponent implements OnInit {
   bulletins: ArchivedBulletin[] = [];
   loading = false;
   error = '';
+  page = 1;
+  pageSize = 10;
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.bulletins.length / this.pageSize));
+  }
+
+  changePage(page: number): void {
+    this.page = Math.min(Math.max(page, 1), this.totalPages);
+  }
+
+  changePageSize(pageSize: number): void {
+    this.pageSize = pageSize;
+    this.page = 1;
+  }
 
   constructor(
     private reportService: ReportService,
@@ -38,6 +57,7 @@ export class BulletinsParentComponent implements OnInit {
     this.reportService.listerBulletinsParents().subscribe({
       next: (bulletins) => {
         this.bulletins = bulletins;
+        this.page = 1;
         this.loading = false;
       },
       error: (err) => {

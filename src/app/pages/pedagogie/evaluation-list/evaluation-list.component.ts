@@ -9,6 +9,7 @@ import { LabelComponent } from '../../../shared/components/form/label/label.comp
 import { SelectComponent } from '../../../shared/components/form/select/select.component';
 import { BadgeComponent } from '../../../shared/components/ui/badge/badge.component';
 import { ConfirmDialogComponent } from '../../../shared/components/referentiel/confirm-dialog/confirm-dialog.component';
+import { PaginationComponent } from '../../../shared/components/ui/pagination/pagination.component';
 import { PedagogieService } from '../../../core/services/pedagogie.service';
 import { ReferentielCrudService } from '../../../core/services/referentiel-crud.service';
 import { AuthenticationService } from '../../../core/services/authentication.service';
@@ -39,14 +40,17 @@ function emptyEvaluationRequest(): Partial<EvaluationRequest> {
     LabelComponent,
     SelectComponent,
     BadgeComponent,
-    ConfirmDialogComponent
+    ConfirmDialogComponent,
+    PaginationComponent
   ],
-  templateUrl: './evaluation-list.component.html'
+  templateUrl: './evaluation-list.component.html',
+  host: { class: 'sgs-dark-view block' }
 })
 export class EvaluationListComponent implements OnInit {
   rows: Evaluation[] = [];
   meta: MetaResponse | null = null;
   page = 1;
+  pageSize = 10;
   loading = false;
   listError = '';
 
@@ -156,7 +160,7 @@ export class EvaluationListComponent implements OnInit {
     this.loading = true;
     this.listError = '';
     this.pedagogieService
-      .filterEvaluations(this.buildFilters(), { page: this.page, size: 10, sortField: 'id', sortOrder: 'DESC', filter: '' })
+      .filterEvaluations(this.buildFilters(), { page: this.page, size: this.pageSize, sortField: 'id', sortOrder: 'DESC', filter: '' })
       .subscribe({
         next: (result) => {
           this.rows = result.content;
@@ -191,6 +195,12 @@ export class EvaluationListComponent implements OnInit {
       return;
     }
     this.page = page;
+    this.load();
+  }
+
+  changePageSize(pageSize: number): void {
+    this.pageSize = pageSize;
+    this.page = 1;
     this.load();
   }
 

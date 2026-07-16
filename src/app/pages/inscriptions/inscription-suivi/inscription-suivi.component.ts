@@ -8,6 +8,7 @@ import { LabelComponent } from '../../../shared/components/form/label/label.comp
 import { SelectComponent } from '../../../shared/components/form/select/select.component';
 import { InputFieldComponent } from '../../../shared/components/form/input/input-field.component';
 import { BadgeComponent } from '../../../shared/components/ui/badge/badge.component';
+import { PaginationComponent } from '../../../shared/components/ui/pagination/pagination.component';
 import { InscriptionService } from '../../../core/services/inscription.service';
 import { ReferentielCrudService } from '../../../core/services/referentiel-crud.service';
 import { AuthenticationService } from '../../../core/services/authentication.service';
@@ -37,7 +38,8 @@ const CIBLES_AVEC_MOTIF: StatutInscription[] = ['REJETEE', 'ANNULEE'];
     LabelComponent,
     SelectComponent,
     InputFieldComponent,
-    BadgeComponent
+    BadgeComponent,
+    PaginationComponent
   ],
   templateUrl: './inscription-suivi.component.html'
 })
@@ -45,6 +47,7 @@ export class InscriptionSuiviComponent implements OnInit {
   rows: Inscription[] = [];
   meta: MetaResponse | null = null;
   page = 1;
+  pageSize = 10;
   loading = false;
   listError = '';
 
@@ -122,7 +125,7 @@ export class InscriptionSuiviComponent implements OnInit {
     this.loading = true;
     this.listError = '';
     this.inscriptionService
-      .filterInscriptions(this.buildFilters(), { page: this.page, size: 10, sortField: 'id', sortOrder: 'DESC', filter: '' })
+      .filterInscriptions(this.buildFilters(), { page: this.page, size: this.pageSize, sortField: 'id', sortOrder: 'DESC', filter: '' })
       .subscribe({
         next: (result) => {
           this.rows = result.content;
@@ -157,6 +160,12 @@ export class InscriptionSuiviComponent implements OnInit {
       return;
     }
     this.page = page;
+    this.load();
+  }
+
+  changePageSize(pageSize: number): void {
+    this.pageSize = pageSize;
+    this.page = 1;
     this.load();
   }
 

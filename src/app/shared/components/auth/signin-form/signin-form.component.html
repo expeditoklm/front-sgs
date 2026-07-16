@@ -167,20 +167,10 @@
           </p>
         </div>
 
-        <div class="space-y-3">
-          @for (profile of profiles; track profile.code) {
-            <button
-              type="button"
-              (click)="selectedProfile = profile.code"
-              class="flex w-full items-center justify-between rounded-lg border px-4 py-3 text-left text-sm transition-colors"
-              [ngClass]="selectedProfile === profile.code
-                ? 'border-brand-500 bg-brand-500/5 text-brand-600 dark:text-brand-400'
-                : 'border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]'"
-            >
-              {{ profile.libelle }}
-            </button>
-          }
-        </div>
+        <label for="profile" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Rôle de connexion
+        </label>
+        <app-select id="profile" name="profile" [(ngModel)]="selectedProfile" [options]="profileOptions" placeholder="Choisir un rôle" />
 
         @if (errorMessage) {
           <p class="mt-4 text-sm text-error-500">{{ errorMessage }}</p>

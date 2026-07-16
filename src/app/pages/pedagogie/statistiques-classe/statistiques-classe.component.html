@@ -81,7 +81,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                @for (row of matiereRows; track row.matiereId) {
+                @for (row of matiereRows | paginate:page:pageSize; track row.matiereId) {
                   <tr>
                     <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ matiereLabel(row.matiereId) }}</td>
                     <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.effectif }}</td>
@@ -95,6 +95,7 @@
             </table>
           </div>
         </div>
+        <app-pagination class="mt-4 block" [currentPage]="page" [totalPages]="totalPages" [totalItems]="matiereRows.length" [pageSize]="pageSize" itemLabel="matière" (pageChange)="changePage($event)" (pageSizeChange)="changePageSize($event)"/>
       }
     </app-component-card>
 

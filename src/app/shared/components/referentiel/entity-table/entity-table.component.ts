@@ -29,7 +29,12 @@ export class EntityTableComponent {
     const value = row[column.key];
     if (value === null || value === undefined || value === '') return '—';
     if (typeof value === 'boolean') return value ? 'Oui' : 'Non';
-    if (Array.isArray(value)) return value.length ? String(value.length) : '—';
+    if (Array.isArray(value)) {
+      if (!value.length) return '—';
+      return value.every((item) => ['string', 'number'].includes(typeof item))
+        ? value.join(', ')
+        : String(value.length);
+    }
     return String(value);
   }
 }

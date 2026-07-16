@@ -193,6 +193,14 @@ export interface Paiement {
   codeVerification: string | null;
 }
 
+export interface PaiementVerification {
+  numeroRecu: string;
+  eleveNomComplet: string;
+  montant: number;
+  datePaiement: string;
+  statut: string;
+}
+
 export interface PaiementRequest {
   inscriptionUuid: string;
   montant: number;

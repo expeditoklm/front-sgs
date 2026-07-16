@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { NgClass } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { LabelComponent } from '../../form/label/label.component';
 import { CheckboxComponent } from '../../form/input/checkbox.component';
@@ -9,19 +8,20 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthenticationService } from '../../../../core/services/authentication.service';
 import { ProfileOption } from '../../../../core/models/auth.models';
+import { SelectComponent } from '../../form/select/select.component';
 
 type Step = 'credentials' | 'otp' | 'role';
 
 @Component({
   selector: 'app-signin-form',
   imports: [
-    NgClass,
     LabelComponent,
     CheckboxComponent,
     ButtonComponent,
     InputFieldComponent,
     RouterModule,
-    FormsModule
+    FormsModule,
+    SelectComponent
 ],
   templateUrl: './signin-form.component.html',
   styles: ``
@@ -40,6 +40,13 @@ export class SigninFormComponent {
 
   profiles: ProfileOption[] = [];
   selectedProfile: string | null = null;
+
+  get profileOptions() {
+    return this.profiles.map(profile => ({
+      value: profile.code,
+      label: `${profile.libelle} (${profile.code.replace('ROLE_', '')})`
+    }));
+  }
 
   errorMessage = '';
 
@@ -72,8 +79,12 @@ export class SigninFormComponent {
     this.isSubmitting = true;
     this.authService.validateOtp$(this.otp).subscribe((result) => {
       this.isSubmitting = false;
-      if (!result.success || !result.profiles?.length) {
+      if (!result.success) {
         this.errorMessage = 'Code de vérification invalide.';
+        return;
+      }
+      if (!result.profiles?.length) {
+        this.errorMessage = "Aucun rôle actif n'est associé à ce compte. Contactez un administrateur.";
         return;
       }
       this.profiles = result.profiles;

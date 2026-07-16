@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, catchError, map, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse, MonProfil, ProfileOption, User, UserSummary } from '../models/auth.models';
@@ -20,6 +20,7 @@ interface RoleSelectionData {
   roleUuid: string;
   accessToken: string;
   refreshToken: string;
+  permissions: string[];
 }
 
 interface RefreshTokenData {
@@ -141,12 +142,15 @@ export class AuthenticationService {
       );
   }
 
-  resetPasswordConfirm$(token: string, newPassword: string): Observable<boolean> {
+  resetPasswordConfirm$(token: string, newPassword: string): Observable<{ success: boolean; message: string }> {
     return this.http
-      .post(`${this.endpoint}/reset-password-confirm`, { token, newPassword })
+      .post<ApiResponse<unknown>>(`${this.endpoint}/reset-password-confirm`, { token, newPassword })
       .pipe(
-        map(() => true),
-        catchError(() => of(false))
+        map((response) => ({ success: true, message: response.message })),
+        catchError((error: HttpErrorResponse) => of({
+          success: false,
+          message: error.error?.details || error.error?.message || 'La réinitialisation du mot de passe a échoué.'
+        }))
       );
   }
 
@@ -164,6 +168,36 @@ export class AuthenticationService {
         map(() => true),
         catchError(() => of(false))
       );
+  }
+
+  accountRequests$(status?: string): Observable<any[]> {
+    const options = status ? { params: { status } } : {};
+    return this.http
+      .get<ApiResponse<any[]>>(`${this.endpoint}/account-requests`, options)
+      .pipe(map(response => response.data ?? []));
+  }
+
+  accountRequestRoles$(): Observable<Array<{ code: string; label: string }>> {
+    return this.http
+      .get<ApiResponse<Array<{ code: string; label: string }>>>(`${this.endpoint}/account-requests/roles`)
+      .pipe(map(response => response.data ?? []));
+  }
+
+  approveAccountRequest$(
+    uuid: string,
+    payload: { username?: string; roleCodes: string[]; comment?: string }
+  ): Observable<ApiResponse<unknown>> {
+    return this.http.post<ApiResponse<unknown>>(
+      `${this.endpoint}/account-requests/${uuid}/approve`,
+      payload
+    );
+  }
+
+  rejectAccountRequest$(uuid: string, reason: string): Observable<ApiResponse<unknown>> {
+    return this.http.post<ApiResponse<unknown>>(
+      `${this.endpoint}/account-requests/${uuid}/reject`,
+      { reason }
+    );
   }
 
   // Réservé SADM/ADM (cf. SecurityConfig.SADM_ADM_PATHS côté gateway) - distinct de
@@ -211,6 +245,15 @@ export class AuthenticationService {
     return profile !== null && roles.includes(profile);
   }
 
+  hasPermission(permission: string): boolean {
+    const user = this.user();
+    return user?.profilCode === 'SADM' || (user?.permissions ?? []).includes(permission);
+  }
+
+  hasAnyPermission(permissions: string[]): boolean {
+    return permissions.length === 0 || permissions.some(permission => this.hasPermission(permission));
+  }
+
   synchroniserProfil(profile: MonProfil): void {
     const current = this.user();
     if (!current) return;
@@ -239,7 +282,8 @@ export class AuthenticationService {
       firstName: this.pendingUser?.firstName ?? '',
       lastName: this.pendingUser?.lastName ?? '',
       profilCode: data.roleName,
-      profilLibelle: profileLibelle
+      profilLibelle: profileLibelle,
+      permissions: data.permissions ?? []
     };
 
     localStorage.setItem('access_token', data.accessToken);

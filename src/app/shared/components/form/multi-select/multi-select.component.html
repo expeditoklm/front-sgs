@@ -31,10 +31,10 @@
               }
             } @else {
               <input
-                placeholder="Select option"
+                placeholder="Sélectionner une ou plusieurs options"
                 class="w-full h-full p-1 pr-2 text-sm bg-transparent border-0 outline-hidden appearance-none placeholder:text-gray-800 focus:border-0 focus:outline-hidden focus:ring-0 dark:placeholder:text-white/90"
                 readonly
-                value="Select option"
+                value="Sélectionner une ou plusieurs options"
               />
             }
           </div>
@@ -69,8 +69,16 @@
         class="absolute left-0 z-40 w-full overflow-y-auto bg-white rounded-lg shadow-sm top-full max-h-select dark:bg-gray-900"
         (click)="$event.stopPropagation()"
       >
+        <div class="sticky top-0 z-10 border-b border-gray-100 bg-white p-2 dark:border-gray-800 dark:bg-gray-900">
+          <input
+            type="search"
+            [(ngModel)]="query"
+            placeholder="Rechercher..."
+            class="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm outline-none focus:border-brand-300 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
+          />
+        </div>
         <div class="flex flex-col">
-          @for (option of options; track $index) {
+          @for (option of displayedOptions; track $index) {
           <div
             class="hover:bg-primary/5 w-full cursor-pointer rounded-t border-b border-gray-200 dark:border-gray-800"
             (click)="handleSelect(option.value)"
@@ -85,7 +93,15 @@
             </div>
           </div>
           }
+          @if (!displayedOptions.length) {
+            <div class="p-4 text-center text-sm text-gray-500">Aucun résultat</div>
+          }
         </div>
+        @if (!query && options.length > resultLimit) {
+          <div class="border-t border-gray-100 px-3 py-2 text-xs text-gray-400 dark:border-gray-800">
+            Les {{ resultLimit }} premiers résultats sont affichés. Recherchez pour affiner.
+          </div>
+        }
       </div>
       }
     </div>

@@ -41,6 +41,7 @@ export class StatisticsChartComponent implements OnChanges {
     height: 310,
     type: 'area',
     toolbar: { show: false },
+    animations: { enabled: false },
   };
 
   public colors: string[] = ['#465FFF', '#9CB9FF'];
@@ -106,12 +107,16 @@ export class StatisticsChartComponent implements OnChanges {
 
   ngOnChanges(): void {
     this.series = [
-      { name: 'Effectif', data: this.classes.map((item) => item.effectif) },
+      { name: 'Effectif', data: this.classes.map((item) => Number(item.effectif ?? 0)) },
       { name: 'Capacité', data: this.classes.map((item) => item.capaciteMax ?? 0) }
     ];
     this.xaxis = {
       ...this.xaxis,
       categories: this.classes.map((item) => item.classeCode || item.classeLibelle)
     };
+  }
+
+  get hasData(): boolean {
+    return this.classes.length > 0;
   }
 }

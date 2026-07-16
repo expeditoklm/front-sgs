@@ -1,25 +1,94 @@
-<select
-  class="h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 pr-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800
-    {{ value ? 'text-gray-800 dark:text-white/90' : 'text-gray-400 dark:text-gray-400' }} {{ className }}"
-  [value]="value"
-  (change)="onChange($event)"
->
-  <!-- Placeholder option -->
-  <option
-    value=""
-    disabled
-    [selected]="!value"
-    class="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
+<div class="relative w-full" [class.opacity-60]="disabled">
+  <button
+    type="button"
+    class="flex h-11 w-full items-center justify-between gap-3 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-left text-sm shadow-theme-xs outline-none transition hover:border-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 disabled:cursor-not-allowed dark:border-gray-700 dark:bg-gray-900 dark:focus:border-brand-800 {{ className }}"
+    [disabled]="disabled"
+    [attr.aria-expanded]="open"
+    aria-haspopup="listbox"
+    (click)="toggle()"
+    (keydown)="handleKeydown($event)"
   >
-    {{ placeholder }}
-  </option>
-  <!-- Map over options -->
-  @for (option of options; track $index) {
-  <option
-    [value]="option.value"
-    class="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
-  >
-    {{ option.label }}
-  </option>
+    <span class="min-w-0 flex-1 truncate" [ngClass]="selectedOption ? 'text-gray-800 dark:text-white/90' : 'text-gray-400 dark:text-gray-500'">
+      {{ selectedOption?.label || placeholder }}
+    </span>
+    <span class="flex shrink-0 items-center gap-2">
+      @if (clearable && selectedOption && !disabled) {
+        <span
+          role="button"
+          tabindex="0"
+          class="rounded p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+          aria-label="Effacer la sélection"
+          (click)="clear($event)"
+        >×</span>
+      }
+      <svg class="h-4 w-4 text-gray-400 transition-transform" [class.rotate-180]="open" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" clip-rule="evenodd"/>
+      </svg>
+    </span>
+  </button>
+
+  @if (open) {
+    <div class="absolute z-[100] mt-1 w-full min-w-[220px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900">
+      @if (searchable) {
+        <div class="border-b border-gray-100 p-2 dark:border-gray-800">
+          <div class="relative">
+            <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" viewBox="0 0 20 20" fill="none" stroke="currentColor">
+              <circle cx="8.5" cy="8.5" r="5.5" stroke-width="1.5"/>
+              <path d="m13 13 4 4" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <input
+              #searchInput
+              type="search"
+              autocomplete="off"
+              class="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 pl-9 pr-3 text-sm outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
+              [ngModel]="query"
+              [placeholder]="searchPlaceholder"
+              (ngModelChange)="onSearch($event)"
+              (keydown)="handleKeydown($event)"
+              (click)="$event.stopPropagation()"
+            />
+          </div>
+        </div>
+      }
+
+      <div class="max-h-64 overflow-y-auto p-1" role="listbox">
+        @if (loading) {
+          <div class="flex items-center gap-2 px-3 py-3 text-sm text-gray-500">
+            <span class="h-4 w-4 animate-spin rounded-full border-2 border-brand-500 border-t-transparent"></span>
+            Recherche en cours...
+          </div>
+        } @else if (displayedOptions.length === 0) {
+          <div class="px-3 py-4 text-center text-sm text-gray-500">Aucun résultat</div>
+        } @else {
+          @for (option of displayedOptions; track $index; let index = $index) {
+            <button
+              type="button"
+              role="option"
+              class="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm transition"
+              [ngClass]="{
+                'bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300': sameValue(option.value, value) || activeIndex === index,
+                'text-gray-700 dark:text-gray-200': !sameValue(option.value, value) && activeIndex !== index,
+                'cursor-not-allowed opacity-40': option.disabled
+              }"
+              [disabled]="option.disabled"
+              (click)="select(option)"
+            >
+              <span class="truncate">{{ option.label }}</span>
+              @if (sameValue(option.value, value)) {
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.2 7.25a1 1 0 0 1-1.42 0l-3.3-3.325a1 1 0 1 1 1.42-1.408l2.59 2.61 6.49-6.535a1 1 0 0 1 1.414-.006Z" clip-rule="evenodd"/>
+                </svg>
+              }
+            </button>
+          }
+        }
+      </div>
+
+      @if (!loading && ((searchFn && remoteOptions.length >= resultLimit) || (!searchFn && options.length > resultLimit && !query))) {
+        <div class="border-t border-gray-100 px-3 py-2 text-xs text-gray-400 dark:border-gray-800">
+          Les {{ resultLimit }} premiers résultats sont affichés. Utilisez la recherche pour affiner.
+        </div>
+      }
+    </div>
   }
-</select>
+</div>

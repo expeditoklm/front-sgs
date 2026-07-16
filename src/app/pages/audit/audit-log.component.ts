@@ -9,6 +9,7 @@ import { ModalComponent } from '../../shared/components/ui/modal/modal.component
 import { LabelComponent } from '../../shared/components/form/label/label.component';
 import { InputFieldComponent } from '../../shared/components/form/input/input-field.component';
 import { SelectComponent, Option } from '../../shared/components/form/select/select.component';
+import { PaginationComponent } from '../../shared/components/ui/pagination/pagination.component';
 import { AuditService } from '../../core/services/audit.service';
 import { ToastService } from '../../core/services/toast.service';
 import {
@@ -42,7 +43,8 @@ const ACTION_TYPE_OPTIONS: Option[] = [
     ModalComponent,
     LabelComponent,
     InputFieldComponent,
-    SelectComponent
+    SelectComponent,
+    PaginationComponent
   ],
   templateUrl: './audit-log.component.html',
   styles: ``
@@ -103,6 +105,12 @@ export class AuditLogComponent implements OnInit {
       return;
     }
     this.page = page;
+    this.load();
+  }
+
+  changePageSize(pageSize: number): void {
+    this.pageSize = pageSize;
+    this.page = 1;
     this.load();
   }
 

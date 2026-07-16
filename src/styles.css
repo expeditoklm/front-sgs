@@ -795,6 +795,195 @@ span.flatpickr-weekday,
   display: none !important;
 }
 
+/*
+ * Thème sombre unifié des modules métier SGS.
+ * Le contexte est posé sur le host des pages concernées afin de couvrir aussi
+ * leurs cartes, tableaux, formulaires, modales et composants partagés.
+ */
+.dark .sgs-dark-view {
+  color: #e4e7ec;
+  color-scheme: dark;
+}
+
+.dark .sgs-dark-view .bg-white {
+  background-color: #161f2e !important;
+}
+
+.dark .sgs-dark-view .bg-gray-50,
+.dark .sgs-dark-view .bg-gray-100 {
+  background-color: #1d2939 !important;
+}
+
+.dark .sgs-dark-view .bg-gray-200 {
+  background-color: #344054 !important;
+}
+
+.dark .sgs-dark-view .bg-brand-50 {
+  background-color: rgba(70, 95, 255, 0.18) !important;
+  color: #c2d6ff;
+}
+
+.dark .sgs-dark-view .bg-error-50 {
+  background-color: rgba(240, 68, 56, 0.12) !important;
+}
+
+.dark .sgs-dark-view .bg-success-50 {
+  background-color: rgba(18, 183, 106, 0.12) !important;
+}
+
+.dark .sgs-dark-view .bg-warning-50 {
+  background-color: rgba(247, 144, 9, 0.12) !important;
+}
+
+.dark .sgs-dark-view .text-gray-900,
+.dark .sgs-dark-view .text-gray-800,
+.dark .sgs-dark-view .text-gray-700 {
+  color: #f2f4f7 !important;
+}
+
+.dark .sgs-dark-view .text-gray-600,
+.dark .sgs-dark-view .text-gray-500 {
+  color: #98a2b3 !important;
+}
+
+.dark .sgs-dark-view .text-brand-600 {
+  color: #9cb9ff !important;
+}
+
+.dark .sgs-dark-view .text-error-700,
+.dark .sgs-dark-view .text-error-600 {
+  color: #fda29b !important;
+}
+
+.dark .sgs-dark-view .text-success-700,
+.dark .sgs-dark-view .text-success-600 {
+  color: #6ce9a6 !important;
+}
+
+.dark .sgs-dark-view .text-warning-700,
+.dark .sgs-dark-view .text-warning-600 {
+  color: #fec84b !important;
+}
+
+.dark .sgs-dark-view .border-gray-100,
+.dark .sgs-dark-view .border-gray-200,
+.dark .sgs-dark-view .border-gray-300,
+.dark .sgs-dark-view [class~="border"]:not([class*="border-"]),
+.dark .sgs-dark-view [class~="border-t"],
+.dark .sgs-dark-view [class~="border-b"] {
+  border-color: #344054;
+}
+
+.dark .sgs-dark-view input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+.dark .sgs-dark-view select,
+.dark .sgs-dark-view textarea {
+  border-color: #344054 !important;
+  background-color: #101828 !important;
+  color: #f2f4f7 !important;
+  color-scheme: dark;
+}
+
+.dark .sgs-dark-view input:disabled,
+.dark .sgs-dark-view input[readonly],
+.dark .sgs-dark-view select:disabled,
+.dark .sgs-dark-view textarea:disabled {
+  background-color: #1d2939 !important;
+  color: #98a2b3 !important;
+}
+
+.dark .sgs-dark-view input::placeholder,
+.dark .sgs-dark-view textarea::placeholder {
+  color: #667085;
+}
+
+.dark .sgs-dark-view select option {
+  background-color: #101828;
+  color: #f2f4f7;
+}
+
+.dark .sgs-dark-view table {
+  color: #e4e7ec;
+}
+
+.dark .sgs-dark-view tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+}
+
+.dark .sgs-dark-view .apexcharts-text,
+.dark .sgs-dark-view .apexcharts-legend-text {
+  fill: #98a2b3 !important;
+  color: #98a2b3 !important;
+}
+
+.dark .sgs-dark-view .apexcharts-gridline {
+  stroke: #344054;
+}
+
+.dark .sgs-dark-view .apexcharts-tooltip,
+.dark .sgs-dark-view .apexcharts-xaxistooltip,
+.dark .sgs-dark-view .apexcharts-yaxistooltip {
+  border-color: #344054 !important;
+  background: #1d2939 !important;
+  color: #f2f4f7 !important;
+}
+
+.dark .sgs-dark-view .fc {
+  --fc-page-bg-color: #161f2e;
+  --fc-neutral-bg-color: #1d2939;
+  --fc-neutral-text-color: #98a2b3;
+  --fc-border-color: #344054;
+  --fc-button-text-color: #e4e7ec;
+  --fc-button-bg-color: #1d2939;
+  --fc-button-border-color: #344054;
+  --fc-button-hover-bg-color: #344054;
+  --fc-button-hover-border-color: #475467;
+  --fc-button-active-bg-color: #344054;
+  --fc-button-active-border-color: #475467;
+  --fc-today-bg-color: rgba(70, 95, 255, 0.09);
+  --fc-list-event-hover-bg-color: #1d2939;
+  color: #e4e7ec;
+}
+
+.dark .sgs-dark-view .fc .fc-view-harness,
+.dark .sgs-dark-view .fc .fc-scrollgrid,
+.dark .sgs-dark-view .fc .fc-timegrid-body,
+.dark .sgs-dark-view .fc .fc-timegrid-slots,
+.dark .sgs-dark-view .fc .fc-daygrid-body {
+  background-color: #161f2e;
+}
+
+.dark .sgs-dark-view .fc-theme-standard th {
+  background-color: #1d2939 !important;
+}
+
+.dark .sgs-dark-view .fc .fc-timegrid-slot,
+.dark .sgs-dark-view .fc-theme-standard td,
+.dark .sgs-dark-view .fc-theme-standard th,
+.dark .sgs-dark-view .fc-theme-standard .fc-scrollgrid {
+  border-color: #344054 !important;
+}
+
+.dark .sgs-dark-view .fc .fc-col-header-cell-cushion,
+.dark .sgs-dark-view .fc .fc-timegrid-slot-label-cushion,
+.dark .sgs-dark-view .fc .fc-timegrid-axis-cushion,
+.dark .sgs-dark-view .fc .fc-daygrid-day-number {
+  color: #98a2b3 !important;
+}
+
+.dark .sgs-dark-view .custom-calendar .fc-h-event {
+  color: #f2f4f7;
+}
+
+.dark .sgs-dark-view .fc .fc-popover {
+  border-color: #344054;
+  background-color: #1d2939;
+}
+
+.dark .sgs-dark-view .fc .fc-popover-header {
+  background-color: #344054;
+  color: #f2f4f7;
+}
+
 .fc.fc-media-screen {
   @apply min-h-screen;
 }

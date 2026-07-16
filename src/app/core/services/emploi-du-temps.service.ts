@@ -10,6 +10,13 @@ export class EmploiDuTempsService {
   private readonly url=`${environment.apiUrl}/emplois-du-temps`;
   constructor(private http:HttpClient){}
   options():Observable<EmploiDuTempsOptions>{return this.http.get<ApiResponse<EmploiDuTempsOptions>>(`${this.url}/options`).pipe(map(r=>r.data));}
+  rechercherOptions(type:'annees'|'classes'|'matieres'|'enseignants'|'salles',recherche:string,limit=10):Observable<Array<{value:number;label:string}>>{
+    const terme=this.normaliser(recherche);
+    return this.options().pipe(map(options=>(options[type]??[])
+      .filter(option=>!terme||this.normaliser(option.label).includes(terme))
+      .slice(0,limit)
+      .map(option=>({value:option.id,label:option.label}))));
+  }
   lister(anneeScolaireId:number,classeId?:number,enseignantId?:number,salleId?:number):Observable<CoursPlanifie[]> { let p=new HttpParams().set('anneeScolaireId',anneeScolaireId); if(classeId)p=p.set('classeId',classeId);if(enseignantId)p=p.set('enseignantId',enseignantId);if(salleId)p=p.set('salleId',salleId);return this.http.get<ApiResponse<CoursPlanifie[]>>(`${this.url}/creneaux`,{params:p}).pipe(map(r=>r.data)); }
   creer(v:CoursPayload){return this.http.post<ApiResponse<unknown>>(this.url,v);}
   modifier(uuid:string,v:CoursPayload){return this.http.put<ApiResponse<unknown>>(`${this.url}/${uuid}`,v);}
@@ -34,4 +41,5 @@ export class EmploiDuTempsService {
   indisponibilitesSalles(){return this.http.get<ApiResponse<IndisponibiliteSalle[]>>(`${this.url}/indisponibilites-salles`).pipe(map(r=>r.data));}
   enregistrerIndisponibiliteSalle(v:any){return this.http.post(`${this.url}/indisponibilites-salles`,v);}
   supprimerIndisponibiliteSalle(uuid:string){return this.http.delete(`${this.url}/indisponibilites-salles/${uuid}`);}
+  private normaliser(value:string){return String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();}
 }

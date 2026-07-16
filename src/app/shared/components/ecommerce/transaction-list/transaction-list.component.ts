@@ -3,6 +3,8 @@ import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { TableDropdownComponent } from '../../common/table-dropdown/table-dropdown.component';
 import { FormsModule } from '@angular/forms';
+import { PaginationComponent } from '../../ui/pagination/pagination.component';
+import { SelectComponent } from '../../form/select/select.component';
 
 interface Transaction {
   id: number;
@@ -27,6 +29,8 @@ interface SortState {
     RouterModule,
     TableDropdownComponent,
     FormsModule,
+    PaginationComponent,
+    SelectComponent,
   ],
   templateUrl: './transaction-list.component.html',
   styles: ``
@@ -242,9 +246,10 @@ export class TransactionListComponent {
   search: string = '';
   filterDays: string = 'Last 7 Days';
   perPage: number = 10;
+  readonly filterDayOptions = [7, 10, 15, 30].map(days => ({ value: `Last ${days} Days`, label: `Last ${days} Days` }));
 
   get totalPages(): number {
-    return Math.ceil(this.transactions.length / this.perPage) || 1;
+    return Math.ceil(this.filteredRows.length / this.perPage) || 1;
   }
 
   get startEntry(): number {
@@ -319,6 +324,11 @@ export class TransactionListComponent {
     if (n >= 1 && n <= this.totalPages) {
       this.page = n;
     }
+  }
+
+  changePageSize(pageSize: number): void {
+    this.perPage = pageSize;
+    this.page = 1;
   }
 
   onSearchChange(): void {

@@ -7,6 +7,7 @@ import { NotFoundComponent } from './pages/other-page/not-found/not-found.compon
 import { AppLayoutComponent } from './shared/layout/app-layout/app-layout.component';
 import { SignInComponent } from './pages/auth-pages/sign-in/sign-in.component';
 import { AccountRequestComponent } from './pages/auth-pages/account-request/account-request.component';
+import { AccountRequestsComponent } from './pages/administration/account-requests/account-requests.component';
 import { ResetPasswordComponent } from './pages/auth-pages/reset-password/reset-password.component';
 import { CalenderComponent } from './pages/calender/calender.component';
 import { PersonnelDashboardComponent } from './pages/personnel/personnel-dashboard.component';
@@ -32,6 +33,8 @@ import { BulletinsParentComponent } from './pages/parents/bulletins-parent/bulle
 import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
 import { roleGuard } from './core/guards/role.guard';
+import { PaiementVerificationComponent } from './pages/public/paiement-verification/paiement-verification.component';
+import { PermissionsComponent } from './pages/administration/permissions/permissions.component';
 
 // Une route par référentiel du Module 01 (Établissements, Années scolaires, Niveaux, Classes,
 // Matières, Salles, Utilisateurs, Profils), toutes servies par le même ReferentielPageComponent
@@ -40,11 +43,23 @@ const referentielRoutes: Routes = REFERENTIEL_CRUD_ENTITIES.map((entity) => ({
   path: `referentiels/${entity.key}`,
   component: ReferentielPageComponent,
   canActivate: [roleGuard],
-  data: { entity, roles: entity.roles },
+  data: {
+    entity,
+    permission: entity.key === 'utilisateurs'
+      ? 'UTILISATEUR_GERER'
+      : entity.key === 'profils'
+        ? 'PERMISSION_GERER'
+        : 'REFERENTIEL_GERER'
+  },
   title: `${entity.label} | SGS`
 }));
 
 export const routes: Routes = [
+  {
+    path: 'verification-paiement/:code',
+    component: PaiementVerificationComponent,
+    title: 'Vérification du reçu | SGS'
+  },
   {
     path:'',
     component:AppLayoutComponent,
@@ -60,25 +75,25 @@ export const routes: Routes = [
         path:'emploi-du-temps',
         component:CalenderComponent,
         canActivate:[roleGuard],
-        data:{roles:['SADM','ADM','ENS','SUR','SEC']},
+        data:{permission:'EDT_CONSULTER'},
         title:'Emploi du temps | SGS'
       },
       {
         path:'personnel',
         component:PersonnelDashboardComponent,
         canActivate:[roleGuard],
-        data:{roles:['SADM','ADM','RH']},
+        data:{permission:'PERSONNEL_CONSULTER'},
         title:'Personnel | SGS'
       },
-      {path:'personnel/evaluations-detaillees',component:EvaluationsDetailleesComponent,canActivate:[roleGuard],data:{roles:['SADM','ADM','RH']},title:'Évaluations détaillées | SGS'},
+      {path:'personnel/evaluations-detaillees',component:EvaluationsDetailleesComponent,canActivate:[roleGuard],data:{permission:'RH_EVALUATION_GERER'},title:'Évaluations détaillées | SGS'},
       {
         path:'portail',component:PortailComponent,canActivate:[roleGuard],
-        data:{roles:['PAR','ELV']},title:'Portail Parents & Élèves | SGS'
+        data:{permission:'PORTAIL_FAMILLE'},title:'Portail Parents & Élèves | SGS'
       },
-      {path:'mon-espace-personnel',component:MonEspacePersonnelComponent,canActivate:[roleGuard],data:{roles:['ENS','SUR','SEC','RH','ADM','SADM']},title:'Mes congés | SGS'},
+      {path:'mon-espace-personnel',component:MonEspacePersonnelComponent,canActivate:[roleGuard],data:{permission:'CONGE_PERSONNEL'},title:'Mes congés | SGS'},
       {
         path:'administration-portail',component:PortailAdministrationComponent,canActivate:[roleGuard],
-        data:{roles:['SADM','ADM']},title:'Administration du portail | SGS'
+        data:{permission:'PORTAIL_ADMINISTRER'},title:'Administration du portail | SGS'
       },
       {
         path:'profile',
@@ -99,8 +114,22 @@ export const routes: Routes = [
         path: 'audit',
         component: AuditLogComponent,
         canActivate: [roleGuard],
-        data: { roles: ['SADM', 'ADM'] },
+        data: { permission: 'AUDIT_CONSULTER' },
         title: 'Journal d\'audit | SGS'
+      },
+      {
+        path: 'administration/demandes-compte',
+        component: AccountRequestsComponent,
+        canActivate: [roleGuard],
+        data: { permission: 'DEMANDE_COMPTE_GERER' },
+        title: 'Demandes de compte | SGS'
+      },
+      {
+        path: 'administration/permissions',
+        component: PermissionsComponent,
+        canActivate: [roleGuard],
+        data: { permission: 'PERMISSION_GERER' },
+        title: 'Profils et permissions | SGS'
       },
       // Module Inscription des Élèves : ouvert à SEC (secrétariat) en plus de SADM/ADM,
       // cf. @PreAuthorize côté service-inscription (EleveController/PieceJustificativeController/
@@ -109,35 +138,35 @@ export const routes: Routes = [
         path: 'inscriptions/eleves',
         component: EleveListComponent,
         canActivate: [roleGuard],
-        data: { roles: ['SEC', 'SADM', 'ADM'] },
+        data: { permission: 'INSCRIPTION_ELEVE_GERER' },
         title: 'Élèves | SGS'
       },
       {
         path: 'inscriptions/eleves/:uuid',
         component: EleveDossierComponent,
         canActivate: [roleGuard],
-        data: { roles: ['SEC', 'SADM', 'ADM'] },
+        data: { permission: 'INSCRIPTION_ELEVE_GERER' },
         title: 'Dossier élève | SGS'
       },
       {
         path: 'inscriptions/suivi',
         component: InscriptionSuiviComponent,
         canActivate: [roleGuard],
-        data: { roles: ['SEC', 'SADM', 'ADM'] },
+        data: { permission: 'INSCRIPTION_GERER' },
         title: 'Suivi des inscriptions | SGS'
       },
       {
         path: 'inscriptions/paiements',
         component: PaiementSuiviComponent,
         canActivate: [roleGuard],
-        data: { roles: ['SEC', 'SADM', 'ADM'] },
+        data: { permission: 'PAIEMENT_GERER' },
         title: 'Suivi des paiements | SGS'
       },
       {
         path: 'inscriptions/statistiques',
         component: StatistiquesDashboardComponent,
         canActivate: [roleGuard],
-        data: { roles: ['SEC', 'SADM', 'ADM'] },
+        data: { permission: 'INSCRIPTION_STATISTIQUE' },
         title: 'Statistiques d\'inscription | SGS'
       },
       // Module Pédagogie — Notes & Moyennes : ouvert à ENS (enseignant) en plus de SADM/ADM,
@@ -147,14 +176,14 @@ export const routes: Routes = [
         path: 'pedagogie/evaluations',
         component: EvaluationListComponent,
         canActivate: [roleGuard],
-        data: { roles: ['ENS', 'SADM', 'ADM'] },
+        data: { permission: 'EVALUATION_GERER' },
         title: 'Évaluations | SGS'
       },
       {
         path: 'pedagogie/evaluations/:uuid/notes',
         component: SaisieNotesComponent,
         canActivate: [roleGuard],
-        data: { roles: ['ENS', 'SADM', 'ADM'] },
+        data: { permission: 'NOTE_GERER' },
         title: 'Saisie des notes | SGS'
       },
       // Consultation interne des moyennes. Le portail PAR/ELV (phase 4) utilisera des endpoints
@@ -164,14 +193,14 @@ export const routes: Routes = [
         path: 'pedagogie/moyennes',
         component: MoyennesConsultationComponent,
         canActivate: [roleGuard],
-        data: { roles: ['ENS', 'SEC', 'SADM', 'ADM'] },
+        data: { permission: 'MOYENNE_CONSULTER' },
         title: 'Notes et moyennes | SGS'
       },
       {
         path: 'pedagogie/statistiques',
         component: StatistiquesClasseComponent,
         canActivate: [roleGuard],
-        data: { roles: ['ENS', 'SEC', 'SADM', 'ADM'] },
+        data: { permission: 'PEDAGOGIE_STATISTIQUE' },
         title: 'Statistiques de classe | SGS'
       },
       // Délibérations : SADM/ADM uniquement, cf. DeliberationController class-level @PreAuthorize.
@@ -179,21 +208,21 @@ export const routes: Routes = [
         path: 'pedagogie/deliberations',
         component: DeliberationListComponent,
         canActivate: [roleGuard],
-        data: { roles: ['SADM', 'ADM'] },
+        data: { permission: 'DELIBERATION_GERER' },
         title: 'Délibérations | SGS'
       },
       {
         path: 'pedagogie/deliberations/:uuid',
         component: DeliberationDetailComponent,
         canActivate: [roleGuard],
-        data: { roles: ['SADM', 'ADM'] },
+        data: { permission: 'DELIBERATION_GERER' },
         title: 'Session de délibération | SGS'
       },
       {
         path: 'parents/bulletins',
         component: BulletinsParentComponent,
         canActivate: [roleGuard],
-        data: { roles: ['PAR'] },
+        data: { permission: 'BULLETIN_TELECHARGER' },
         title: 'Bulletins | SGS'
       },
       ...referentielRoutes,

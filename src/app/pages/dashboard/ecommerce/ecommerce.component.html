@@ -1,3 +1,134 @@
+@if (accueilFamille) {
+<div class="mx-auto max-w-7xl space-y-6">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p class="text-sm font-medium text-brand-500">Espace famille</p>
+      <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Bonjour, bienvenue dans votre espace</h1>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        Une vue rapide de la scolarité de vos enfants.
+      </p>
+    </div>
+    @if (elevesFamille.length > 0) {
+    <label class="text-sm text-gray-700 dark:text-gray-300">
+      Enfant suivi
+      <app-select [(ngModel)]="eleveFamilleUuid" [options]="eleveFamilleOptions" [searchFn]="rechercherElevesFamille" (ngModelChange)="chargerAccueilFamille()" className="mt-1 min-w-64" />
+    </label>
+    }
+  </div>
+
+  @if (erreurFamille) {
+  <div class="rounded-xl border border-error-200 bg-error-50 p-4 text-sm text-error-700 dark:border-error-900/50 dark:bg-error-950/30">
+    {{ erreurFamille }}
+  </div>
+  }
+
+  @if (chargement) {
+  <div class="rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-500 dark:border-gray-800 dark:bg-white/[0.03]">
+    Actualisation des informations…
+  </div>
+  } @else if (!eleveFamilleUuid) {
+  <div class="rounded-2xl border border-gray-200 bg-white p-8 text-center dark:border-gray-800 dark:bg-white/[0.03]">
+    <h2 class="font-semibold text-gray-900 dark:text-white">Aucun enfant rattaché</h2>
+    <p class="mt-2 text-sm text-gray-500">Contactez l’administration pour rattacher votre compte au dossier de votre enfant.</p>
+  </div>
+  } @else {
+  <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+      <p class="text-sm text-gray-500">Moyenne récente</p>
+      <p class="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">{{ moyenneFamille }}<small class="text-sm"> /20</small></p>
+    </div>
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+      <p class="text-sm text-gray-500">Rang</p>
+      <p class="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">{{ rangFamille }}</p>
+    </div>
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+      <p class="text-sm text-gray-500">Reste à payer</p>
+      <p class="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">{{ resteAPayerFamille | number:'1.0-0' }}</p>
+    </div>
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+      <p class="text-sm text-gray-500">Absences non justifiées</p>
+      <p class="mt-2 text-2xl font-semibold text-warning-600">{{ syntheseFamille?.absences?.non_justifiees ?? 0 }}</p>
+    </div>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-2">
+    <section class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+      <div class="flex items-center justify-between border-b border-gray-200 p-5 dark:border-gray-800">
+        <div>
+          <h2 class="font-semibold text-gray-900 dark:text-white">Dernières notes</h2>
+          <p class="text-sm text-gray-500">Les résultats récemment disponibles.</p>
+        </div>
+        <a routerLink="/portail" class="text-sm font-medium text-brand-500">Tout consulter</a>
+      </div>
+      <div class="divide-y divide-gray-100 px-5 dark:divide-gray-800">
+        @for (note of notesRecentesFamille; track $index) {
+        <div class="flex items-center justify-between gap-4 py-4">
+          <div>
+            <p class="font-medium text-gray-900 dark:text-white">{{ note.matiere }}</p>
+            <p class="text-sm text-gray-500">{{ note.eva_libelle }} · {{ note.eva_date | date:'dd/MM/yyyy' }}</p>
+          </div>
+          <span class="font-semibold text-gray-900 dark:text-white">
+            {{ note.not_absent ? 'Absent' : (note.not_valeur + ' / ' + note.eva_bareme) }}
+          </span>
+        </div>
+        } @empty {
+        <p class="py-8 text-center text-sm text-gray-500">Aucune note disponible.</p>
+        }
+      </div>
+    </section>
+
+    <section class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+      <div class="flex items-center justify-between border-b border-gray-200 p-5 dark:border-gray-800">
+        <div>
+          <h2 class="font-semibold text-gray-900 dark:text-white">Emploi du temps</h2>
+          <p class="text-sm text-gray-500">Les prochains cours à retenir.</p>
+        </div>
+        <a routerLink="/portail" class="text-sm font-medium text-brand-500">Voir le planning</a>
+      </div>
+      <div class="divide-y divide-gray-100 px-5 dark:divide-gray-800">
+        @for (cours of prochainsCoursFamille; track $index) {
+        <div class="flex gap-3 py-4">
+          <span class="mt-1 h-10 w-1 rounded-full bg-brand-500" [style.background-color]="cours.edt_couleur"></span>
+          <div>
+            <p class="font-medium text-gray-900 dark:text-white">{{ cours.matiere }}</p>
+            <p class="text-sm text-gray-500">{{ cours.edt_jour }} · {{ cours.edt_debut }}–{{ cours.edt_fin }}</p>
+            <p class="text-xs text-gray-400">{{ cours.enseignant }} · {{ cours.salle }}</p>
+          </div>
+        </div>
+        } @empty {
+        <p class="py-8 text-center text-sm text-gray-500">Aucun cours disponible.</p>
+        }
+      </div>
+    </section>
+  </div>
+
+  <div class="flex justify-end">
+    <a routerLink="/portail" class="rounded-lg bg-brand-500 px-5 py-3 text-sm font-medium text-white hover:bg-brand-600">
+      Ouvrir le portail famille
+    </a>
+  </div>
+  }
+</div>
+} @else {
+@if (chargement) {
+<div class="grid grid-cols-12 gap-4 md:gap-6" aria-busy="true" aria-label="Chargement du tableau de bord">
+  <div class="col-span-12 space-y-6 xl:col-span-7">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      @for (item of [1, 2]; track item) {
+      <div class="h-44 animate-pulse rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-white/[0.04]"></div>
+      }
+    </div>
+    <div class="h-64 animate-pulse rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-white/[0.04]"></div>
+  </div>
+  <div class="col-span-12 h-[420px] animate-pulse rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-white/[0.04] xl:col-span-5"></div>
+  <div class="col-span-12 h-[420px] animate-pulse rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-white/[0.04]"></div>
+</div>
+} @else {
+@if (donneesPartielles) {
+<div class="mb-4 rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-700 dark:border-warning-900/50 dark:bg-warning-950/30 dark:text-warning-300">
+  Certaines informations du tableau de bord ne sont momentanément pas disponibles.
+</div>
+}
 <div class="grid grid-cols-12 gap-4 md:gap-6">
   <div class="col-span-12 space-y-6 xl:col-span-7">
     <div>
@@ -32,3 +163,5 @@
     <app-recent-orders [inscriptions]="inscriptionsRecentes" />
   </div>
 </div>
+}
+}
