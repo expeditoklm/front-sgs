@@ -25,6 +25,8 @@ export interface FieldConfig {
   accept?: string;
   uploadDirectory?: string;
   fileHelp?: string;
+  help?: string;
+  visibleWhen?: { key: string; value: unknown };
 }
 
 export interface ColumnConfig {
@@ -57,6 +59,7 @@ export const REFERENTIEL_CRUD_ENTITIES: EntityDefinition[] = [
       { key: 'groupe', label: 'Groupe' },
       { key: 'code', label: 'Code' },
       { key: 'libelle', label: 'Libellé' },
+      { key: 'niveauCodesAffichage', label: 'Niveaux concernés' },
       { key: 'ordre', label: 'Ordre' },
       { key: 'actif', label: 'Actif' }
     ],
@@ -67,6 +70,14 @@ export const REFERENTIEL_CRUD_ENTITIES: EntityDefinition[] = [
       { key: 'description', label: 'Description', type: 'text' },
       { key: 'ordre', label: "Ordre d'affichage", type: 'number', required: true },
       { key: 'actif', label: 'Actif', type: 'checkbox' },
+      {
+        key: 'niveauCodes',
+        label: 'Niveaux concernés',
+        type: 'multiselect',
+        optionsSource: { path: 'niveaux', valueField: 'code', labelField: 'libelle' },
+        visibleWhen: { key: 'groupe', value: 'TYPE_DOCUMENT_INSCRIPTION' },
+        help: 'Ne sélectionnez aucun niveau pour rendre cette pièce disponible dans tous les niveaux.'
+      },
       { key: 'metadonnees', label: 'Métadonnées JSON', type: 'text' }
     ]
   },

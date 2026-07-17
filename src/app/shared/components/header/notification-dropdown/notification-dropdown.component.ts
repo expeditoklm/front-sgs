@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { Subscription, timer } from 'rxjs';
 import {
   ActionNotification,
   ActionNotificationService
@@ -13,11 +14,12 @@ import { AccountPreferencesService } from '../../../../core/services/account-pre
   templateUrl: './notification-dropdown.component.html',
   imports: [CommonModule, DropdownComponent]
 })
-export class NotificationDropdownComponent implements OnInit {
+export class NotificationDropdownComponent implements OnInit, OnDestroy {
   isOpen = false;
   loading = true;
   notifying = false;
   notifications: ActionNotification[] = [];
+  private refreshSubscription?: Subscription;
 
   constructor(
     private notificationService: ActionNotificationService,
@@ -27,7 +29,11 @@ export class NotificationDropdownComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.charger();
+    this.refreshSubscription = timer(0, 60_000).subscribe(() => this.charger());
+  }
+
+  ngOnDestroy(): void {
+    this.refreshSubscription?.unsubscribe();
   }
 
   get total(): number {
@@ -44,7 +50,10 @@ export class NotificationDropdownComponent implements OnInit {
 
   toggleDropdown(): void {
     this.isOpen = !this.isOpen;
-    if (this.isOpen) this.notifying = false;
+    if (this.isOpen) {
+      this.notifying = false;
+      this.charger();
+    }
   }
 
   closeDropdown(): void {

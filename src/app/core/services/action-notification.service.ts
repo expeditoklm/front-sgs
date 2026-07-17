@@ -74,6 +74,22 @@ export class ActionNotificationService {
       );
     }
 
+    if (role && ['ADM', 'SADM'].includes(role)) {
+      sources.push(
+        this.authenticationService.accountRequests$('PENDING').pipe(
+          map((requests) => this.notification(
+            'demandes-compte',
+            'Demandes de compte à traiter',
+            'Nouvelles demandes en attente de validation et d’attribution des rôles',
+            requests.length,
+            '/administration/demandes-compte',
+            'warning'
+          )),
+          catchError(() => of(null))
+        )
+      );
+    }
+
     if (!sources.length) return of([]);
     return forkJoin(sources).pipe(
       map((notifications) => notifications.filter(

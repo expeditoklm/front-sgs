@@ -30,12 +30,13 @@ import {
 })
 export class PieceJustificativePanelComponent implements OnChanges {
   @Input({ required: true }) inscriptionUuid!: string;
+  @Input() niveauCode: string | null = null;
 
   pieces: PieceJustificative[] = [];
   loading = false;
   loadError = '';
 
-  selectedType: TypeDocument = 'ACTE_NAISSANCE';
+  selectedType: TypeDocument | '' = 'ACTE_NAISSANCE';
   selectedFile: File | null = null;
   uploading = false;
   uploadError = '';
@@ -62,18 +63,20 @@ export class PieceJustificativePanelComponent implements OnChanges {
     private referentielCrudService: ReferentielCrudService,
     private documentViewer: DocumentViewerService
   ) {
-    this.loadTypeOptions();
   }
 
   private loadTypeOptions(): void {
-    this.referentielCrudService.businessParameterOptions('TYPE_DOCUMENT_INSCRIPTION').subscribe({
+    this.referentielCrudService.businessParameterOptions('TYPE_DOCUMENT_INSCRIPTION', this.niveauCode).subscribe({
       next: (items) => {
         this.typeOptions = items.map((item) => ({ value: item.code, label: item.libelle }));
         this.typeLabels = Object.fromEntries(items.map((item) => [item.code, item.libelle]));
-        this.selectedType = this.typeOptions[0]?.value ?? '';
+        this.selectedType = (this.typeOptions[0]?.value as TypeDocument | undefined) ?? '';
       },
       error: () => {
-        this.typeOptions = Object.entries(TYPE_DOCUMENT_LABELS).map(([value, label]) => ({ value, label }));
+        this.typeOptions = this.niveauCode
+          ? []
+          : Object.entries(TYPE_DOCUMENT_LABELS).map(([value, label]) => ({ value, label }));
+        this.selectedType = (this.typeOptions[0]?.value as TypeDocument | undefined) ?? '';
       }
     });
   }
@@ -87,6 +90,9 @@ export class PieceJustificativePanelComponent implements OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['niveauCode'] || changes['inscriptionUuid']) {
+      this.loadTypeOptions();
+    }
     if (changes['inscriptionUuid'] && this.inscriptionUuid) {
       this.load();
     }
@@ -121,6 +127,10 @@ export class PieceJustificativePanelComponent implements OnChanges {
   }
 
   upload(): void {
+    if (!this.selectedType) {
+      this.uploadError = 'Aucun type de pièce n’est configuré pour ce niveau.';
+      return;
+    }
     if (!this.selectedFile) {
       this.uploadError = 'Choisissez un fichier.';
       return;
@@ -128,10 +138,11 @@ export class PieceJustificativePanelComponent implements OnChanges {
 
     this.uploading = true;
     this.uploadError = '';
+    const selectedType = this.selectedType as TypeDocument;
     this.inscriptionService.uploaderFichier(this.selectedFile, 'pieces-justificatives').subscribe({
       next: (uploadResponse) => {
         this.inscriptionService
-          .creerPieceJustificative({ inscriptionUuid: this.inscriptionUuid, type: this.selectedType, fichierId: uploadResponse.id })
+          .creerPieceJustificative({ inscriptionUuid: this.inscriptionUuid, type: selectedType, fichierId: uploadResponse.id })
           .subscribe({
             next: () => {
               this.uploading = false;

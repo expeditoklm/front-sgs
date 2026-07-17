@@ -107,6 +107,11 @@ export class EntityFormComponent implements OnChanges {
     return this.optionsFor(field).map((option) => ({ value: option.value, text: option.label }));
   }
 
+  get visibleFields(): FieldConfig[] {
+    return this.fields.filter((field) => !field.visibleWhen
+      || this.model[field.visibleWhen.key] === field.visibleWhen.value);
+  }
+
   isDisabled(field: FieldConfig): boolean {
     return this.isEdit && !!field.readOnlyOnEdit;
   }

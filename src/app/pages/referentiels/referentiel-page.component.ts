@@ -99,7 +99,9 @@ export class ReferentielPageComponent implements OnInit {
       .list(this.entity.path, { page: this.page, size: this.pageSize, sortField: 'id', sortOrder: 'DESC', filter: this.filterText })
       .subscribe({
         next: (result) => {
-          this.rows = result.content;
+          this.rows = this.entity.key === 'parametres-metier'
+            ? result.content.map((row) => this.withNiveauDisplay(row))
+            : result.content;
           this.meta = result.meta;
           this.loading = false;
         },
@@ -160,9 +162,10 @@ export class ReferentielPageComponent implements OnInit {
     this.saving = true;
     this.formError = '';
 
+    const payload = this.buildRequestModel();
     const request$ = this.isEditMode
-      ? this.crudService.update(this.entity.path, this.editingUuid!, this.formModel)
-      : this.crudService.create(this.entity.path, this.formModel);
+      ? this.crudService.update(this.entity.path, this.editingUuid!, payload)
+      : this.crudService.create(this.entity.path, payload);
 
     request$.subscribe({
       next: () => {
@@ -304,10 +307,53 @@ export class ReferentielPageComponent implements OnInit {
         model[field.key] = (row['droits'] ?? []).map((droit: any) => String(droit.id));
       } else if (this.entity.key === 'utilisateurs' && field.key === 'profilCodes') {
         model[field.key] = row['profilCodes'] ?? (row['profilCode'] ? [row['profilCode']] : []);
+      } else if (this.entity.key === 'parametres-metier' && field.key === 'niveauCodes') {
+        model[field.key] = this.readNiveauCodes(row['metadonnees']);
       } else {
         model[field.key] = row[field.key];
       }
     });
     return model;
+  }
+
+  private buildRequestModel(): Record<string, any> {
+    if (this.entity.key !== 'parametres-metier') {
+      return { ...this.formModel };
+    }
+    const payload = { ...this.formModel };
+    const niveauCodes = Array.isArray(payload['niveauCodes']) ? payload['niveauCodes'] : [];
+    delete payload['niveauCodes'];
+    if (payload['groupe'] !== 'TYPE_DOCUMENT_INSCRIPTION') {
+      return payload;
+    }
+    let metadata: Record<string, unknown> = {};
+    try {
+      metadata = payload['metadonnees'] ? JSON.parse(String(payload['metadonnees'])) : {};
+    } catch {
+      // La sélection des niveaux reste prioritaire et remplace une ancienne métadonnée illisible.
+    }
+    payload['metadonnees'] = JSON.stringify({ ...metadata, niveauCodes });
+    return payload;
+  }
+
+  private readNiveauCodes(rawMetadata: unknown): string[] {
+    if (!rawMetadata) return [];
+    try {
+      const parsed = JSON.parse(String(rawMetadata));
+      return Array.isArray(parsed?.niveauCodes) ? parsed.niveauCodes.map(String) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private withNiveauDisplay(row: Record<string, any>): Record<string, any> {
+    if (row['groupe'] !== 'TYPE_DOCUMENT_INSCRIPTION') {
+      return { ...row, niveauCodesAffichage: '—' };
+    }
+    const niveauCodes = this.readNiveauCodes(row['metadonnees']);
+    return {
+      ...row,
+      niveauCodesAffichage: niveauCodes.length ? niveauCodes.join(', ') : 'Tous les niveaux'
+    };
   }
 }

@@ -75,8 +75,11 @@ export class ReferentielCrudService {
       .pipe(map((response) => response.data));
   }
 
-  businessParameterOptions(group: string): Observable<BusinessParameterOption[]> {
-    const params = new HttpParams().set('groupe', group);
+  businessParameterOptions(group: string, niveauCode?: string | null): Observable<BusinessParameterOption[]> {
+    let params = new HttpParams().set('groupe', group);
+    if (niveauCode) {
+      params = params.set('niveauCode', niveauCode);
+    }
     return this.http.get<ApiResponse<BusinessParameterOption[]>>(
       `${this.endpoint}/parametres-metier-options`,
       { params }

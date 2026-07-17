@@ -79,7 +79,7 @@ export class EleveDossierComponent implements OnInit {
   anneeScolaireOptions: SelectOption[] = [];
   typeInscriptionOptions: SelectOption[] = [];
   generatingCertificat = false;
-  classeRows: Array<{ id: number; libelle: string; anneeScolaireCode: string }> = [];
+  classeRows: Array<{ id: number; libelle: string; niveauCode: string; anneeScolaireCode: string }> = [];
 
   // --- Correction d'un dossier rejeté ---
   isResoumissionOpen = false;
@@ -202,6 +202,7 @@ export class EleveDossierComponent implements OnInit {
           this.classeRows = page.content.map((item) => ({
             id: Number(item['id']),
             libelle: String(item['libelle']),
+            niveauCode: String(item['niveauCode']),
             anneeScolaireCode: String(item['anneeScolaireCode'])
           }));
           this.classeOptions = page.content.map((item) => ({ value: String(item['id']), label: `${item['libelle']} (${item['anneeScolaireCode']})` }));
@@ -390,6 +391,10 @@ export class EleveDossierComponent implements OnInit {
 
   classeLabel(classeId: number): string {
     return this.classeRows.find((classe) => classe.id === classeId)?.libelle || `Classe #${classeId}`;
+  }
+
+  niveauCode(classeId: number): string | null {
+    return this.classeRows.find((classe) => classe.id === classeId)?.niveauCode ?? null;
   }
 
   openTransfertClasse(): void {

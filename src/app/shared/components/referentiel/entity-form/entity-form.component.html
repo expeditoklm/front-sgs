@@ -1,5 +1,5 @@
 <div class="space-y-5">
-  @for (field of fields; track field.key) {
+  @for (field of visibleFields; track field.key) {
     <div>
       @switch (field.type) {
         @case ('checkbox') {
@@ -30,6 +30,9 @@
               [disabled]="isDisabled(field)"
               (selectionChange)="update(field.key, $event)"
             />
+            @if (field.help) {
+              <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ field.help }}</p>
+            }
           }
         }
         @case ('file') {

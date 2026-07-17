@@ -177,7 +177,10 @@
 
   @if (activeTab === 'pieces') {
     @if (selectedInscription) {
-      <app-piece-justificative-panel [inscriptionUuid]="selectedInscription.uuid" />
+      <app-piece-justificative-panel
+        [inscriptionUuid]="selectedInscription.uuid"
+        [niveauCode]="niveauCode(selectedInscription.classeId)"
+      />
     } @else {
       <app-component-card title="Pièces justificatives">
         <p class="text-sm text-gray-500 dark:text-gray-400">
