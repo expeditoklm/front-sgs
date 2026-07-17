@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/audit.models';
-import { Affectation,Conge,Contrat,Employe,EmployePayload,EvaluationRh,RhDashboard,RhOptions,SoldeConge,StatistiquesRh } from '../models/personnel.models';
+import { Affectation,Conge,Contrat,Employe,EmployePayload,EvaluationRh,GrilleEvaluationConfig,GrilleEvaluationPayload,RhDashboard,RhOptions,SoldeConge,StatistiquesRh } from '../models/personnel.models';
 @Injectable({providedIn:'root'}) export class PersonnelService {
  private url=`${environment.apiUrl}/personnel`;constructor(private http:HttpClient){}
  dashboard(){return this.http.get<ApiResponse<RhDashboard>>(`${this.url}/tableau-de-bord`).pipe(map(r=>r.data));}
@@ -35,6 +35,9 @@ import { Affectation,Conge,Contrat,Employe,EmployePayload,EvaluationRh,RhDashboa
  exporterMesDonnees(){return this.http.get<ApiResponse<any>>(`${this.url}/moi/donnees-personnelles`).pipe(map(r=>r.data));}
  demanderConfidentialite(type:string,motif=''){return this.http.post(`${this.url}/moi/demandes-confidentialite`,null,{params:{type,motif}});}
  grillesEvaluation(){return this.http.get<ApiResponse<any[]>>(`${this.url}/evaluations/grilles`).pipe(map(r=>r.data));}
+ grillesEvaluationAdministration(){return this.http.get<ApiResponse<GrilleEvaluationConfig[]>>(`${this.url}/evaluations/grilles/administration`).pipe(map(r=>r.data));}
+ enregistrerGrilleEvaluation(v:GrilleEvaluationPayload,uuid?:string){return uuid?this.http.put(`${this.url}/evaluations/grilles/${uuid}`,v):this.http.post(`${this.url}/evaluations/grilles`,v);}
+ changerEtatGrilleEvaluation(uuid:string){return this.http.patch(`${this.url}/evaluations/grilles/${uuid}/etat`,null);}
  evaluerDetaille(v:any){return this.http.post(`${this.url}/evaluations/detaillees`,v);}
  evaluationDetaillee(uuid:string){return this.http.get<ApiResponse<any>>(`${this.url}/evaluations/${uuid}`).pipe(map(r=>r.data));}
  modifierEvaluationDetaillee(uuid:string,v:any){return this.http.put(`${this.url}/evaluations/detaillees/${uuid}`,v);}

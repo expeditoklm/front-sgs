@@ -9,3 +9,6 @@ export interface Affectation { uu_id:string;employe_uuid:string;employe:string;a
 export interface SoldeConge { uu_id:string;employe_uuid:string;employe:string;sol_annee:number;sol_type:string;sol_jours_acquis:number;sol_jours_reportes:number;jours_pris:number;solde:number; }
 export interface EvaluationRh { uu_id:string;employe_uuid:string;employe:string;eva_date:string;eva_periode:string;eva_note:number;eva_objectifs?:string;eva_appreciation?:string;eva_evaluateur:string; }
 export interface StatistiquesRh { categories:Record<string,unknown>[];contrats:Record<string,unknown>[];chargeEnseignants:Record<string,unknown>[];presence:Record<string,unknown>[];evaluations:Record<string,unknown>[]; }
+export interface CritereEvaluationConfig { id?:number;uuid?:string;code:string;libelle:string;coefficient:number;ordre:number; }
+export interface GrilleEvaluationConfig { id:number;uuid:string;code:string;libelle:string;actif:boolean;criteres:CritereEvaluationConfig[]; }
+export interface GrilleEvaluationPayload { code:string;libelle:string;criteres:CritereEvaluationConfig[]; }

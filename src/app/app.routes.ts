@@ -35,6 +35,7 @@ import { guestGuard } from './core/guards/guest.guard';
 import { roleGuard } from './core/guards/role.guard';
 import { PaiementVerificationComponent } from './pages/public/paiement-verification/paiement-verification.component';
 import { PermissionsComponent } from './pages/administration/permissions/permissions.component';
+import { GrillesEvaluationComponent } from './pages/referentiels/grilles-evaluation/grilles-evaluation.component';
 
 // Une route par référentiel du Module 01 (Établissements, Années scolaires, Niveaux, Classes,
 // Matières, Salles, Utilisateurs, Profils), toutes servies par le même ReferentielPageComponent
@@ -224,6 +225,13 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { permission: 'BULLETIN_TELECHARGER' },
         title: 'Bulletins | SGS'
+      },
+      {
+        path: 'referentiels/grilles-evaluation',
+        component: GrillesEvaluationComponent,
+        canActivate: [roleGuard],
+        data: { permission: 'RH_EVALUATION_GERER' },
+        title: 'Grilles d’évaluation | SGS'
       },
       ...referentielRoutes,
     ]

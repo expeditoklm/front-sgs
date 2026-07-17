@@ -20,7 +20,7 @@ export class PersonnelDashboardComponent implements OnInit {
  readonly taillesPageConges=[10,20,50];
  pagination:Record<string,{page:number;size:number}>={equipe:{page:1,size:10},contrats:{page:1,size:10},conges:{page:1,size:10},soldes:{page:1,size:10},affectations:{page:1,size:10},evaluations:{page:1,size:10}};
  filtreAnnee?:number;filtreCategorie='';readonly anneesStatistiques=Array.from({length:6},(_,i)=>new Date().getFullYear()-i);
- recherche='';onglet:'equipe'|'contrats'|'conges'|'affectations'|'evaluations'|'statistiques'='equipe';modalEmploye=false;modalConge=false;modalContrat=false;modalClotureContrat=false;modalAffectation=false;modalSolde=false;modalEvaluation=false;selection?:Employe;selectionContrat?:Contrat;contratACloturer?:Contrat;motifCloture='';erreur='';succes='';
+ recherche='';onglet:'equipe'|'contrats'|'conges'|'affectations'|'evaluations'|'statistiques'='equipe';modalEmploye=false;modalConge=false;modalContrat=false;modalClotureContrat=false;modalAffectation=false;modalSolde=false;modalEvaluation=false;selection?:Employe;selectionContrat?:Contrat;selectionSolde?:SoldeConge;contratACloturer?:Contrat;motifCloture='';erreur='';succes='';
  form:EmployePayload=this.vide();conge={employeUuid:'',type:'ANNUEL',dateDebut:'',dateFin:'',motif:''};contrat={employeUuid:'',type:'CDI',dateDebut:'',dateFin:'',remuneration:null as number|null};
  affectation={employeUuid:'',anneeId:0,matiereId:null as number|null,niveauId:null as number|null,classeId:null as number|null,heuresHebdo:0,dateDebut:'',dateFin:''};
  solde={employeUuid:'',annee:new Date().getFullYear(),type:'ANNUEL',joursAcquis:30,joursReportes:0};
@@ -60,6 +60,19 @@ export class PersonnelDashboardComponent implements OnInit {
  totalPages(liste:unknown[],cle:string){return Math.max(1,Math.ceil(liste.length/this.tailleDe(cle)));}
  changerPage(cle:string,page:number,liste:unknown[]){this.pagination[cle].page=Math.min(Math.max(page,1),this.totalPages(liste,cle));}
  changerTaille(cle:string,taille:number){this.pagination[cle]={page:1,size:taille};}
+ ouvrirSolde(s?:SoldeConge){
+  this.selectionSolde=s;
+  this.erreur='';
+  this.solde=s?{
+   employeUuid:s.employe_uuid,
+   annee:s.sol_annee,
+   type:s.sol_type,
+   joursAcquis:Number(s.sol_jours_acquis),
+   joursReportes:Number(s.sol_jours_reportes)
+  }:{employeUuid:'',annee:new Date().getFullYear(),type:'ANNUEL',joursAcquis:30,joursReportes:0};
+  this.modalSolde=true;
+ }
+ fermerSolde(){this.modalSolde=false;this.selectionSolde=undefined;}
  ouvrirConge(){this.erreur='';this.conge={employeUuid:'',type:'ANNUEL',dateDebut:'',dateFin:'',motif:''};this.modalConge=true;}
  ouvrir(e?:Employe){this.selection=e;this.form=e?{nom:e.nom,prenom:e.prenom,email:e.email,telephone:e.telephone??'',categorie:e.categorie,specialite:e.specialite??'',dateEmbauche:e.dateEmbauche,utilisateurId:e.utilisateurId??null}:this.vide();this.modalEmploye=true;}
  enregistrer(){this.service.enregistrer(this.form,this.selection?.uuid).subscribe({next:()=>{this.modalEmploye=false;this.ok(this.selection?'Dossier mis à jour.':'Collaborateur ajouté.');},error:e=>this.erreur=this.message(e)});}
@@ -85,7 +98,17 @@ export class PersonnelDashboardComponent implements OnInit {
  decider(c:Conge,s:string){const commentaire=s==='REJETE'?(window.prompt('Motif obligatoire du refus :')??''):'';if(s==='REJETE'&&!commentaire.trim())return;this.service.decider(c.uu_id,s,commentaire).subscribe({next:()=>this.ok(s==='APPROUVE'?'Congé approuvé.':'Congé refusé.'),error:e=>this.erreur=this.message(e)});}
  creerAffectation(){const v={...this.affectation,dateFin:this.affectation.dateFin||null};this.service.creerAffectation(v).subscribe({next:()=>{this.modalAffectation=false;this.ok('Affectation enregistrée.');},error:e=>this.erreur=this.message(e)});}
  supprimerAffectation(a:Affectation){this.service.supprimerAffectation(a.uu_id).subscribe({next:()=>this.ok('Affectation supprimée.'),error:e=>this.erreur=this.message(e)});}
- enregistrerSolde(){this.service.enregistrerSolde(this.solde).subscribe({next:()=>{this.modalSolde=false;this.ok('Solde de congé enregistré.');},error:e=>this.erreur=this.message(e)});}
+ enregistrerSolde(){
+  this.erreur='';
+  if(!this.solde.employeUuid){this.erreur='Choisissez un collaborateur.';return;}
+  if(!this.solde.annee||!this.solde.type.trim()){this.erreur='Renseignez l\'année et le type de congé.';return;}
+  if(this.solde.joursAcquis<0||this.solde.joursReportes<0){this.erreur='Les nombres de jours ne peuvent pas être négatifs.';return;}
+  const modification=!!this.selectionSolde;
+  this.service.enregistrerSolde(this.solde).subscribe({
+   next:()=>{this.fermerSolde();this.ok(modification?'Solde de congé modifié.':'Solde de congé initialisé.');},
+   error:e=>this.erreur=this.message(e)
+  });
+ }
  evaluer(){this.service.evaluer(this.evaluation).subscribe({next:()=>{this.modalEvaluation=false;this.ok('Évaluation enregistrée.');},error:e=>this.erreur=this.message(e)});}
  private normaliserPageConges(){this.pageConges=Math.min(Math.max(this.pageConges,1),this.totalPagesConges);}
  private ok(m:string){this.succes=m;this.erreur='';this.charger();}
