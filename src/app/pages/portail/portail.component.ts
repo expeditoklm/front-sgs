@@ -6,6 +6,7 @@ import { PortailService } from '../../core/services/portail.service';
 import { PaginationComponent } from '../../shared/components/ui/pagination/pagination.component';
 import { PaginatePipe } from '../../shared/pipes/paginate.pipe';
 import { SelectComponent } from '../../shared/components/form/select/select.component';
+import { DocumentViewerService } from '../../core/services/document-viewer.service';
 @Component({selector:'app-portail',standalone:true,imports:[CommonModule,FormsModule,PaginationComponent,PaginatePipe,SelectComponent],templateUrl:'./portail.component.html',host:{class:'sgs-dark-view block'}})
 export class PortailComponent implements OnInit {
  eleves:any[]=[];eleveUuid='';synthese:any={};notes:any[]=[];paiements:any[]=[];edt:any[]=[];absences:any[]=[];bulletins:any[]=[];onglet:'notes'|'edt'|'absences'|'paiements'|'bulletins'='notes';chargement=false;erreur='';
@@ -18,8 +19,8 @@ export class PortailComponent implements OnInit {
  changerOnglet(onglet:'notes'|'edt'|'absences'|'paiements'|'bulletins'){this.onglet=onglet;}
  get eleveOptions(){return this.eleves.map(e=>({value:e.uu_id,label:`${e.elv_prenom??''} ${e.elv_nom??''} · ${e.classe??''}`.trim()}));}
  readonly rechercherEleves=(term:string,limit:number)=>this.portail.rechercherEleves(term,limit).pipe(map(items=>items.map(e=>({value:e.uu_id,label:`${e.elv_prenom??''} ${e.elv_nom??''} · ${e.classe??''}`.trim()}))));
- constructor(private portail:PortailService){}ngOnInit(){this.portail.eleves().subscribe({next:r=>{this.eleves=r;this.eleveUuid=r[0]?.uu_id??'';if(this.eleveUuid)this.charger();},error:e=>this.erreur=this.message(e)});}
+ constructor(private portail:PortailService,private documentViewer:DocumentViewerService){}ngOnInit(){this.portail.eleves().subscribe({next:r=>{this.eleves=r;this.eleveUuid=r[0]?.uu_id??'';if(this.eleveUuid)this.charger();},error:e=>this.erreur=this.message(e)});}
  charger(){if(!this.eleveUuid)return;this.chargement=true;forkJoin({synthese:this.portail.synthese(this.eleveUuid),notes:this.portail.notes(this.eleveUuid),paiements:this.portail.paiements(this.eleveUuid),edt:this.portail.emploiDuTemps(this.eleveUuid),absences:this.portail.absences(this.eleveUuid),bulletins:this.portail.bulletins(this.eleveUuid)}).subscribe({next:r=>{Object.assign(this,r);Object.values(this.pagination).forEach(p=>p.page=1);this.chargement=false;},error:e=>{this.erreur=this.message(e);this.chargement=false;}});}
- telecharger(b:any){this.portail.telechargerBulletin(this.eleveUuid,b.uu_id).subscribe({next:blob=>{const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download='bulletin.pdf';a.click();URL.revokeObjectURL(u);},error:e=>this.erreur=this.message(e)});}
+ telecharger(b:any){this.portail.telechargerBulletin(this.eleveUuid,b.uu_id).subscribe({next:blob=>this.documentViewer.open(blob,b.perio_libelle||'Bulletin scolaire','bulletin.pdf'),error:e=>this.erreur=this.message(e)});}
  private message(e:any){return e?.error?.message??'Impossible de charger le portail.';}
 }

@@ -11,6 +11,7 @@ import { InscriptionService } from '../../../../core/services/inscription.servic
 import { ToastService } from '../../../../core/services/toast.service';
 import { AuthenticationService } from '../../../../core/services/authentication.service';
 import { ReferentielCrudService } from '../../../../core/services/referentiel-crud.service';
+import { DocumentViewerService } from '../../../../core/services/document-viewer.service';
 import { SelectOption } from '../../../../core/models/referentiel-crud.models';
 import {
   PieceJustificative,
@@ -41,6 +42,7 @@ export class PieceJustificativePanelComponent implements OnChanges {
 
   deletingUuid: string | null = null;
   validatingUuid: string | null = null;
+  viewingUuid: string | null = null;
 
   // Rejet : motif obligatoire, saisi dans une modale (même pattern que inscription-suivi) -
   // "rejectingPiece" garde la pièce ciblée le temps de la saisie.
@@ -57,7 +59,8 @@ export class PieceJustificativePanelComponent implements OnChanges {
     private inscriptionService: InscriptionService,
     private toastService: ToastService,
     private authenticationService: AuthenticationService,
-    private referentielCrudService: ReferentielCrudService
+    private referentielCrudService: ReferentielCrudService,
+    private documentViewer: DocumentViewerService
   ) {
     this.loadTypeOptions();
   }
@@ -164,6 +167,28 @@ export class PieceJustificativePanelComponent implements OnChanges {
         this.toastService.error(err?.error?.message || 'Suppression impossible.');
       }
     });
+  }
+
+  visualiser(piece: PieceJustificative): void {
+    this.viewingUuid = piece.uuid;
+    this.inscriptionService.telechargerFichier(piece.fichierUuid).subscribe({
+      next: (blob) => {
+        this.viewingUuid = null;
+        const label = this.typeLabels[piece.type] || 'Pièce justificative';
+        this.documentViewer.open(blob, label, this.fileName(label, piece.fichierNom, blob.type));
+      },
+      error: (err) => {
+        this.viewingUuid = null;
+        this.toastService.error(err?.error?.message || 'Impossible de charger cette pièce.', 'Visualisation impossible');
+      }
+    });
+  }
+
+  private fileName(label: string, storedFileName: string, mimeType: string): string {
+    const base = label.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9_-]+/g, '-').toLowerCase();
+    const storedExtension = storedFileName?.match(/\.[A-Za-z0-9]{2,5}$/)?.[0]?.toLowerCase() ?? '';
+    const extension = storedExtension || (mimeType.includes('pdf') ? '.pdf' : '');
+    return `${base || 'piece-justificative'}${extension}`;
   }
 
   valider(piece: PieceJustificative): void {

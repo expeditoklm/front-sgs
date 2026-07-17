@@ -32,6 +32,47 @@
             />
           }
         }
+        @case ('file') {
+          <app-label>{{ field.label }} @if (field.required) { <span class="text-error-500">*</span> }</app-label>
+          @if (filePreview(field)) {
+            <div class="mb-3 flex items-center gap-4 rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-white/[0.03]">
+              @if (!previewFailures[field.key]) {
+                <img
+                  [src]="filePreview(field)"
+                  [alt]="field.label"
+                  class="h-20 w-20 rounded-lg border border-gray-200 bg-white object-contain p-1 dark:border-gray-700"
+                  (error)="markPreviewAsFailed(field)"
+                />
+              } @else {
+                <div class="flex h-20 w-20 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white p-2 text-center text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+                  Aperçu indisponible
+                </div>
+              }
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-medium text-gray-800 dark:text-white/90">Logo sélectionné</p>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Choisissez une autre image pour le remplacer.</p>
+              </div>
+              <button
+                type="button"
+                class="rounded-lg border border-error-200 px-3 py-2 text-sm text-error-600 hover:bg-error-50 disabled:opacity-50 dark:border-error-900/50 dark:hover:bg-error-900/20"
+                [disabled]="isDisabled(field) || uploadingFiles[field.key]"
+                (click)="clearFile(field)"
+              >Retirer</button>
+            </div>
+          }
+          <app-file-input
+            [accept]="field.accept ?? 'image/*'"
+            [disabled]="isDisabled(field) || uploadingFiles[field.key]"
+            (change)="selectFile(field, $event)"
+          />
+          @if (uploadingFiles[field.key]) {
+            <p class="mt-2 text-sm text-brand-500">Envoi du logo en cours…</p>
+          } @else if (fileErrors[field.key]) {
+            <p class="mt-2 text-sm text-error-500">{{ fileErrors[field.key] }}</p>
+          } @else if (field.fileHelp) {
+            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ field.fileHelp }}</p>
+          }
+        }
         @default {
           <app-label>{{ field.label }} @if (field.required) { <span class="text-error-500">*</span> }</app-label>
           <app-input-field

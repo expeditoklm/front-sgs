@@ -61,6 +61,11 @@ export interface Inscription {
   version: number;
   dateInscription: string;
   montantDu: number;
+  motifDerniereTransition: string | null;
+  dateDerniereTransition: string | null;
+  statutPrecedentDerniereTransition: StatutInscription | null;
+  motifDernierRejet: string | null;
+  dateDernierRejet: string | null;
 }
 
 export interface InscriptionRequest {
@@ -69,6 +74,20 @@ export interface InscriptionRequest {
   anneeScolaireId: number;
   type: TypeInscription;
   montantDu: number;
+}
+
+export interface TransfertClasseRequest {
+  classeDestinationId: number;
+  motif: string;
+}
+
+export interface TransfertClasse {
+  id: number;
+  classeOrigineId: number;
+  classeDestinationId: number;
+  motif: string;
+  operateurId: number | null;
+  date: string;
 }
 
 export interface ParentTuteur {
@@ -143,6 +162,8 @@ export interface PieceJustificative {
   inscriptionUuid: string;
   type: TypeDocument;
   fichierId: number;
+  fichierUuid: string;
+  fichierNom: string;
   statutValidation: StatutValidationPiece;
   commentaireRejet: string | null;
 }

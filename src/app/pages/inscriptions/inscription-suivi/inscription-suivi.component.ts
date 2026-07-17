@@ -173,8 +173,13 @@ export class InscriptionSuiviComponent implements OnInit {
     return this.classeLabels[classeId] ?? `#${classeId}`;
   }
 
-  openDossier(row: Inscription): void {
-    this.router.navigate(['/inscriptions/eleves', row.eleveUuid]);
+  openDossier(row: Inscription, action?: 'transfert'): void {
+    this.router.navigate(['/inscriptions/eleves', row.eleveUuid], {
+      queryParams: {
+        inscription: row.uuid,
+        action: action ?? null
+      }
+    });
   }
 
   badgeColor(statut: StatutInscription): 'success' | 'error' | 'warning' | 'light' {
@@ -199,8 +204,26 @@ export class InscriptionSuiviComponent implements OnInit {
     return row.statut === 'VALIDEE' && this.authService.hasAnyRole(['SADM', 'ADM']);
   }
 
-  canResubmit(row: Inscription): boolean {
-    return row.statut === 'REJETEE' && this.authService.hasAnyRole(['SADM', 'ADM']);
+  canTransfer(row: Inscription): boolean {
+    return row.statut === 'VALIDEE' && this.authService.hasAnyRole(['SADM', 'ADM']);
+  }
+
+  canCorrect(row: Inscription): boolean {
+    return row.statut === 'REJETEE' && this.authService.hasAnyRole(['SEC', 'SADM', 'ADM']);
+  }
+
+  isCorrectedAndResubmitted(row: Inscription): boolean {
+    return row.statut === 'EN_ATTENTE' && row.statutPrecedentDerniereTransition === 'REJETEE';
+  }
+
+  formatDateTime(value: string | null | undefined): string {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return new Intl.DateTimeFormat('fr-FR', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    }).format(date);
   }
 
   applyTransition(row: Inscription, cible: StatutInscription): void {

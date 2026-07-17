@@ -62,6 +62,7 @@
       [model]="formModel"
       [isEdit]="isEditMode"
       (modelChange)="onModelChange($event)"
+      (fileUploadingChange)="fileUploading = $event"
     />
 
     @if (formError) {
@@ -72,8 +73,8 @@
       <app-button size="sm" variant="outline" (btnClick)="closeForm()">
         Annuler
       </app-button>
-      <app-button size="sm" [disabled]="saving" (btnClick)="save()">
-        Enregistrer
+      <app-button size="sm" [disabled]="saving || fileUploading" (btnClick)="save()">
+        {{ fileUploading ? 'Envoi du fichier…' : 'Enregistrer' }}
       </app-button>
     </div>
   </app-modal>

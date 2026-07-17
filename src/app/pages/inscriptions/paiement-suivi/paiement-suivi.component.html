@@ -86,7 +86,7 @@
                         (click)="telechargerRecu(row)"
                         class="text-sm font-medium text-brand-500 hover:text-brand-600 disabled:opacity-40"
                       >
-                        Télécharger le reçu
+                        {{ downloadingUuid === row.uuid ? 'Ouverture...' : 'Visualiser le reçu' }}
                       </button>
                     }
                   </div>

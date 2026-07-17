@@ -24,6 +24,8 @@ import {
   StatistiqueNiveau,
   StatistiqueSexe,
   StatutInscription,
+  TransfertClasse,
+  TransfertClasseRequest,
   UploadResponse
 } from '../models/inscription.models';
 
@@ -113,6 +115,18 @@ export class InscriptionService {
       .pipe(map((response) => response.data));
   }
 
+  transfererClasse(uuid: string, payload: TransfertClasseRequest): Observable<Inscription> {
+    return this.http
+      .post<ApiResponse<Inscription>>(`${this.base}/inscriptions/${uuid}/transfert-classe`, payload)
+      .pipe(map((response) => response.data));
+  }
+
+  historiqueTransferts(uuid: string): Observable<TransfertClasse[]> {
+    return this.http
+      .get<ApiResponse<TransfertClasse[]>>(`${this.base}/inscriptions/${uuid}/transferts`)
+      .pipe(map((response) => response.data));
+  }
+
   // --- Parents/tuteurs rattachés à un élève ---------------------------
 
   getParents(eleveUuid: string): Observable<EleveParent[]> {
@@ -182,6 +196,10 @@ export class InscriptionService {
     return this.http
       .post<ApiResponse<PieceJustificative>>(`${this.base}/pieces-justificatives/${uuid}/valider`, payload)
       .pipe(map((response) => response.data));
+  }
+
+  telechargerFichier(fichierUuid: string): Observable<Blob> {
+    return this.http.get(`${this.storageEndpoint}/download/${encodeURIComponent(fichierUuid)}`, { responseType: 'blob' });
   }
 
   // --- Upload de fichier (service-referentiel/StorageController) -------

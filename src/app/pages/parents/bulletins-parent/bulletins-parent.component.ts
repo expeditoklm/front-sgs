@@ -5,7 +5,7 @@ import { ComponentCardComponent } from '../../../shared/components/common/compon
 import { ButtonComponent } from '../../../shared/components/ui/button/button.component';
 import { ArchivedBulletin, ReportService } from '../../../core/services/report.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { downloadBlob } from '../../../core/helpers/download.helpers';
+import { DocumentViewerService } from '../../../core/services/document-viewer.service';
 import { PaginationComponent } from '../../../shared/components/ui/pagination/pagination.component';
 import { PaginatePipe } from '../../../shared/pipes/paginate.pipe';
 
@@ -43,7 +43,8 @@ export class BulletinsParentComponent implements OnInit {
 
   constructor(
     private reportService: ReportService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private documentViewer: DocumentViewerService
   ) {
   }
 
@@ -71,7 +72,11 @@ export class BulletinsParentComponent implements OnInit {
 
   download(bulletin: ArchivedBulletin): void {
     this.reportService.telechargerBulletinArchive(bulletin.uuid).subscribe({
-      next: (blob) => downloadBlob(blob, `bulletin-${bulletin.eleveNomComplet}-${bulletin.periodeLibelle}.pdf`.replace(/[^A-Za-z0-9._-]/g, '-')),
+      next: (blob) => this.documentViewer.open(
+        blob,
+        `Bulletin de ${bulletin.eleveNomComplet} — ${bulletin.periodeLibelle}`,
+        `bulletin-${bulletin.eleveNomComplet}-${bulletin.periodeLibelle}.pdf`.replace(/[^A-Za-z0-9._-]/g, '-')
+      ),
       error: () => this.toastService.error('Téléchargement du bulletin impossible.', 'Téléchargement impossible')
     });
   }

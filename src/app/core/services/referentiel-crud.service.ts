@@ -24,6 +24,14 @@ export interface BusinessParameterOption {
   metadonnees?: string;
 }
 
+export interface StorageUploadResponse {
+  id: number;
+  fileName: string;
+  // Le backend expose ici l'UUID du fichier malgré le nom historique "download".
+  download: string;
+  fileSize: number;
+}
+
 // Générique par construction : les 8 référentiels du Module 01 partagent exactement le même
 // contrat REST (MasterController/AbstractBaseService côté backend), donc un seul service
 // paramétré par path, plutôt que 8 sous-classes quasi identiques.
@@ -73,5 +81,16 @@ export class ReferentielCrudService {
       `${this.endpoint}/parametres-metier-options`,
       { params }
     ).pipe(map((response) => response.data));
+  }
+
+  uploadFile(file: File, directory: string): Observable<StorageUploadResponse> {
+    const formData = new FormData();
+    formData.append('directory', directory);
+    formData.append('file', file);
+    return this.http.post<StorageUploadResponse>(`${environment.apiUrl}/storage/upload`, formData);
+  }
+
+  publicLogoUrl(fileUuid: string): string {
+    return `${environment.apiUrl}/storage/public/logos/${encodeURIComponent(fileUuid)}`;
   }
 }

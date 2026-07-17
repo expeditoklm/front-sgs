@@ -9,7 +9,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { ModalComponent } from '../../shared/components/ui/modal/modal.component';
 import { AbsenceCours, AbsencePayload, CoursPayload, CoursPlanifie, DisponibiliteEnseignant, DisponibilitePayload, EleveCoursOption, IndisponibiliteSalle, JourSemaine, OptionRef, PlageHoraire, Remplacement, RemplacementPayload, SuggestionConflit } from '../../core/models/emploi-du-temps.models';
 import { EmploiDuTempsService } from '../../core/services/emploi-du-temps.service';
-import { downloadBlob } from '../../core/helpers/download.helpers';
+import { DocumentViewerService } from '../../core/services/document-viewer.service';
 import { PaginationComponent } from '../../shared/components/ui/pagination/pagination.component';
 import { PaginatePipe } from '../../shared/pipes/paginate.pipe';
 import { SelectComponent } from '../../shared/components/form/select/select.component';
@@ -53,7 +53,7 @@ export class CalenderComponent implements OnInit {
  readonly rechercherEnseignants=(term:string,limit:number)=>this.edt.rechercherOptions('enseignants',term,limit);
  readonly rechercherSalles=(term:string,limit:number)=>this.edt.rechercherOptions('salles',term,limit);
  calendarOptions:CalendarOptions={plugins:[dayGridPlugin,timeGridPlugin,interactionPlugin],initialView:'timeGridWeek',locale:'fr',firstDay:1,weekends:true,allDaySlot:false,slotMinTime:'07:00:00',slotMaxTime:'20:00:00',slotDuration:'00:30:00',height:'auto',editable:true,selectable:true,nowIndicator:true,headerToolbar:{left:'prev,next today',center:'title',right:'timeGridWeek,timeGridDay,dayGridMonth'},buttonText:{today:"Aujourd'hui",week:'Semaine',day:'Jour',month:'Mois'},select:i=>this.selectionnerPlage(i),eventClick:i=>this.editer(i),eventDrop:i=>this.deplacer(i),eventResize:i=>this.deplacer(i),events:[]};
- constructor(private edt:EmploiDuTempsService){}
+ constructor(private edt:EmploiDuTempsService,private documentViewer:DocumentViewerService){}
  ngOnInit(){this.chargerDepuisServeur();}
  get publies(){return this.cours.filter(c=>c.statut==='PUBLIE').length;}
  get volume(){return this.cours.reduce((s,c)=>s+(this.minutes(c.heureFin)-this.minutes(c.heureDebut))/60,0);}
@@ -95,7 +95,7 @@ export class CalenderComponent implements OnInit {
   this.edt.exporterPdf(this.anneeId,this.classeFiltre||undefined,this.enseignantFiltre||undefined,this.salleFiltre||undefined).subscribe({
    next:b=>{
     if(!b?.size){this.erreur='Le serveur a généré un fichier PDF vide.';return;}
-    downloadBlob(b,'emploi-du-temps.pdf');
+    this.documentViewer.open(b,'Emploi du temps','emploi-du-temps.pdf');
    },
    error:e=>this.messageBlob(e).then(message=>this.erreur=message)
   });

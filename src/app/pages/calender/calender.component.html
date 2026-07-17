@@ -1,7 +1,7 @@
 <div class="space-y-6">
  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
   <div><p class="text-sm font-medium text-brand-500">Organisation scolaire</p><h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Emploi du temps intelligent</h1><p class="text-sm text-gray-500">Planification, remplacements, disponibilités et suivi des absences.</p></div>
-  <div class="flex flex-wrap gap-2"><span class="rounded-lg bg-gray-100 px-3 py-2 text-sm">{{publication}}</span><button (click)="exporter()" class="rounded-lg border px-4 py-2 text-sm">Exporter PDF</button><button (click)="publier()" class="rounded-lg border border-brand-500 px-4 py-2 text-sm font-medium text-brand-600">Publier</button><button (click)="ouvrir()" class="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white">+ Planifier un cours</button></div>
+  <div class="flex flex-wrap gap-2"><span class="rounded-lg bg-gray-100 px-3 py-2 text-sm">{{publication}}</span><button (click)="exporter()" class="rounded-lg border px-4 py-2 text-sm">Aperçu PDF</button><button (click)="publier()" class="rounded-lg border border-brand-500 px-4 py-2 text-sm font-medium text-brand-600">Publier</button><button (click)="ouvrir()" class="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white">+ Planifier un cours</button></div>
  </div>
  @if(erreur){<div class="rounded-xl border border-error-200 bg-error-50 p-3 text-sm text-error-700">{{erreur}}</div>}
  @if(succes){<div class="rounded-xl border border-success-200 bg-success-50 p-3 text-sm text-success-700">{{succes}}</div>}

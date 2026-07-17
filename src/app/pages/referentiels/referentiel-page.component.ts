@@ -48,6 +48,7 @@ export class ReferentielPageComponent implements OnInit {
   formModel: Record<string, any> = {};
   formError = '';
   saving = false;
+  fileUploading = false;
 
   isConfirmOpen = false;
   rowPendingDelete: Record<string, any> | null = null;

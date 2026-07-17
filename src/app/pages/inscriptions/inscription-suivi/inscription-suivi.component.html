@@ -39,6 +39,7 @@
             <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Classe</th>
             <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Type</th>
             <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Statut</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Motif / observation</th>
             <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Montant dû</th>
             <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"></th>
           </tr>
@@ -46,11 +47,11 @@
         <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
           @if (loading) {
             <tr>
-              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="7">Chargement...</td>
+              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="8">Chargement...</td>
             </tr>
           } @else if (rows.length === 0) {
             <tr>
-              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="7">Aucune inscription.</td>
+              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="8">Aucune inscription.</td>
             </tr>
           } @else {
             @for (row of rows; track row.uuid) {
@@ -65,6 +66,26 @@
                 <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ typeLabels[row.type] }}</td>
                 <td class="px-5 py-4 text-start">
                   <app-badge [color]="badgeColor(row.statut)">{{ statutLabels[row.statut] }}</app-badge>
+                  @if (isCorrectedAndResubmitted(row)) {
+                    <div class="mt-2">
+                      <span class="inline-flex items-center rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
+                        Corrigé et resoumis
+                      </span>
+                      @if (row.dateDerniereTransition) {
+                        <p class="mt-1 text-xs text-gray-400">{{ formatDateTime(row.dateDerniereTransition) }}</p>
+                      }
+                    </div>
+                  }
+                </td>
+                <td class="max-w-72 px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
+                  @if (isCorrectedAndResubmitted(row) && row.motifDernierRejet) {
+                    <p class="mb-1 text-xs font-medium text-error-500">Motif corrigé</p>
+                    <p class="line-clamp-2 whitespace-normal" [title]="row.motifDernierRejet">{{ row.motifDernierRejet }}</p>
+                  } @else if (row.motifDerniereTransition) {
+                    <p class="line-clamp-2 whitespace-normal" [title]="row.motifDerniereTransition">{{ row.motifDerniereTransition }}</p>
+                  } @else {
+                    <span>—</span>
+                  }
                 </td>
                 <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.montantDu }} FCFA</td>
                 <td class="px-5 py-4 text-start whitespace-nowrap">
@@ -87,9 +108,14 @@
                         Annuler
                       </button>
                     }
-                    @if (canResubmit(row)) {
-                      <button type="button" (click)="applyTransition(row, 'NOUVELLE')" class="text-sm font-medium text-gray-600 hover:text-gray-800 dark:text-gray-300">
-                        Remettre en brouillon
+                    @if (canTransfer(row)) {
+                      <button type="button" (click)="openDossier(row, 'transfert')" class="text-sm font-medium text-brand-500 hover:text-brand-600">
+                        Transférer l’élève
+                      </button>
+                    }
+                    @if (canCorrect(row)) {
+                      <button type="button" (click)="openDossier(row)" class="text-sm font-medium text-brand-500 hover:text-brand-600">
+                        Corriger le dossier
                       </button>
                     }
                   </div>

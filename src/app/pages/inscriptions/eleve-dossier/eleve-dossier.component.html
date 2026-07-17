@@ -119,7 +119,35 @@
           @if (selectedInscription) {
             <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
               Montant dû : <span class="font-medium text-gray-800 dark:text-white/90">{{ selectedInscription.montantDu }} FCFA</span>
+              <span class="mx-2">•</span>
+              Classe : <span class="font-medium text-gray-800 dark:text-white/90">{{ classeLabel(selectedInscription.classeId) }}</span>
             </p>
+            @if (selectedInscription.statut === 'REJETEE' && selectedInscription.motifDernierRejet) {
+              <div class="mb-4 rounded-xl border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300">
+                <p class="font-medium">Motif du rejet</p>
+                <p class="mt-1 whitespace-pre-line">{{ selectedInscription.motifDernierRejet }}</p>
+              </div>
+            }
+            @if (isCorrectionResoumise) {
+              <div class="mb-4 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-700 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-300">
+                <p class="font-medium">Dossier corrigé et resoumis</p>
+                <p class="mt-1">En attente d’un nouveau contrôle par l’administration.</p>
+                @if (selectedInscription.motifDernierRejet) {
+                  <p class="mt-2 text-xs font-medium">Motif traité : {{ selectedInscription.motifDernierRejet }}</p>
+                }
+              </div>
+            }
+            @if (canResoumettreCorrection) {
+              <div class="mb-4 flex flex-col gap-3 rounded-xl border border-warning-200 bg-warning-50 px-4 py-4 dark:border-warning-500/30 dark:bg-warning-500/10 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p class="font-medium text-warning-800 dark:text-warning-200">Correction attendue</p>
+                  <p class="mt-1 text-sm text-warning-700 dark:text-warning-300">
+                    Corrigez les informations ou les pièces signalées, puis resoumettez le dossier à l’administration.
+                  </p>
+                </div>
+                <app-button size="sm" (btnClick)="openResoumission()">Terminer et resoumettre</app-button>
+              </div>
+            }
           }
         }
         <div class="flex flex-wrap gap-3">
@@ -131,8 +159,16 @@
               Enregistrer un paiement
             </app-button>
             <app-button size="sm" variant="outline" [disabled]="generatingCertificat" (btnClick)="telechargerCertificat()">
-              Télécharger le certificat d'inscription
+              Visualiser le certificat d'inscription
             </app-button>
+            <app-button size="sm" variant="outline" (btnClick)="openHistoriqueTransferts()">
+              Historique des transferts
+            </app-button>
+            @if (canTransfererClasse) {
+              <app-button size="sm" (btnClick)="openTransfertClasse()">
+                Transférer l’élève de classe
+              </app-button>
+            }
           }
         </div>
       </app-component-card>
@@ -204,6 +240,118 @@
       <app-button size="sm" [disabled]="savingInscription" (btnClick)="saveInscription()">
         Enregistrer
       </app-button>
+    </div>
+  </app-modal>
+
+  <app-modal [isOpen]="isTransfertFormOpen" (close)="closeTransfertClasse()" className="max-w-[560px] p-5 lg:p-8">
+    <h4 class="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90">Transférer l’élève de classe</h4>
+    <p class="mb-6 text-sm text-gray-500 dark:text-gray-400">
+      Classe actuelle : <span class="font-medium text-gray-800 dark:text-white/90">{{ classeLabel(selectedInscription?.classeId || 0) }}</span>.
+      Cette action sera conservée dans l’historique du dossier.
+    </p>
+    <div class="space-y-5">
+      <div>
+        <app-label>Classe de destination <span class="text-error-500">*</span></app-label>
+        <app-select
+          [options]="transfertClasseOptions"
+          [value]="transfertClasseDestinationId?.toString() ?? ''"
+          placeholder="Choisir la nouvelle classe"
+          (valueChange)="transfertClasseDestinationId = +$event"
+        />
+      </div>
+      <div>
+        <app-label>Motif du transfert <span class="text-error-500">*</span></app-label>
+        <textarea
+          rows="4"
+          class="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+          placeholder="Expliquez la raison du changement de classe"
+          [value]="transfertMotif"
+          (input)="transfertMotif = $any($event.target).value"
+        ></textarea>
+      </div>
+    </div>
+    @if (transfertError) {
+      <p class="mt-4 text-sm text-error-500">{{ transfertError }}</p>
+    }
+    <div class="mt-8 flex items-center justify-end gap-3">
+      <app-button size="sm" variant="outline" [disabled]="transferring" (btnClick)="closeTransfertClasse()">Annuler</app-button>
+      <app-button size="sm" [disabled]="transferring" (btnClick)="confirmerTransfertClasse()">
+        {{ transferring ? 'Transfert en cours…' : 'Confirmer le transfert' }}
+      </app-button>
+    </div>
+  </app-modal>
+
+  <app-modal [isOpen]="isResoumissionOpen" (close)="closeResoumission()" className="max-w-[520px] p-5 lg:p-8">
+    <h4 class="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90">Resoumettre le dossier corrigé</h4>
+    <p class="text-sm text-gray-500 dark:text-gray-400">
+      Confirmez que toutes les corrections demandées ont été effectuées. Le dossier repassera en attente de validation et l’administration sera avertie.
+    </p>
+    @if (selectedInscription?.motifDernierRejet) {
+      <div class="mt-5 rounded-xl border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300">
+        <p class="font-medium">Dernier motif de rejet</p>
+        <p class="mt-1 whitespace-pre-line">{{ selectedInscription?.motifDernierRejet }}</p>
+      </div>
+    }
+    @if (resoumissionError) {
+      <p class="mt-4 text-sm text-error-500">{{ resoumissionError }}</p>
+    }
+    <div class="mt-8 flex items-center justify-end gap-3">
+      <app-button size="sm" variant="outline" [disabled]="resubmitting" (btnClick)="closeResoumission()">Annuler</app-button>
+      <app-button size="sm" [disabled]="resubmitting" (btnClick)="confirmerResoumission()">
+        {{ resubmitting ? 'Resoumission en cours…' : 'Confirmer la resoumission' }}
+      </app-button>
+    </div>
+  </app-modal>
+
+  <app-modal [isOpen]="isHistoriqueTransfertsOpen" (close)="closeHistoriqueTransferts()" className="max-w-[820px] p-5 lg:p-8">
+    <div class="mb-6">
+      <h4 class="font-semibold text-gray-800 text-title-sm dark:text-white/90">Historique des transferts de classe</h4>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        Chaque changement conserve la classe d’origine, la destination, le motif, la date et l’opérateur.
+      </p>
+    </div>
+
+    @if (loadingHistoriqueTransferts) {
+      <p class="py-8 text-center text-sm text-gray-500 dark:text-gray-400">Chargement de l’historique…</p>
+    } @else if (historiqueTransfertsError) {
+      <p class="rounded-xl border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-600 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300">
+        {{ historiqueTransfertsError }}
+      </p>
+    } @else if (historiqueTransferts.length === 0) {
+      <p class="rounded-xl border border-gray-200 px-4 py-8 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+        Aucun transfert de classe n’a encore été effectué pour cette inscription.
+      </p>
+    } @else {
+      <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+        <div class="max-w-full overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="border-b border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-white/[0.03]">
+              <tr>
+                <th class="px-4 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400">Date</th>
+                <th class="px-4 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400">Classe d’origine</th>
+                <th class="px-4 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400">Destination</th>
+                <th class="px-4 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400">Motif</th>
+                <th class="px-4 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400">Opérateur</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+              @for (transfert of historiqueTransferts; track transfert.id) {
+                <tr>
+                  <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ formatDateTime(transfert.date) }}</td>
+                  <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ classeLabel(transfert.classeOrigineId) }}</td>
+                  <td class="px-4 py-3 text-sm font-medium text-gray-800 dark:text-white/90">{{ classeLabel(transfert.classeDestinationId) }}</td>
+                  <td class="max-w-72 px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ transfert.motif }}</td>
+                  <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ transfert.operateurId ? ('#' + transfert.operateurId) : 'Système' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <div class="mt-7 flex justify-end">
+      <app-button size="sm" variant="outline" (btnClick)="closeHistoriqueTransferts()">Fermer</app-button>
     </div>
   </app-modal>
 

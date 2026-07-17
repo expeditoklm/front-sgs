@@ -11,7 +11,7 @@ import { PaginationComponent } from '../../../shared/components/ui/pagination/pa
 import { InscriptionService } from '../../../core/services/inscription.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ReferentielCrudService } from '../../../core/services/referentiel-crud.service';
-import { downloadBlob } from '../../../core/helpers/download.helpers';
+import { DocumentViewerService } from '../../../core/services/document-viewer.service';
 import { MetaResponse } from '../../../core/models/audit.models';
 import { SelectOption } from '../../../core/models/referentiel-crud.models';
 import {
@@ -61,7 +61,8 @@ export class PaiementSuiviComponent implements OnInit {
     private router: Router,
     private inscriptionService: InscriptionService,
     private referentielCrudService: ReferentielCrudService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private documentViewer: DocumentViewerService
   ) {
   }
 
@@ -174,7 +175,7 @@ export class PaiementSuiviComponent implements OnInit {
     this.inscriptionService.telechargerRecu(row.uuid).subscribe({
       next: (blob) => {
         this.downloadingUuid = null;
-        downloadBlob(blob, `recu-${row.numeroRecu ?? row.uuid}.pdf`);
+        this.documentViewer.open(blob, `Reçu ${row.numeroRecu ?? ''}`.trim(), `recu-${row.numeroRecu ?? row.uuid}.pdf`);
       },
       error: (err) => {
         this.downloadingUuid = null;

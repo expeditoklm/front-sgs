@@ -3,7 +3,7 @@ export interface SelectOption {
   label: string;
 }
 
-export type FieldType = 'text' | 'number' | 'date' | 'checkbox' | 'select' | 'multiselect';
+export type FieldType = 'text' | 'number' | 'date' | 'checkbox' | 'select' | 'multiselect' | 'file';
 
 export interface OptionsSource {
   path: string;
@@ -22,6 +22,9 @@ export interface FieldConfig {
   readOnlyOnEdit?: boolean;
   staticOptions?: SelectOption[];
   optionsSource?: OptionsSource;
+  accept?: string;
+  uploadDirectory?: string;
+  fileHelp?: string;
 }
 
 export interface ColumnConfig {
@@ -115,7 +118,14 @@ export const REFERENTIEL_CRUD_ENTITIES: EntityDefinition[] = [
         }
       },
       { key: 'effectifCible', label: 'Effectif cible', type: 'number' },
-      { key: 'logoUrl', label: 'URL du logo (en-tête des documents PDF)', type: 'text' }
+      {
+        key: 'logoUrl',
+        label: 'Logo de l’établissement',
+        type: 'file',
+        accept: 'image/png,image/jpeg',
+        uploadDirectory: 'logos-etablissements',
+        fileHelp: 'Formats acceptés : PNG ou JPEG. Ce logo apparaîtra dans l’en-tête des documents PDF.'
+      }
     ]
   },
   {
