@@ -17,6 +17,7 @@ import { PageResponse } from '../../../core/models/audit.models';
 import { AuthenticationService } from '../../../core/services/authentication.service';
 import { PortailService } from '../../../core/services/portail.service';
 import { SelectComponent } from '../../../shared/components/form/select/select.component';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-ecommerce',
@@ -50,7 +51,6 @@ export class EcommerceComponent implements OnInit {
   syntheseFamille: any = {};
   notesRecentesFamille: any[] = [];
   prochainsCoursFamille: any[] = [];
-  erreurFamille = '';
 
   get eleveFamilleOptions() {
     return this.elevesFamille.map(eleve => ({
@@ -69,7 +69,8 @@ export class EcommerceComponent implements OnInit {
     private inscriptions: InscriptionService,
     private personnelService: PersonnelService,
     private authentication: AuthenticationService,
-    private portail: PortailService
+    private portail: PortailService,
+    private toast: ToastService
   ) {
   }
 
@@ -112,17 +113,18 @@ export class EcommerceComponent implements OnInit {
         this.totalEffectif = this.classes.reduce((total, item) => total + item.effectif, 0);
         this.totalCapacite = this.classes.reduce((total, item) => total + (item.capaciteMax ?? 0), 0);
         this.chargement = false;
+        if (this.donneesPartielles) this.toast.warning('Certaines informations du tableau de bord ne sont momentanément pas disponibles.');
       },
       error: () => {
         this.donneesPartielles = true;
         this.chargement = false;
+        this.toast.error('Impossible de charger le tableau de bord.', 'Chargement impossible');
       }
     });
   }
 
   chargerElevesFamille(): void {
     this.chargement = true;
-    this.erreurFamille = '';
     this.portail.eleves().subscribe({
       next: (eleves) => {
         this.elevesFamille = eleves ?? [];
@@ -134,7 +136,7 @@ export class EcommerceComponent implements OnInit {
         }
       },
       error: (erreur) => {
-        this.erreurFamille = this.messagePortail(erreur);
+        this.toast.error(this.messagePortail(erreur), 'Chargement impossible');
         this.chargement = false;
       }
     });
@@ -143,7 +145,6 @@ export class EcommerceComponent implements OnInit {
   chargerAccueilFamille(): void {
     if (!this.eleveFamilleUuid) return;
     this.chargement = true;
-    this.erreurFamille = '';
     forkJoin({
       synthese: this.portail.synthese(this.eleveFamilleUuid),
       notes: this.portail.notes(this.eleveFamilleUuid),
@@ -156,7 +157,7 @@ export class EcommerceComponent implements OnInit {
         this.chargement = false;
       },
       error: (erreur) => {
-        this.erreurFamille = this.messagePortail(erreur);
+        this.toast.error(this.messagePortail(erreur), 'Chargement impossible');
         this.chargement = false;
       }
     });

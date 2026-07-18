@@ -6,6 +6,7 @@ import { PermissionMatrix, PermissionProfile, SystemPermission } from '../../../
 import { PermissionService } from '../../../core/services/permission.service';
 import { PaginationComponent } from '../../../shared/components/ui/pagination/pagination.component';
 import { SelectComponent } from '../../../shared/components/form/select/select.component';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-permissions',
@@ -22,12 +23,10 @@ export class PermissionsComponent implements OnInit {
   chargement = true;
   sauvegarde = false;
   confirmation = false;
-  erreur = '';
-  succes = '';
   page = 1;
   pageSize = 10;
 
-  constructor(private permissionsService: PermissionService) {
+  constructor(private permissionsService: PermissionService, private toast: ToastService) {
   }
 
   ngOnInit(): void {
@@ -36,7 +35,6 @@ export class PermissionsComponent implements OnInit {
 
   charger(): void {
     this.chargement = true;
-    this.erreur = '';
     this.permissionsService.charger().subscribe({
       next: matrice => {
         this.matrice = matrice;
@@ -47,7 +45,7 @@ export class PermissionsComponent implements OnInit {
         this.chargement = false;
       },
       error: erreur => {
-        this.erreur = erreur?.error?.message ?? 'Impossible de charger la matrice des permissions.';
+        this.toast.error(erreur?.error?.message ?? 'Impossible de charger la matrice des permissions.', 'Chargement impossible');
         this.chargement = false;
       }
     });
@@ -110,7 +108,6 @@ export class PermissionsComponent implements OnInit {
     const droits = this.selection[profil] ?? new Set<string>();
     droits.has(permission) ? droits.delete(permission) : droits.add(permission);
     this.selection[profil] = new Set(droits);
-    this.succes = '';
   }
 
   basculerProfil(profil: string, activer: boolean): void {
@@ -148,7 +145,6 @@ export class PermissionsComponent implements OnInit {
 
   enregistrer(): void {
     this.sauvegarde = true;
-    this.erreur = '';
     const affectations = Object.fromEntries(
       this.profils.map(profil => [profil.code, [...(this.selection[profil.code] ?? [])].sort()])
     );
@@ -159,12 +155,12 @@ export class PermissionsComponent implements OnInit {
           matrice.profils.map(profil => [profil.code, new Set(matrice.affectations[profil.code] ?? [])])
         );
         this.original = this.signature();
-        this.succes = 'La matrice des permissions a été enregistrée.';
+        this.toast.success('La matrice des permissions a été enregistrée.');
         this.sauvegarde = false;
         this.confirmation = false;
       },
       error: erreur => {
-        this.erreur = erreur?.error?.message ?? 'La sauvegarde des permissions a échoué.';
+        this.toast.error(erreur?.error?.message ?? 'La sauvegarde des permissions a échoué.', 'Enregistrement impossible');
         this.sauvegarde = false;
         this.confirmation = false;
       }
@@ -175,7 +171,6 @@ export class PermissionsComponent implements OnInit {
     this.selection = Object.fromEntries(
       this.matrice.profils.map(profil => [profil.code, new Set(this.matrice.affectations[profil.code] ?? [])])
     );
-    this.succes = '';
   }
 
   private signature(): string {

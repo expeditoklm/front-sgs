@@ -25,9 +25,6 @@
     <app-button size="sm" variant="outline" (btnClick)="resetFilters()">Réinitialiser</app-button>
   </div>
 
-  @if (listError) {
-    <p class="text-sm text-error-500">{{ listError }}</p>
-  }
 
   <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
     <div class="max-w-full overflow-x-auto">
@@ -40,7 +37,7 @@
             <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Type</th>
             <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Statut</th>
             <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Motif / observation</th>
-            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Montant dû</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Situation financière</th>
             <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"></th>
           </tr>
         </thead>
@@ -87,7 +84,10 @@
                     <span>—</span>
                   }
                 </td>
-                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.montantDu }} FCFA</td>
+                <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                  <span class="block">Dette antérieure : {{ row.montantDu }} FCFA</span>
+                  <span class="block text-xs">Inscription : {{ row.montantInscription }} FCFA</span>
+                </td>
                 <td class="px-5 py-4 text-start whitespace-nowrap">
                   <div class="flex flex-wrap gap-2">
                     @if (canSubmit(row)) {

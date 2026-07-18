@@ -18,7 +18,6 @@ export class GrillesEvaluationComponent implements OnInit {
   grilles: GrilleEvaluationConfig[] = [];
   recherche = '';
   chargement = false;
-  erreur = '';
   page = 1;
   taillePage = 5;
 
@@ -55,10 +54,9 @@ export class GrillesEvaluationComponent implements OnInit {
 
   charger(): void {
     this.chargement = true;
-    this.erreur = '';
     this.personnel.grillesEvaluationAdministration().subscribe({
       next: grilles => { this.grilles = grilles; this.chargement = false; },
-      error: err => { this.chargement = false; this.erreur = err?.error?.message || 'Impossible de charger les grilles d’évaluation.'; }
+      error: err => { this.chargement = false; this.toast.error(err?.error?.message || 'Impossible de charger les grilles d’évaluation.', 'Chargement impossible'); }
     });
   }
 

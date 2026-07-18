@@ -61,6 +61,8 @@ export interface Inscription {
   version: number;
   dateInscription: string;
   montantDu: number;
+  montantInscription: number;
+  montantTotal: number;
   motifDerniereTransition: string | null;
   dateDerniereTransition: string | null;
   statutPrecedentDerniereTransition: StatutInscription | null;

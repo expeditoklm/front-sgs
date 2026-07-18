@@ -7,6 +7,7 @@ import {PersonnelService} from '../../core/services/personnel.service';
 import {PaginationComponent} from '../../shared/components/ui/pagination/pagination.component';
 import {PaginatePipe} from '../../shared/pipes/paginate.pipe';
 import {SelectComponent} from '../../shared/components/form/select/select.component';
+import {ToastService} from '../../core/services/toast.service';
 
 interface CritereEvaluation {
   id:number;
@@ -41,8 +42,6 @@ export class EvaluationsDetailleesComponent implements OnInit {
   objectifs='';
   appreciation='';
   notes:Record<number,number|null>={};
-  erreur='';
-  succes='';
   enregistrement=false;
   pageBrouillons=1;
   tailleBrouillons=10;
@@ -56,7 +55,7 @@ export class EvaluationsDetailleesComponent implements OnInit {
   changerPageBrouillons(page:number){this.pageBrouillons=Math.min(Math.max(page,1),this.totalPagesBrouillons);}
   changerTailleBrouillons(taille:number){this.tailleBrouillons=taille;this.pageBrouillons=1;}
 
-  constructor(private service:PersonnelService){}
+  constructor(private service:PersonnelService,private toast:ToastService){}
 
   ngOnInit(){
     forkJoin({
@@ -70,7 +69,7 @@ export class EvaluationsDetailleesComponent implements OnInit {
         this.brouillons=this.filtrerBrouillons(r.evaluations);
         if(this.grilles.length){this.grilleId=this.grilles[0].id;this.initialiserNotes();}
       },
-      error:e=>this.erreur=this.message(e)
+      error:e=>this.toast.error(this.message(e),'Chargement impossible')
     });
   }
 
@@ -89,11 +88,10 @@ export class EvaluationsDetailleesComponent implements OnInit {
   }
 
   enregistrer(valider:boolean){
-    this.erreur='';this.succes='';
-    if(!this.employeUuid||!this.grilleId){this.erreur='Sélectionnez un collaborateur et une grille.';return;}
+    if(!this.employeUuid||!this.grilleId){this.toast.warning('Sélectionnez un collaborateur et une grille.');return;}
     const criteres=this.grilleSelectionnee?.criteres??[];
     if(criteres.some(c=>this.notes[c.id]===null||Number(this.notes[c.id])<0||Number(this.notes[c.id])>20)){
-      this.erreur='Toutes les notes sont obligatoires et doivent être comprises entre 0 et 20.';return;
+      this.toast.warning('Toutes les notes sont obligatoires et doivent être comprises entre 0 et 20.');return;
     }
     const notes=Object.fromEntries(criteres.map(c=>[String(c.id),Number(this.notes[c.id])]));
     const payload={employeUuid:this.employeUuid,grilleId:Number(this.grilleId),trimestre:this.trimestre,date:this.date,objectifs:this.objectifs,appreciation:this.appreciation,notes,valider};
@@ -104,21 +102,20 @@ export class EvaluationsDetailleesComponent implements OnInit {
     this.enregistrement=true;
     requete.subscribe({
       next:()=>{
-        this.succes=valider?'Évaluation validée.':modification?'Brouillon mis à jour.':'Brouillon enregistré.';
+        this.toast.success(valider?'Évaluation validée.':modification?'Brouillon mis à jour.':'Brouillon enregistré.');
         this.enregistrement=false;
         this.reinitialiser();
         this.chargerBrouillons();
       },
-      error:e=>{this.erreur=this.message(e);this.enregistrement=false;}
+      error:e=>{this.toast.error(this.message(e),'Enregistrement impossible');this.enregistrement=false;}
     });
   }
 
   reprendre(uuid:string){
-    this.erreur='';this.succes='';
     this.service.evaluationDetaillee(uuid).subscribe({
       next:e=>{
         if(e.statut!=='BROUILLON'){
-          this.erreur='Cette évaluation a déjà été validée.';
+          this.toast.warning('Cette évaluation a déjà été validée.');
           this.chargerBrouillons();
           return;
         }
@@ -133,7 +130,7 @@ export class EvaluationsDetailleesComponent implements OnInit {
         for(const [critereId,note] of Object.entries(e.notes??{}))this.notes[Number(critereId)]=Number(note);
         window.scrollTo({top:0,behavior:'smooth'});
       },
-      error:e=>this.erreur=this.message(e)
+      error:e=>this.toast.error(this.message(e),'Chargement impossible')
     });
   }
 
@@ -142,7 +139,7 @@ export class EvaluationsDetailleesComponent implements OnInit {
   private chargerBrouillons(){
     this.service.evaluations().subscribe({
       next:evaluations=>{this.brouillons=this.filtrerBrouillons(evaluations);this.pageBrouillons=1;},
-      error:e=>this.erreur=this.message(e)
+      error:e=>this.toast.error(this.message(e),'Chargement impossible')
     });
   }
 

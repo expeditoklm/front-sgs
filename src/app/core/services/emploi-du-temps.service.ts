@@ -33,7 +33,7 @@ export class EmploiDuTempsService {
   elevesDuCours(coursUuid:string){return this.http.get<ApiResponse<EleveCoursOption[]>>(`${this.url}/${coursUuid}/eleves`).pipe(map(r=>r.data));}
   saisirAbsence(coursUuid:string,v:AbsencePayload){return this.http.post(`${this.url}/${coursUuid}/absences`,v);}
   justifierAbsence(uuid:string,motif?:string){let p=new HttpParams();if(motif)p=p.set('motif',motif);return this.http.patch(`${this.url}/absences/${uuid}/justifier`,null,{params:p});}
-  suggestions(v:CoursPayload){return this.http.post<ApiResponse<SuggestionConflit[]>>(`${this.url}/conflits/suggestions`,v).pipe(map(r=>r.data));}
+  suggestions(v:CoursPayload,coursUuid?:string){let p=new HttpParams();if(coursUuid)p=p.set('coursUuid',coursUuid);return this.http.post<ApiResponse<SuggestionConflit[]>>(`${this.url}/conflits/suggestions`,v,{params:p}).pipe(map(r=>r.data));}
   journal(){return this.http.get<ApiResponse<Record<string,unknown>[]>>(`${this.url}/journal`).pipe(map(r=>r.data));}
   exporterPdf(anneeScolaireId:number,classeId?:number,enseignantId?:number,salleId?:number){let p=new HttpParams().set('anneeScolaireId',anneeScolaireId);if(classeId)p=p.set('classeId',classeId);if(enseignantId)p=p.set('enseignantId',enseignantId);if(salleId)p=p.set('salleId',salleId);return this.http.get(`${this.url}/export.pdf`,{params:p,responseType:'blob'});}
   plages(){return this.http.get<ApiResponse<PlageHoraire[]>>(`${this.url}/plages-horaires`).pipe(map(r=>r.data));}

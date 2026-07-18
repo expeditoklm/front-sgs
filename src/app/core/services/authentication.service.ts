@@ -21,6 +21,7 @@ interface RoleSelectionData {
   accessToken: string;
   refreshToken: string;
   permissions: string[];
+  profiles?: ProfileOption[];
 }
 
 interface RefreshTokenData {
@@ -38,6 +39,7 @@ export class AuthenticationService {
   private pendingToken: string | null = null;
   private pendingUser: UserSummary | null = null;
   private pendingLogin: string | null = null;
+  private pendingProfiles: ProfileOption[] = [];
 
   user = signal<User | null>(this.userFromStorage);
 
@@ -69,7 +71,10 @@ export class AuthenticationService {
         { withCredentials: true }
       )
       .pipe(
-        tap((response) => (this.pendingLogin = response.data.login)),
+        tap((response) => {
+          this.pendingLogin = response.data.login;
+          this.pendingProfiles = this.normalizeProfiles(response.data.profiles);
+        }),
         map((response) => ({ success: true, profiles: response.data.profiles })),
         catchError(() => of({ success: false }))
       );
@@ -101,6 +106,44 @@ export class AuthenticationService {
       )
       .pipe(
         tap((response) => this.storeAuthentication(response.data, profileLibelle)),
+        map(() => true),
+        catchError(() => of(false))
+      );
+  }
+
+  availableProfiles$(): Observable<ProfileOption[]> {
+    return this.http
+      .get<ApiResponse<ProfileOption[]>>(`${this.endpoint}/profiles`)
+      .pipe(
+        map((response) => this.normalizeProfiles(response.data ?? [])),
+        tap((profiles) => this.updateStoredProfiles(profiles))
+      );
+  }
+
+  switchProfile$(profile: ProfileOption): Observable<boolean> {
+    return this.http
+      .post<ApiResponse<RoleSelectionData>>(
+        `${this.endpoint}/switch-role`,
+        { role: profile.code },
+        { withCredentials: true }
+      )
+      .pipe(
+        tap((response) => {
+          const current = this.user();
+          if (!current) return;
+
+          const profiles = this.normalizeProfiles(response.data.profiles ?? current.profiles ?? []);
+          const updated: User = {
+            ...current,
+            profilCode: response.data.roleName.replace(/^ROLE_/, ''),
+            profilLibelle: profile.libelle,
+            permissions: response.data.permissions ?? [],
+            profiles
+          };
+          localStorage.setItem('user', JSON.stringify(updated));
+          localStorage.setItem('profile', updated.profilCode);
+          this.user.set(updated);
+        }),
         map(() => true),
         catchError(() => of(false))
       );
@@ -263,8 +306,11 @@ export class AuthenticationService {
       email: profile.email,
       firstName: profile.firstName,
       lastName: profile.lastName,
-      profilCode: profile.profilCode || current.profilCode,
-      profilLibelle: profile.profilLibelle || current.profilLibelle
+      // /mon-profil décrit le compte, pas le contexte de session choisi. Conserver le profil
+      // actif évite qu'un rafraîchissement des informations personnelles annule visuellement un
+      // basculement (notamment pour un administrateur également parent ou enseignant).
+      profilCode: current.profilCode || profile.profilCode,
+      profilLibelle: current.profilLibelle || profile.profilLibelle
     };
     localStorage.setItem('user', JSON.stringify(updated));
     this.user.set(updated);
@@ -283,7 +329,8 @@ export class AuthenticationService {
       lastName: this.pendingUser?.lastName ?? '',
       profilCode: data.roleName,
       profilLibelle: profileLibelle,
-      permissions: data.permissions ?? []
+      permissions: data.permissions ?? [],
+      profiles: this.normalizeProfiles(data.profiles ?? this.pendingProfiles)
     };
 
     localStorage.setItem('access_token', data.accessToken);
@@ -298,5 +345,21 @@ export class AuthenticationService {
     this.pendingToken = null;
     this.pendingUser = null;
     this.pendingLogin = null;
+    this.pendingProfiles = [];
+  }
+
+  private normalizeProfiles(profiles: ProfileOption[]): ProfileOption[] {
+    return profiles.map((profile) => ({
+      ...profile,
+      code: profile.code.replace(/^ROLE_/, '')
+    }));
+  }
+
+  private updateStoredProfiles(profiles: ProfileOption[]): void {
+    const current = this.user();
+    if (!current) return;
+    const updated = { ...current, profiles };
+    localStorage.setItem('user', JSON.stringify(updated));
+    this.user.set(updated);
   }
 }

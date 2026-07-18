@@ -182,6 +182,7 @@ export const REFERENTIEL_CRUD_ENTITIES: EntityDefinition[] = [
       { key: 'code', label: 'Code' },
       { key: 'libelle', label: 'Libellé' },
       { key: 'capaciteMax', label: 'Capacité max' },
+      { key: 'montantInscription', label: "Montant d'inscription" },
       { key: 'niveauLibelle', label: 'Niveau' },
       { key: 'anneeScolaireCode', label: 'Année scolaire' }
     ],
@@ -189,6 +190,7 @@ export const REFERENTIEL_CRUD_ENTITIES: EntityDefinition[] = [
       { key: 'code', label: 'Code', type: 'text', required: true, readOnlyOnEdit: true },
       { key: 'libelle', label: 'Libellé', type: 'text', required: true },
       { key: 'capaciteMax', label: 'Capacité max', type: 'number', required: true },
+      { key: 'montantInscription', label: "Montant d'inscription (FCFA)", type: 'number', required: true },
       {
         key: 'niveauCode', label: 'Niveau', type: 'select', required: true,
         optionsSource: { path: 'niveaux', valueField: 'code', labelField: 'libelle' }

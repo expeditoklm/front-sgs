@@ -79,7 +79,7 @@ export class EleveDossierComponent implements OnInit {
   anneeScolaireOptions: SelectOption[] = [];
   typeInscriptionOptions: SelectOption[] = [];
   generatingCertificat = false;
-  classeRows: Array<{ id: number; libelle: string; niveauCode: string; anneeScolaireCode: string }> = [];
+  classeRows: Array<{ id: number; libelle: string; niveauCode: string; anneeScolaireCode: string; montantInscription: number }> = [];
 
   // --- Correction d'un dossier rejeté ---
   isResoumissionOpen = false;
@@ -203,7 +203,8 @@ export class EleveDossierComponent implements OnInit {
             id: Number(item['id']),
             libelle: String(item['libelle']),
             niveauCode: String(item['niveauCode']),
-            anneeScolaireCode: String(item['anneeScolaireCode'])
+            anneeScolaireCode: String(item['anneeScolaireCode']),
+            montantInscription: Number(item['montantInscription'] ?? 0)
           }));
           this.classeOptions = page.content.map((item) => ({ value: String(item['id']), label: `${item['libelle']} (${item['anneeScolaireCode']})` }));
         },
@@ -303,11 +304,16 @@ export class EleveDossierComponent implements OnInit {
     this.inscriptionModel = { ...this.inscriptionModel, [key]: value };
   }
 
+  get montantInscriptionClasseSelectionnee(): number {
+    const classeId = Number(this.inscriptionModel.classeId ?? 0);
+    return this.classeRows.find((classe) => classe.id === classeId)?.montantInscription ?? 0;
+  }
+
   saveInscription(): void {
     if (!this.eleve) return;
     const { classeId, anneeScolaireId, type, montantDu } = this.inscriptionModel;
     if (!classeId || !anneeScolaireId || !type || montantDu === undefined || montantDu === null) {
-      this.inscriptionError = 'Classe, année scolaire, type et montant dû sont obligatoires.';
+      this.inscriptionError = "Classe, année scolaire, type et dette antérieure sont obligatoires.";
       return;
     }
 

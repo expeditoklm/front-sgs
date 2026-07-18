@@ -23,6 +23,7 @@ export interface User {
   profilCode: string;
   profilLibelle: string;
   permissions: string[];
+  profiles?: ProfileOption[];
 }
 
 export interface MonProfil {

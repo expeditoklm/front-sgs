@@ -31,6 +31,10 @@ export class ToastService {
   }
 
   private show(variant: ToastVariant, title: string, message: string): void {
+    const duplicate = this.toasts().find((toast) => toast.variant === variant && toast.title === title && toast.message === message);
+    if (duplicate) {
+      this.dismiss(duplicate.id);
+    }
     const toast: ToastMessage = { id: this.nextId++, variant, title, message };
     this.toasts.update((current) => [...current, toast]);
     setTimeout(() => this.dismiss(toast.id), this.durationMs);

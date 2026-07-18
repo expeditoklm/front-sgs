@@ -14,9 +14,6 @@
   </div>
 </div>
 
-@if (loadError) {
-  <p class="mb-4 text-sm text-error-500">{{ loadError }}</p>
-}
 
 @if (rechercheEffectuee && !loading && stats) {
   @if (stats.effectif === 0) {

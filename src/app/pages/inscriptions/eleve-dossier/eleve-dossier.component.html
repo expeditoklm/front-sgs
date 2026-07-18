@@ -118,7 +118,9 @@
           </div>
           @if (selectedInscription) {
             <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
-              Montant dû : <span class="font-medium text-gray-800 dark:text-white/90">{{ selectedInscription.montantDu }} FCFA</span>
+              Dette antérieure : <span class="font-medium text-gray-800 dark:text-white/90">{{ selectedInscription.montantDu }} FCFA</span>
+              <span class="mx-2">•</span>
+              Frais d'inscription : <span class="font-medium text-gray-800 dark:text-white/90">{{ selectedInscription.montantInscription }} FCFA</span>
               <span class="mx-2">•</span>
               Classe : <span class="font-medium text-gray-800 dark:text-white/90">{{ classeLabel(selectedInscription.classeId) }}</span>
             </p>
@@ -227,8 +229,14 @@
         />
       </div>
       <div>
-        <app-label>Montant dû (FCFA) <span class="text-error-500">*</span></app-label>
+        <app-label>Dette de l'année antérieure (FCFA) <span class="text-error-500">*</span></app-label>
         <app-input-field type="number" [value]="inscriptionModel.montantDu ?? ''" (valueChange)="updateInscriptionField('montantDu', $event)" />
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Cette dette doit être soldée avant la validation du dossier. Saisissez 0 si l'élève n'a aucune dette antérieure.</p>
+      </div>
+      <div class="rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 dark:border-brand-500/30 dark:bg-brand-500/10">
+        <p class="text-sm text-gray-700 dark:text-gray-300">Frais d'inscription de la classe</p>
+        <p class="mt-1 text-lg font-semibold text-brand-600 dark:text-brand-300">{{ montantInscriptionClasseSelectionnee }} FCFA</p>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Ce montant est configuré dans le référentiel Classes et peut être payé en plusieurs tranches.</p>
       </div>
     </div>
 
@@ -363,6 +371,14 @@
       Enregistrer un paiement
     </h4>
 
+    @if (selectedInscription) {
+      <div class="mb-5 grid gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm dark:border-gray-700 dark:bg-white/[0.03] sm:grid-cols-3">
+        <div><span class="block text-xs text-gray-500">Dette antérieure</span><strong>{{ selectedInscription.montantDu }} FCFA</strong></div>
+        <div><span class="block text-xs text-gray-500">Frais d'inscription</span><strong>{{ selectedInscription.montantInscription }} FCFA</strong></div>
+        <div><span class="block text-xs text-gray-500">Total à couvrir</span><strong>{{ selectedInscription.montantTotal }} FCFA</strong></div>
+      </div>
+    }
+
     <div class="space-y-5">
       <div>
         <app-label>Montant (FCFA) <span class="text-error-500">*</span></app-label>
@@ -387,6 +403,9 @@
     }
 
     <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">
+      Les versements sont libres : ils couvrent d'abord la dette antérieure, puis les frais d'inscription.
+      Les frais d'inscription peuvent être réglés en plusieurs tranches.
+      <br />
       Un paiement en espèces est confirmé automatiquement (reçu disponible immédiatement dans Suivi
       des paiements). Les autres modes restent "En attente" jusqu'à confirmation.
     </p>
