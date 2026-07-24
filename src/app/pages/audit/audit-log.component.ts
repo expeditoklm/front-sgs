@@ -20,8 +20,9 @@ import {
   formatFieldValue,
   humanizeKey,
   MetaResponse,
-  REFERENTIEL_ENTITIES,
-  ReferentielEntityDescriptor
+  AUDIT_MODULES,
+  AuditEntityDescriptor,
+  AuditModuleDescriptor
 } from '../../core/models/audit.models';
 
 const ACTION_TYPE_OPTIONS: Option[] = [
@@ -51,9 +52,11 @@ const ACTION_TYPE_OPTIONS: Option[] = [
 })
 export class AuditLogComponent implements OnInit {
 
-  entities: Option[] = REFERENTIEL_ENTITIES.map((e) => ({ value: e.key, label: e.label }));
+  modules: Option[] = AUDIT_MODULES.map((module) => ({ value: module.key, label: module.label }));
+  selectedModuleKey = AUDIT_MODULES[0].key;
+  entities: Option[] = this.toEntityOptions(AUDIT_MODULES[0]);
   actionTypeOptions = ACTION_TYPE_OPTIONS;
-  selectedEntityKey = REFERENTIEL_ENTITIES[0].key;
+  selectedEntityKey = AUDIT_MODULES[0].entities[0].key;
 
   filters: AuditLogFilters = emptyAuditLogFilters();
   page = 1;
@@ -75,8 +78,20 @@ export class AuditLogComponent implements OnInit {
     this.load();
   }
 
-  get selectedEntity(): ReferentielEntityDescriptor {
-    return REFERENTIEL_ENTITIES.find((e) => e.key === this.selectedEntityKey)!;
+  get selectedModule(): AuditModuleDescriptor {
+    return AUDIT_MODULES.find((module) => module.key === this.selectedModuleKey)!;
+  }
+
+  get selectedEntity(): AuditEntityDescriptor {
+    return this.selectedModule.entities.find((entity) => entity.key === this.selectedEntityKey)!;
+  }
+
+  onModuleChange(key: string): void {
+    this.selectedModuleKey = key;
+    this.entities = this.toEntityOptions(this.selectedModule);
+    this.selectedEntityKey = this.selectedModule.entities[0].key;
+    this.page = 1;
+    this.load();
   }
 
   onEntityChange(key: string): void {
@@ -117,7 +132,13 @@ export class AuditLogComponent implements OnInit {
   load(): void {
     this.loading = true;
     this.loadError = '';
-    this.auditService.getAuditLogs(this.selectedEntity.path, this.filters, this.page, this.pageSize).subscribe({
+    this.auditService.getAuditLogs(
+      this.selectedModule.basePath,
+      this.selectedEntity.path,
+      this.filters,
+      this.page,
+      this.pageSize
+    ).subscribe({
       next: (result) => {
         this.logs = result.content;
         this.meta = result.meta;
@@ -148,7 +169,13 @@ export class AuditLogComponent implements OnInit {
     // Récupère tout ce qui correspond aux filtres actuels (au-delà de la page affichée), sans
     // ajouter d'endpoint dédié côté backend - une taille de page généreuse suffit à l'échelle
     // d'un outil d'administration.
-    this.auditService.getAuditLogs(this.selectedEntity.path, this.filters, 1, 1000).subscribe({
+    this.auditService.getAuditLogs(
+      this.selectedModule.basePath,
+      this.selectedEntity.path,
+      this.filters,
+      1,
+      1000
+    ).subscribe({
       next: (result) => {
         this.exporting = false;
         if (result.content.length === 0) {
@@ -201,8 +228,12 @@ export class AuditLogComponent implements OnInit {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `journal-audit-${this.selectedEntity.key}-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `journal-audit-${this.selectedModule.key}-${this.selectedEntity.key}-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  private toEntityOptions(module: AuditModuleDescriptor): Option[] {
+    return module.entities.map((entity) => ({ value: entity.key, label: entity.label }));
   }
 }

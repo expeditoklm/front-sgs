@@ -26,9 +26,9 @@
         }
       </button>
       <!-- Logo (placeholder) -->
-      <a routerLink="/" class="xl:hidden">
-        <img class="dark:hidden" src="/images/logo/logo.svg" alt="Logo" />
-        <img class="hidden dark:block" src="/images/logo/logo-dark.svg" alt="Logo" />
+      <a routerLink="/" class="flex items-center gap-2 xl:hidden">
+        <img src="/images/logo/logo-icon.svg" alt="" width="32" height="32" />
+        <span class="font-bold text-gray-900 dark:text-white">SGS</span>
       </a>
       <button (click)="toggleApplicationMenu()"
         class="flex items-center justify-center w-10 h-10 text-gray-700 rounded-lg z-99999 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 xl:hidden">
@@ -40,7 +40,7 @@
         </svg>
       </button>
       <div class="hidden xl:block">
-        <form>
+        <form (submit)="$event.preventDefault(); submitSearch()">
           <div class="relative">
             <span class="absolute -translate-y-1/2 pointer-events-none left-4 top-1/2">
               <!-- Search Icon -->
@@ -50,13 +50,80 @@
                   fill="" />
               </svg>
             </span>
-            <input #searchInput type="text" placeholder="Search or type command..."
+            <input #searchInput type="text" placeholder="Rechercher un élève ou une fonctionnalité..."
+              autocomplete="off"
+              [ngModel]="query"
+              [ngModelOptions]="{standalone: true}"
+              (ngModelChange)="onSearch($event)"
+              (focus)="openPalette()"
               class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pl-12 pr-14 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900 dark:bg-white/[0.03] dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 xl:w-[430px]" />
-            <button
+            <button type="button" (click)="openPalette(); searchInput.focus()"
               class="absolute right-2.5 top-1/2 inline-flex -translate-y-1/2 items-center gap-0.5 rounded-lg border border-gray-200 bg-gray-50 px-[7px] py-[4.5px] text-xs -tracking-[0.2px] text-gray-500 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400">
-              <span> ⌘ </span>
+              <span> Ctrl </span>
               <span> K </span>
             </button>
+
+            @if (paletteOpen) {
+              <button type="button" aria-label="Fermer la recherche" (click)="closePalette()"
+                class="fixed inset-0 z-[99998] cursor-default bg-transparent"></button>
+              <div class="absolute left-0 top-[52px] z-[100001] w-[640px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-900">
+                <div class="max-h-[560px] overflow-y-auto p-2">
+                  @if (searching) {
+                    <div class="px-3 py-2 text-xs text-gray-400">Recherche dans SGS...</div>
+                  }
+                  @for (category of categories; track category) {
+                    <section class="mb-2 last:mb-0">
+                      <h3 class="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                        {{ category }}
+                      </h3>
+                      @for (item of resultsFor(category); track item.category + item.route + item.label) {
+                        <div class="rounded-lg px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-white/[0.05]">
+                          <button type="button" (click)="select(item)" class="flex w-full items-center gap-3 text-left">
+                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-sm font-semibold text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
+                              {{ category === 'Élèves' ? 'É' : category === 'Personnel' ? 'P' : category === 'Référentiels' ? 'R' : category === 'Actions rapides' ? '＋' : '↗' }}
+                            </span>
+                            <span class="min-w-0 flex-1">
+                              <span class="block truncate text-sm font-medium text-gray-800 dark:text-white/90">
+                                {{ item.label }}
+                                @if (item.recent) {
+                                  <span class="ml-1 text-[10px] font-normal text-brand-500">Récent</span>
+                                }
+                              </span>
+                              <span class="block truncate text-xs text-gray-500 dark:text-gray-400">{{ item.description }}</span>
+                            </span>
+                          </button>
+                          @if (item.details?.length) {
+                            <div class="ml-12 mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                              @for (detail of item.details; track detail) {
+                                <span class="text-[11px] text-gray-500 dark:text-gray-400">{{ detail }}</span>
+                              }
+                            </div>
+                          }
+                          @if (item.actions?.length) {
+                            <div class="ml-12 mt-2 flex flex-wrap gap-2">
+                              @for (action of item.actions; track action.label) {
+                                <button type="button" (click)="navigate(action.route)"
+                                  class="rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-brand-600 hover:border-brand-300 hover:bg-brand-50 dark:border-gray-700 dark:text-brand-400 dark:hover:bg-brand-500/10">
+                                  {{ action.label }}
+                                </button>
+                              }
+                            </div>
+                          }
+                        </div>
+                      }
+                    </section>
+                  } @empty {
+                    <div class="px-4 py-8 text-center text-sm text-gray-500">
+                      Aucun résultat. Essayez un nom, un téléphone, un matricule, une inscription ou un reçu.
+                    </div>
+                  }
+                </div>
+                <div class="flex items-center justify-between border-t border-gray-100 px-4 py-2 text-[11px] text-gray-400 dark:border-gray-800">
+                  <span>Entrée pour ouvrir</span>
+                  <span>Échap pour fermer</span>
+                </div>
+              </div>
+            }
           </div>
         </form>
       </div>

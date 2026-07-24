@@ -2,11 +2,20 @@
 
 <app-component-card
   title="Journal d'audit"
-  desc="Historique détaillé des modifications apportées aux référentiels et aux paramètres système."
+  desc="Historique détaillé des modifications apportées aux différents modules de SGS."
 >
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
     <div>
-      <app-label>Référentiel</app-label>
+      <app-label>Module</app-label>
+      <app-select
+        [options]="modules"
+        [value]="selectedModuleKey"
+        (valueChange)="onModuleChange($event)"
+      />
+    </div>
+
+    <div>
+      <app-label>Élément audité</app-label>
       <app-select
         [options]="entities"
         [value]="selectedEntityKey"
@@ -136,7 +145,7 @@
 <app-modal [isOpen]="isDetailsModalOpen" (close)="closeDetails()" className="max-w-[700px] p-5 lg:p-8">
   @if (selectedLog) {
     <h4 class="font-semibold text-gray-800 mb-1 text-title-sm dark:text-white/90">
-      Révision #{{ selectedLog.revision }} — {{ selectedEntity.label }}
+      Révision #{{ selectedLog.revision }} — {{ selectedModule.label }} / {{ selectedEntity.label }}
     </h4>
     <div class="mb-6 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
       <app-badge size="sm" [color]="actionBadgeColor(selectedLog.actionType)">

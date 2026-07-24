@@ -6,12 +6,10 @@ import { ApiResponse, AuditLogFilters, AuditRevision, PageResponse, ReferentielR
 
 @Injectable({ providedIn: 'root' })
 export class AuditService {
-  private endpoint = `${environment.apiUrl}/referentiels`;
-
   constructor(private http: HttpClient) {
   }
 
-  listRecords(entityPath: string, filter: string, page = 1, size = 25): Observable<PageResponse<ReferentielRecord>> {
+  listRecords(basePath: string, entityPath: string, filter: string, page = 1, size = 25): Observable<PageResponse<ReferentielRecord>> {
     let params = new HttpParams()
       .set('page', page)
       .set('size', size)
@@ -22,17 +20,18 @@ export class AuditService {
     }
 
     return this.http
-      .get<ApiResponse<PageResponse<ReferentielRecord>>>(`${this.endpoint}/${entityPath}`, { params })
+      .get<ApiResponse<PageResponse<ReferentielRecord>>>(`${environment.apiUrl}/${basePath}/${entityPath}`, { params })
       .pipe(map((response) => response.data));
   }
 
-  getHistory(entityPath: string, id: number): Observable<AuditRevision[]> {
+  getHistory(basePath: string, entityPath: string, id: number): Observable<AuditRevision[]> {
     return this.http
-      .get<ApiResponse<AuditRevision[]>>(`${this.endpoint}/${entityPath}/${id}/history`)
+      .get<ApiResponse<AuditRevision[]>>(`${environment.apiUrl}/${basePath}/${entityPath}/${id}/history`)
       .pipe(map((response) => response.data));
   }
 
   getAuditLogs(
+    basePath: string,
     entityPath: string,
     filters: AuditLogFilters,
     page: number,
@@ -45,7 +44,7 @@ export class AuditService {
     if (filters.actionType) params = params.set('actionType', filters.actionType);
 
     return this.http
-      .get<ApiResponse<PageResponse<AuditRevision>>>(`${this.endpoint}/${entityPath}/audit-logs`, { params })
+      .get<ApiResponse<PageResponse<AuditRevision>>>(`${environment.apiUrl}/${basePath}/${entityPath}/audit-logs`, { params })
       .pipe(map((response) => response.data));
   }
 }

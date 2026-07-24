@@ -24,6 +24,7 @@ import {
   StatistiqueNiveau,
   StatistiqueSexe,
   StatutInscription,
+  SoldeInscription,
   TransfertClasse,
   TransfertClasseRequest,
   UploadResponse
@@ -217,6 +218,12 @@ export class InscriptionService {
   creerPaiement(payload: PaiementRequest): Observable<Paiement> {
     return this.http
       .post<ApiResponse<Paiement>>(`${this.base}/paiements`, payload)
+      .pipe(map((response) => response.data));
+  }
+
+  getSoldeInscription(uuid: string): Observable<SoldeInscription> {
+    return this.http
+      .get<ApiResponse<SoldeInscription>>(`${this.base}/inscriptions/${uuid}/solde`)
       .pipe(map((response) => response.data));
   }
 

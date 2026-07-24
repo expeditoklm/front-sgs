@@ -34,6 +34,7 @@
             <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">N° reçu</th>
             <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Élève</th>
             <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Montant</th>
+            <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Reste à payer</th>
             <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Mode</th>
             <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Statut</th>
             <th class="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Date</th>
@@ -43,11 +44,11 @@
         <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
           @if (loading) {
             <tr>
-              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="7">Chargement...</td>
+              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="8">Chargement...</td>
             </tr>
           } @else if (rows.length === 0) {
             <tr>
-              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="7">Aucun paiement.</td>
+              <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="8">Aucun paiement.</td>
             </tr>
           } @else {
             @for (row of rows; track row.uuid) {
@@ -59,6 +60,7 @@
                   </button>
                 </td>
                 <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ row.montant }} FCFA</td>
+                <td class="px-5 py-4 font-medium text-gray-700 text-start text-theme-sm dark:text-gray-300">{{ row.montantRestantAPayer }} FCFA</td>
                 <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">{{ modeLabels[row.mode] }}</td>
                 <td class="px-5 py-4 text-start">
                   <app-badge [color]="badgeColor(row.statut)">{{ statutLabels[row.statut] }}</app-badge>

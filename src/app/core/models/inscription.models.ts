@@ -62,6 +62,7 @@ export interface Inscription {
   dateInscription: string;
   montantDu: number;
   montantInscription: number;
+  montantScolarite: number;
   montantTotal: number;
   motifDerniereTransition: string | null;
   dateDerniereTransition: string | null;
@@ -214,6 +215,23 @@ export interface Paiement {
   datePaiement: string;
   numeroRecu: string | null;
   codeVerification: string | null;
+  montantRestantAPayer: number;
+}
+
+export interface SoldeInscription {
+  inscriptionUuid: string;
+  montantDu: number;
+  montantInscription: number;
+  montantScolarite: number;
+  montantTotal: number;
+  montantPayeConfirme: number;
+  resteDetteAnterieure: number;
+  resteInscription: number;
+  resteScolarite: number;
+  soldeRestant: number;
+  solde: boolean;
+  detteAnterieureSoldee: boolean;
+  paiements: Paiement[];
 }
 
 export interface PaiementVerification {

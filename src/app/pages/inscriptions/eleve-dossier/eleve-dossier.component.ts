@@ -25,6 +25,7 @@ import {
   MODE_PAIEMENT_LABELS,
   ModePaiement,
   PaiementRequest,
+  SoldeInscription,
   TYPE_INSCRIPTION_LABELS,
   STATUT_INSCRIPTION_LABELS,
   TypeInscription,
@@ -69,6 +70,7 @@ export class EleveDossierComponent implements OnInit {
   // --- Inscriptions ---
   inscriptions: Inscription[] = [];
   selectedInscription: Inscription | null = null;
+  soldeInscription: SoldeInscription | null = null;
   readonly statutLabels = STATUT_INSCRIPTION_LABELS;
 
   isInscriptionFormOpen = false;
@@ -79,7 +81,7 @@ export class EleveDossierComponent implements OnInit {
   anneeScolaireOptions: SelectOption[] = [];
   typeInscriptionOptions: SelectOption[] = [];
   generatingCertificat = false;
-  classeRows: Array<{ id: number; libelle: string; niveauCode: string; anneeScolaireCode: string; montantInscription: number }> = [];
+  classeRows: Array<{ id: number; libelle: string; niveauCode: string; anneeScolaireCode: string; montantInscription: number; montantScolarite: number }> = [];
 
   // --- Correction d'un dossier rejeté ---
   isResoumissionOpen = false;
@@ -162,7 +164,16 @@ export class EleveDossierComponent implements OnInit {
         this.selectedInscription = inscriptions.find((item) => item.uuid === requestedInscriptionUuid)
           ?? inscriptions[0]
           ?? null;
-        if (this.route.snapshot.queryParamMap.get('action') === 'transfert') {
+        this.loadSoldeInscription();
+        const requestedAction = this.route.snapshot.queryParamMap.get('action');
+        if (requestedAction === 'paiement') {
+          if (this.selectedInscription) {
+            this.openCreatePaiement();
+          } else {
+            this.toastService.warning("Cet élève n'a aucune inscription pouvant recevoir un paiement.");
+          }
+          this.clearQueryParameter('action');
+        } else if (requestedAction === 'transfert') {
           if (this.canTransfererClasse) {
             this.openTransfertClasse();
           } else {
@@ -171,15 +182,23 @@ export class EleveDossierComponent implements OnInit {
               'Transfert indisponible'
             );
           }
-          this.router.navigate([], {
-            relativeTo: this.route,
-            queryParams: { action: null },
-            queryParamsHandling: 'merge',
-            replaceUrl: true
-          });
+          this.clearQueryParameter('action');
+        }
+        if (this.route.snapshot.queryParamMap.get('section') === 'paiements') {
+          setTimeout(() => document.getElementById('suivi-financier')?.scrollIntoView({ behavior: 'smooth' }));
+          this.clearQueryParameter('section');
         }
       },
       error: () => (this.inscriptions = [])
+    });
+  }
+
+  private clearQueryParameter(name: string): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { [name]: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
     });
   }
 
@@ -204,7 +223,8 @@ export class EleveDossierComponent implements OnInit {
             libelle: String(item['libelle']),
             niveauCode: String(item['niveauCode']),
             anneeScolaireCode: String(item['anneeScolaireCode']),
-            montantInscription: Number(item['montantInscription'] ?? 0)
+            montantInscription: Number(item['montantInscription'] ?? 0),
+            montantScolarite: Number(item['montantScolarite'] ?? 0)
           }));
           this.classeOptions = page.content.map((item) => ({ value: String(item['id']), label: `${item['libelle']} (${item['anneeScolaireCode']})` }));
         },
@@ -230,6 +250,19 @@ export class EleveDossierComponent implements OnInit {
 
   selectInscription(uuid: string): void {
     this.selectedInscription = this.inscriptions.find((i) => i.uuid === uuid) ?? null;
+    this.loadSoldeInscription();
+  }
+
+  private loadSoldeInscription(): void {
+    if (!this.selectedInscription) {
+      this.soldeInscription = null;
+      return;
+    }
+    this.soldeInscription = null;
+    this.inscriptionService.getSoldeInscription(this.selectedInscription.uuid).subscribe({
+      next: (solde) => (this.soldeInscription = solde),
+      error: () => (this.soldeInscription = null)
+    });
   }
 
   updateInfoField(key: keyof EleveRequest, value: unknown): void {
@@ -307,6 +340,16 @@ export class EleveDossierComponent implements OnInit {
   get montantInscriptionClasseSelectionnee(): number {
     const classeId = Number(this.inscriptionModel.classeId ?? 0);
     return this.classeRows.find((classe) => classe.id === classeId)?.montantInscription ?? 0;
+  }
+
+  get montantScolariteClasseSelectionnee(): number {
+    const classeId = Number(this.inscriptionModel.classeId ?? 0);
+    return this.classeRows.find((classe) => classe.id === classeId)?.montantScolarite ?? 0;
+  }
+
+  get montantRestantAPayer(): number {
+    const reste = this.soldeInscription?.soldeRestant ?? this.selectedInscription?.montantTotal ?? 0;
+    return Math.max(0, reste);
   }
 
   saveInscription(): void {
@@ -476,6 +519,7 @@ export class EleveDossierComponent implements OnInit {
 
   openCreatePaiement(): void {
     if (!this.selectedInscription) return;
+    this.loadSoldeInscription();
     this.paiementModel = { inscriptionUuid: this.selectedInscription.uuid, mode: 'ESPECES' as ModePaiement };
     this.paiementError = '';
     this.isPaiementFormOpen = true;
@@ -517,6 +561,7 @@ export class EleveDossierComponent implements OnInit {
               next: () => {
                 this.savingPaiement = false;
                 this.isPaiementFormOpen = false;
+                this.loadSoldeInscription();
                 this.toastService.success('Paiement enregistré et confirmé avec succès.');
               },
               error: (err) => {
