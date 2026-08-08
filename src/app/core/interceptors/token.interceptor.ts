@@ -3,20 +3,28 @@ import { inject } from '@angular/core';
 import { BehaviorSubject, Observable, catchError, filter, of, switchMap, take, throwError } from 'rxjs';
 import { AuthenticationService } from '../services/authentication.service';
 import { completeLogout, httpHeaders, isAuthEndpoint } from '../helpers/auth.helpers';
+import { TenantContextService } from '../services/tenant-context.service';
 
 let isTokenRefreshing = false;
 const refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
 export const tokenInterceptor: HttpInterceptorFn = (request, next) => {
   const authService = inject(AuthenticationService);
+  const tenantContext = inject(TenantContextService);
 
   if (isAuthEndpoint(request.url)) {
-    return next(request);
+    // Les routes login/OTP/select-role ne doivent pas recevoir un ancien Bearer, mais elles ont
+    // besoin du tenant choisi pour charger les profils dans la base de la bonne école.
+    const tenantId = tenantContext.tenantId;
+    return next(request.clone({
+      withCredentials: true,
+      setHeaders: tenantId ? { 'X-SGS-Tenant-ID': tenantId } : {}
+    }));
   }
 
   const authorizedRequest = request.clone({
     withCredentials: true,
-    setHeaders: httpHeaders()
+    setHeaders: requestHeaders(tenantContext)
   });
 
   return next(authorizedRequest).pipe(
@@ -30,7 +38,7 @@ export const tokenInterceptor: HttpInterceptorFn = (request, next) => {
         return throwError(() => error);
       }
       if (localStorage.getItem('refresh_token') !== null) {
-        return handleRefreshToken(authorizedRequest, next, authService);
+        return handleRefreshToken(authorizedRequest, next, authService, tenantContext);
       }
       // 401 sans refresh_token exploitable (token invalide/absent, pas seulement expiré) :
       // aucun rafraîchissement possible, retour direct à /signin plutôt que de laisser
@@ -45,6 +53,7 @@ function handleRefreshToken(
   request: HttpRequest<unknown>,
   next: HttpHandlerFn,
   authService: AuthenticationService
+  , tenantContext: TenantContextService
 ): Observable<any> {
   if (!isTokenRefreshing) {
     isTokenRefreshing = true;
@@ -58,7 +67,7 @@ function handleRefreshToken(
           return of();
         }
         refreshTokenSubject.next('refreshed');
-        return next(request.clone({ withCredentials: true, setHeaders: httpHeaders() }));
+        return next(request.clone({ withCredentials: true, setHeaders: requestHeaders(tenantContext) }));
       })
     );
   }
@@ -68,6 +77,13 @@ function handleRefreshToken(
     // parallèles repartent aussitôt avec le jeton expiré pendant que la première le renouvelle.
     filter((status): status is string => status !== null),
     take(1),
-    switchMap(() => next(request.clone({ withCredentials: true, setHeaders: httpHeaders() })))
+    switchMap(() => next(request.clone({ withCredentials: true, setHeaders: requestHeaders(tenantContext) })))
   );
+}
+
+function requestHeaders(tenantContext: TenantContextService): Record<string, string> {
+  const headers = httpHeaders();
+  const tenantId = tenantContext.tenantId;
+  if (tenantId) headers['X-SGS-Tenant-ID'] = tenantId;
+  return headers;
 }

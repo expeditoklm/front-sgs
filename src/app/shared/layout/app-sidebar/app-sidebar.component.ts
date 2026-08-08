@@ -78,6 +78,19 @@ export class AppSidebarComponent {
       path: "/administration/permissions",
     },
     {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 10h2m2 0h2m-6 4h2m2 0h2m-6 4h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+      name: "Console SaaS",
+      subItems: [
+        { name: "Écoles clientes", path: "/saas/ecoles", pro: false },
+        { name: "Plans tarifaires", path: "/saas/plans", pro: false }
+      ],
+    },
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4V6Zm0 4h16M8 15h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+      name: "Mon abonnement",
+      path: "/administration/abonnement",
+    },
+    {
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.5 6.75C3.5 5.09315 4.84315 3.75 6.5 3.75H17.5C19.1569 3.75 20.5 5.09315 20.5 6.75V17.25C20.5 18.9069 19.1569 20.25 17.5 20.25H6.5C4.84315 20.25 3.5 18.9069 3.5 17.25V6.75ZM6.5 5.25C5.67157 5.25 5 5.92157 5 6.75V17.25C5 18.0784 5.67157 18.75 6.5 18.75H17.5C18.3284 18.75 19 18.0784 19 17.25V6.75C19 5.92157 18.3284 5.25 17.5 5.25H6.5ZM7.75 8.25C7.75 7.83579 8.08579 7.5 8.5 7.5H15.5C15.9142 7.5 16.25 7.83579 16.25 8.25C16.25 8.66421 15.9142 9 15.5 9H8.5C8.08579 9 7.75 8.66421 7.75 8.25ZM7.75 12C7.75 11.5858 8.08579 11.25 8.5 11.25H15.5C15.9142 11.25 16.25 11.5858 16.25 12C16.25 12.4142 15.9142 12.75 15.5 12.75H8.5C8.08579 12.75 7.75 12.4142 7.75 12ZM7.75 15.75C7.75 15.3358 8.08579 15 8.5 15H12.5C12.9142 15 13.25 15.3358 13.25 15.75C13.25 16.1642 12.9142 16.5 12.5 16.5H8.5C8.08579 16.5 7.75 16.1642 7.75 15.75Z" fill="currentColor"></path></svg>`,
       name: "Référentiels",
       subItems: REFERENTIEL_CRUD_ENTITIES.map((entity) => ({
@@ -103,7 +116,8 @@ export class AppSidebarComponent {
         { name: "Évaluations", path: "/pedagogie/evaluations", pro: false },
         { name: "Notes et moyennes", path: "/pedagogie/moyennes", pro: false },
         { name: "Statistiques de classe", path: "/pedagogie/statistiques", pro: false },
-        { name: "Délibérations", path: "/pedagogie/deliberations", pro: false }
+        { name: "Délibérations", path: "/pedagogie/deliberations", pro: false },
+        { name: "Règles de calcul", path: "/pedagogie/regles-calcul", pro: false }
       ],
     },
     {
@@ -137,6 +151,11 @@ export class AppSidebarComponent {
       name: "Journal d'audit",
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.25 4.75C5.83579 4.75 5.5 5.08579 5.5 5.5V18.5C5.5 18.9142 5.83579 19.25 6.25 19.25H17.75C18.1642 19.25 18.5 18.9142 18.5 18.5V8.81066L14.1893 4.5H6.25ZM4 5.5C4 4.25736 5.00736 3.25 6.25 3.25H14.5C14.6989 3.25 14.8897 3.32902 15.0303 3.46967L19.7803 8.21967C19.921 8.36032 20 8.55109 20 8.75V18.5C20 19.7426 18.9926 20.75 17.75 20.75H6.25C5.00736 20.75 4 19.7426 4 18.5V5.5ZM8 12.25C8 11.8358 8.33579 11.5 8.75 11.5H15.25C15.6642 11.5 16 11.8358 16 12.25C16 12.6642 15.6642 13 15.25 13H8.75C8.33579 13 8 12.6642 8 12.25ZM8.75 15C8.33579 15 8 15.3358 8 15.75C8 16.1642 8.33579 16.5 8.75 16.5H13.25C13.6642 16.5 14 16.1642 14 15.75C14 15.3358 13.6642 15 13.25 15H8.75Z" fill="currentColor"></path></svg>`,
       path: "/audit",
+    },
+    {
+      name: "Modèles de templates",
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.5 4.25C8.5 3.83579 8.83579 3.5 9.25 3.5H15.25C15.6642 3.5 16 3.83579 16 4.25V20.25C16 20.6642 15.6642 21 15.25 21H8.5C8.08579 21 7.75 20.6642 7.75 20.25V4.25ZM9.25 5V19.5H14.5V5H9.25ZM10.25 7.25C10.25 6.83579 10.5858 6.5 11 6.5H12.75C13.1642 6.5 13.5 6.83579 13.5 7.25C13.5 7.66421 13.1642 8 12.75 8H11C10.5858 8 10.25 7.66421 10.25 7.25ZM10.25 10.75C10.25 10.3358 10.5858 10 11 10H12.75C13.1642 10 13.5 10.3358 13.5 10.75C13.5 11.1642 13.1642 11.5 12.75 11.5H11C10.5858 11.5 10.25 11.1642 10.25 10.75ZM10.25 14.25C10.25 13.8358 10.5858 13.5 11 13.5H12.75C13.1642 13.5 13.5 13.8358 13.5 14.25C13.5 14.6642 13.1642 15 12.75 15H11C10.5858 15 10.25 14.6642 10.25 14.25Z" fill="currentColor"></path></svg>`,
+      path: "/reports/templates",
     },
   ];
   // Others nav items
@@ -224,6 +243,9 @@ export class AppSidebarComponent {
     if (item.name === "Journal d'audit") {
       return this.authService.hasPermission('AUDIT_CONSULTER') ? item : null;
     }
+    if (item.name === 'Modèles de templates') {
+      return this.authService.canManagePermissions() ? item : null;
+    }
     if (item.name === 'Emploi du temps') {
       return this.authService.hasPermission('EDT_CONSULTER') ? item : null;
     }
@@ -240,13 +262,19 @@ export class AppSidebarComponent {
       return this.authService.hasPermission('PORTAIL_FAMILLE') ? item : null;
     }
     if (item.name === 'Administration portail') {
-      return this.authService.hasPermission('PORTAIL_ADMINISTRER') ? item : null;
+      return this.authService.canUseAdministrationPortal() ? item : null;
     }
     if (item.name === 'Demandes de compte') {
       return this.authService.hasPermission('DEMANDE_COMPTE_GERER') ? item : null;
     }
     if (item.name === 'Profils et permissions') {
-      return this.authService.hasPermission('PERMISSION_GERER') ? item : null;
+      return this.authService.canManagePermissions() ? item : null;
+    }
+    if (item.name === 'Console SaaS') {
+      return this.authService.isSuperAdmin ? item : null;
+    }
+    if (item.name === 'Mon abonnement') {
+      return (this.authService.isSuperAdmin || this.authService.isAdmin) ? item : null;
     }
     if (item.name === 'Inscription des Élèves') {
       const permissionsParPage: Record<string, string> = {
@@ -273,6 +301,9 @@ export class AppSidebarComponent {
       };
       const visibleSubItems = (item.subItems ?? [])
         .filter((sub) => {
+          if (sub.path === '/pedagogie/regles-calcul') {
+            return this.authService.hasAnyRole(['SADM', 'ADM']);
+          }
           const permission = permissionParPage[sub.path];
           return !!permission && this.authService.hasPermission(permission);
         });

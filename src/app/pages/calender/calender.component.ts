@@ -14,6 +14,7 @@ import { PaginationComponent } from '../../shared/components/ui/pagination/pagin
 import { PaginatePipe } from '../../shared/pipes/paginate.pipe';
 import { SelectComponent } from '../../shared/components/form/select/select.component';
 import { ToastService } from '../../core/services/toast.service';
+import { AuthenticationService } from '../../core/services/authentication.service';
 
 @Component({selector:'app-calender',imports:[CommonModule,FormsModule,FullCalendarModule,ModalComponent,PaginationComponent,PaginatePipe,SelectComponent],templateUrl:'./calender.component.html',host:{class:'sgs-dark-view block'}})
 export class CalenderComponent implements OnInit {
@@ -54,8 +55,12 @@ export class CalenderComponent implements OnInit {
  readonly rechercherEnseignants=(term:string,limit:number)=>this.edt.rechercherOptions('enseignants',term,limit);
  readonly rechercherSalles=(term:string,limit:number)=>this.edt.rechercherOptions('salles',term,limit);
  calendarOptions:CalendarOptions={plugins:[dayGridPlugin,timeGridPlugin,interactionPlugin],initialView:'timeGridWeek',locale:'fr',firstDay:1,weekends:true,allDaySlot:false,slotMinTime:'07:00:00',slotMaxTime:'20:00:00',slotDuration:'00:30:00',height:'auto',editable:true,selectable:true,nowIndicator:true,headerToolbar:{left:'prev,next today',center:'title',right:'timeGridWeek,timeGridDay,dayGridMonth'},buttonText:{today:"Aujourd'hui",week:'Semaine',day:'Jour',month:'Mois'},select:i=>this.selectionnerPlage(i),eventClick:i=>this.editer(i),eventDrop:i=>this.deplacer(i),eventResize:i=>this.deplacer(i),events:[]};
- constructor(private edt:EmploiDuTempsService,private documentViewer:DocumentViewerService,private toast:ToastService){}
+ constructor(private edt:EmploiDuTempsService,private documentViewer:DocumentViewerService,private toast:ToastService,public authService:AuthenticationService){}
  ngOnInit(){this.chargerDepuisServeur();}
+ get canViewSchedule(){return this.authService.hasPermission('EDT_CONSULTER');}
+ get canEditSchedule(){return this.authService.hasPermission('EDT_GERER');}
+ get canPublishSchedule(){return this.authService.isAdmin||this.authService.isSuperAdmin;}
+ get canManageAbsences(){return this.authService.hasPermission('EDT_ABSENCE_GERER')||this.canEditSchedule;}
  get publies(){return this.cours.filter(c=>c.statut==='PUBLIE').length;}
  get volume(){return this.cours.reduce((s,c)=>s+(this.minutes(c.heureFin)-this.minutes(c.heureDebut))/60,0);}
  get conflits(){return this.suggestions.length;}

@@ -1,0 +1,238 @@
+<app-page-breadcrumb pageTitle="Règles de calcul" />
+
+<div class="space-y-6">
+  <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div>
+      <p class="text-sm font-medium text-brand-500">Pédagogie</p>
+      <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Règles de calcul des moyennes</h1>
+      <p class="mt-1 max-w-3xl text-sm text-gray-500 dark:text-gray-400">
+        Configurez des règles brouillon, activez une version, et conservez les anciennes règles pour l’historique.
+      </p>
+    </div>
+    <button (click)="openCreate()" class="rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-theme-xs">Nouvelle règle</button>
+  </div>
+
+  <section class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      Rechercher
+      <input [(ngModel)]="search" placeholder="Code, libellé, modèle..." class="mt-1 h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-950 dark:text-white">
+    </label>
+  </section>
+
+  <section class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+    @if (loading) {
+      <div class="p-10 text-center text-sm text-gray-500">Chargement des règles…</div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-left text-sm text-gray-700 dark:text-gray-200">
+          <thead class="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-950 dark:text-gray-400">
+            <tr>
+              <th class="p-4">Règle</th>
+              <th class="p-4">Portée</th>
+              <th class="p-4">Modèle</th>
+              <th class="p-4">Version</th>
+              <th class="p-4">Statut</th>
+              <th class="p-4">État</th>
+              <th class="p-4"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (rule of currentPage; track rule.id) {
+              <tr class="border-t border-gray-200 dark:border-gray-800">
+                <td class="p-4">
+                  <div class="font-medium text-gray-900 dark:text-white">{{ rule.libelle }}</div>
+                  <div class="text-xs text-gray-500">{{ rule.code }}</div>
+                </td>
+                <td class="p-4 text-gray-500 dark:text-gray-400">{{ scopeLabel(rule) }}</td>
+                <td class="p-4 font-mono text-xs text-brand-600 dark:text-brand-400">{{ rule.templateCode }}</td>
+                <td class="p-4">{{ rule.version }}</td>
+                <td class="p-4">{{ rule.statut }}</td>
+                <td class="p-4">{{ rule.actif ? 'Active' : 'Inactive' }}</td>
+                <td class="p-4 text-right">
+                  <div class="flex justify-end gap-2">
+                    <button (click)="edit(rule)" class="rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/[0.06]">Modifier</button>
+                    <button *ngIf="!rule.actif" (click)="activate(rule)" class="rounded-lg bg-success-500 px-3 py-2 text-xs font-medium text-white">Activer</button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="p-10 text-center text-gray-500">Aucune règle ne correspond à la recherche.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pagination class="m-4 block" [currentPage]="page" [totalPages]="totalPages" [totalItems]="filtered.length" [pageSize]="pageSize" itemLabel="règle" (pageChange)="page=$event" (pageSizeChange)="pageSize=$event; page=1"/>
+    }
+  </section>
+</div>
+
+<app-modal [isOpen]="modalOpen" (close)="modalOpen=false" className="max-w-4xl p-6 text-gray-900 dark:text-gray-100">
+  <h2 class="text-xl font-semibold text-gray-900 dark:text-white">{{ editId ? 'Modifier la règle' : 'Nouvelle règle' }}</h2>
+  <div class="mt-5 grid gap-4 md:grid-cols-2">
+    <label class="text-sm">Code
+      <input [(ngModel)]="payload.rule.code" class="mt-1 h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-white">
+    </label>
+    <label class="text-sm">Libellé
+      <input [(ngModel)]="payload.rule.libelle" class="mt-1 h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-white">
+    </label>
+    <label class="text-sm">Modèle
+      <input [(ngModel)]="payload.rule.templateCode" readonly class="mt-1 h-11 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+    </label>
+    <label class="text-sm">Portée
+      <select [(ngModel)]="payload.rule.scopeType" (ngModelChange)="onScopeChange()" [disabled]="options.teacher" class="mt-1 h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 disabled:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:disabled:bg-gray-800 dark:disabled:text-gray-400">
+        <option *ngIf="options.superAdmin" value="SYSTEME">Toutes les écoles</option>
+        <option value="ETABLISSEMENT">Un établissement</option>
+        <option value="NIVEAU">Un niveau</option>
+        <option value="CLASSE">Une classe</option>
+        <option value="MATIERE">Une matière</option>
+        <option value="PERIODE">Une période</option>
+        <option value="ENSEIGNANT">Un enseignant, une classe et une matière</option>
+        <option value="COMBINE">Ciblage combiné</option>
+      </select>
+    </label>
+    <label class="text-sm">Version
+      <input [(ngModel)]="payload.rule.version" type="number" class="mt-1 h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-white">
+    </label>
+    <label class="text-sm">Année scolaire
+      <select [(ngModel)]="payload.rule.anneeScolaireId" class="mt-1 h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-white">
+        <option [ngValue]="null">Toutes les années</option>
+        @for (option of options.annees; track option.id) {
+          <option [ngValue]="option.id">{{ option.label }}</option>
+        }
+      </select>
+    </label>
+    @if (payload.rule.scopeType === 'ETABLISSEMENT' || payload.rule.scopeType === 'COMBINE') {
+      <label class="text-sm">Établissement
+        <select [(ngModel)]="payload.rule.etablissementId" class="mt-1 h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-white">
+          <option [ngValue]="null">Sélectionner…</option>
+          @for (option of options.etablissements; track option.id) {
+            <option [ngValue]="option.id">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+    }
+    @if (payload.rule.scopeType === 'NIVEAU' || payload.rule.scopeType === 'COMBINE') {
+      <label class="text-sm">Niveau
+        <select [(ngModel)]="payload.rule.niveauId" class="mt-1 h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-white">
+          <option [ngValue]="null">Sélectionner…</option>
+          @for (option of options.niveaux; track option.id) {
+            <option [ngValue]="option.id">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+    }
+    @if (payload.rule.scopeType === 'CLASSE' || payload.rule.scopeType === 'ENSEIGNANT' || payload.rule.scopeType === 'COMBINE') {
+      <label class="text-sm">Classe
+        <select [(ngModel)]="payload.rule.classeId" class="mt-1 h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-white">
+          <option [ngValue]="null">Sélectionner…</option>
+          @for (option of options.classes; track option.id) {
+            <option [ngValue]="option.id">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+    }
+    @if (payload.rule.scopeType === 'MATIERE' || payload.rule.scopeType === 'ENSEIGNANT' || payload.rule.scopeType === 'COMBINE') {
+      <label class="text-sm">Matière
+        <select [(ngModel)]="payload.rule.matiereId" class="mt-1 h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-white">
+          <option [ngValue]="null">Sélectionner…</option>
+          @for (option of options.matieres; track option.id) {
+            <option [ngValue]="option.id">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+    }
+    @if (payload.rule.scopeType === 'PERIODE' || payload.rule.scopeType === 'COMBINE') {
+      <label class="text-sm">Période
+        <select [(ngModel)]="payload.rule.periodeId" class="mt-1 h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-white">
+          <option [ngValue]="null">Sélectionner…</option>
+          @for (option of options.periodes; track option.id) {
+            <option [ngValue]="option.id">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+    }
+    @if (payload.rule.scopeType === 'ENSEIGNANT' || payload.rule.scopeType === 'COMBINE') {
+      <label class="text-sm">Enseignant
+        <select [(ngModel)]="payload.rule.enseignantId" [disabled]="options.teacher" class="mt-1 h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 disabled:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:disabled:bg-gray-800 dark:disabled:text-gray-400">
+          <option [ngValue]="null">Sélectionner…</option>
+          @for (option of options.enseignants; track option.id) {
+            <option [ngValue]="option.id">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+    }
+    <label class="text-sm md:col-span-2">Description
+      <textarea [(ngModel)]="payload.rule.description" rows="2" class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-white"></textarea>
+    </label>
+    <input [(ngModel)]="payload.rule.configJson" type="hidden">
+  </div>
+
+  <div class="mt-6">
+    <div class="mb-3 flex items-center justify-between">
+      <h3 class="font-semibold">Composants</h3>
+      <button (click)="addComponent()" class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/[0.06]">Ajouter un composant</button>
+    </div>
+    <div class="space-y-3">
+      @for (component of payload.components; track $index) {
+        <div class="grid gap-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4 dark:border-gray-700 dark:bg-white/[0.025] md:grid-cols-4">
+          <label class="text-sm md:col-span-2">Libellé
+            <input [(ngModel)]="component.label" class="mt-1 h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-white">
+          </label>
+          <label class="text-sm">Catégorie d’évaluation
+            <select [(ngModel)]="component.categoryId" class="mt-1 h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-white">
+              <option [ngValue]="null">Toutes les catégories</option>
+              @for (option of options.categories; track option.id) {
+                <option [ngValue]="option.id">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+          <label class="text-sm">Méthode
+            <select [(ngModel)]="component.method" class="mt-1 h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-white">
+              <option value="WEIGHTED_AVERAGE">Moyenne pondérée</option>
+              <option value="SIMPLE_AVERAGE">Moyenne simple</option>
+              <option value="SUM">Somme des notes</option>
+              <option value="BEST">Meilleure note</option>
+              <option value="DROP_LOWEST">Retirer la plus faible</option>
+              <option value="MINIMUM_COUNT">Moyenne avec minimum requis</option>
+            </select>
+          </label>
+          <label class="text-sm">Poids
+            <input [(ngModel)]="component.weight" type="number" step="0.01" class="mt-1 h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-white">
+          </label>
+          <label class="text-sm">Nombre minimum de notes
+            <input [(ngModel)]="component.minNotes" type="number" class="mt-1 h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-white">
+          </label>
+          <label class="text-sm">Barème final
+            <input [(ngModel)]="component.gradeScale" type="number" step="0.01" class="mt-1 h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-white">
+          </label>
+          <label class="flex items-center gap-2 text-sm">
+            <input [(ngModel)]="component.dropLowest" type="checkbox"> Supprimer la plus faible
+          </label>
+          <label class="flex items-center gap-2 text-sm">
+            <input [(ngModel)]="component.onlyBest" type="checkbox"> Garder la meilleure note
+          </label>
+          <label class="text-sm">Ordre
+            <input [(ngModel)]="component.sortOrder" type="number" class="mt-1 h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-white">
+          </label>
+          <div class="md:col-span-4 text-right">
+            <button (click)="removeComponent($index)" class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-error-600 transition hover:bg-error-50 dark:border-gray-700 dark:text-error-400 dark:hover:bg-error-500/10">Retirer</button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="mt-6 flex justify-end gap-2">
+    <button (click)="modalOpen=false" class="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/[0.06]">Fermer</button>
+    <button (click)="confirmSave()" class="rounded-lg bg-brand-500 px-4 py-2 text-white">Enregistrer</button>
+  </div>
+</app-modal>
+
+<app-confirm-dialog
+  [isOpen]="confirmationOpen"
+  [title]="confirmationTitle"
+  [message]="confirmationMessage"
+  [confirming]="false"
+  (cancelled)="closeConfirmation()"
+  (confirmed)="action?.()">
+</app-confirm-dialog>

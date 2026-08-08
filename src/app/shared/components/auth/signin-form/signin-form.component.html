@@ -25,6 +25,15 @@
         <!-- Form -->
         <form (ngSubmit)="onSignIn()" class="space-y-6">
           <div>
+            <app-label>École <span class="text-error-500">*</span></app-label>
+            <app-select
+              name="tenant"
+              [(ngModel)]="selectedTenantId"
+              [options]="tenantOptions"
+              [placeholder]="loadingTenants ? 'Chargement des écoles…' : 'Choisir une école'"
+            />
+          </div>
+          <div>
             <app-label>Identifiant <span class="text-error-500">*</span></app-label>
             <app-input-field
               type="text"
@@ -82,7 +91,7 @@
           <app-button
             className="w-full"
             size="sm"
-            [disabled]="isSubmitting"
+            [disabled]="isSubmitting || loadingTenants || !selectedTenantId"
             (btnClick)="onSignIn()"
           >
             Se connecter

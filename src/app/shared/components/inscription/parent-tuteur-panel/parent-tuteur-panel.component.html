@@ -80,7 +80,7 @@
       <app-input-field [value]="formModel.telephone" (valueChange)="updateField('telephone', $event)" />
     </div>
     <div>
-      <app-label>Email</app-label>
+      <app-label>Email <span class="text-error-500">*</span></app-label>
       <app-input-field type="email" [value]="formModel.email ?? ''" (valueChange)="updateField('email', $event)" />
     </div>
     <div>

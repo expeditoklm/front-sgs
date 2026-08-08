@@ -73,9 +73,9 @@ export class AuthenticationService {
       .pipe(
         tap((response) => {
           this.pendingLogin = response.data.login;
-          this.pendingProfiles = this.normalizeProfiles(response.data.profiles);
+          this.pendingProfiles = this.normalizeProfiles(response.data.profiles ?? []);
         }),
-        map((response) => ({ success: true, profiles: response.data.profiles })),
+        map((response) => ({ success: true, profiles: this.normalizeProfiles(response.data.profiles ?? []) })),
         catchError(() => of({ success: false }))
       );
   }
@@ -198,6 +198,7 @@ export class AuthenticationService {
   }
 
   requestAccount$(payload: {
+    tenantId: string;
     nom: string;
     prenom: string;
     email: string;
@@ -281,6 +282,26 @@ export class AuthenticationService {
 
   get currentProfile(): string | null {
     return this.user()?.profilCode ?? null;
+  }
+
+  get isSuperAdmin(): boolean {
+    return this.currentProfile === 'SADM';
+  }
+
+  get isAdmin(): boolean {
+    return this.currentProfile === 'ADM';
+  }
+
+  get isTeacher(): boolean {
+    return this.currentProfile === 'ENS';
+  }
+
+  canManagePermissions(): boolean {
+    return this.hasPermission('PERMISSION_GERER') || this.isAdmin || this.isSuperAdmin;
+  }
+
+  canUseAdministrationPortal(): boolean {
+    return this.hasPermission('PORTAIL_ADMINISTRER') || this.isAdmin || this.isSuperAdmin;
   }
 
   hasAnyRole(roles: string[]): boolean {

@@ -5,7 +5,7 @@ import { forkJoin } from 'rxjs';
 import { ModalComponent } from '../../shared/components/ui/modal/modal.component';
 import { PaginationComponent } from '../../shared/components/ui/pagination/pagination.component';
 import { PaginatePipe } from '../../shared/pipes/paginate.pipe';
-import { Affectation,Conge,Contrat,Employe,EmployePayload,EvaluationRh,RhDashboard,RhOptions,SoldeConge,StatistiquesRh } from '../../core/models/personnel.models';
+import { Affectation,Conge,Contrat,Employe,EmployePayload,EvaluationRh,RhDashboard,RhOptions,SoldeConge,StatistiquePresenceRh,StatistiquesRh } from '../../core/models/personnel.models';
 import { PersonnelService } from '../../core/services/personnel.service';
 import { SelectComponent } from '../../shared/components/form/select/select.component';
 import { map } from 'rxjs';
@@ -15,7 +15,7 @@ import { ToastService } from '../../core/services/toast.service';
 export class PersonnelDashboardComponent implements OnInit {
  stats:RhDashboard={effectif_actif:0,enseignants:0,contrats_actifs:0,conges_en_attente:0};statistiques:StatistiquesRh={categories:[],contrats:[],chargeEnseignants:[],presence:[],evaluations:[]};options:RhOptions={annees:[],matieres:[],niveaux:[],classes:[],utilisateurs:[]};
  employes:Employe[]=[];conges:Conge[]=[];contrats:Contrat[]=[];affectations:Affectation[]=[];soldes:SoldeConge[]=[];evaluations:EvaluationRh[]=[];
- tauxPresence:any[]=[];
+ tauxPresence:StatistiquePresenceRh[]=[];
  pageConges=1;
  taillePageConges=10;
  readonly taillesPageConges=[10,20,50];
@@ -40,7 +40,7 @@ export class PersonnelDashboardComponent implements OnInit {
  get anneeStatistiqueOptions(){return [{value:undefined,label:'Toutes les années'},...this.options.annees.map(o=>({value:o.id,label:o.label}))];}
  readonly rechercherEmployesSelect=(term:string,limit:number)=>this.service.employes(term).pipe(map(items=>items.slice(0,limit).map(e=>({value:e.uuid,label:`${e.prenom} ${e.nom} · ${e.matricule}`}))));
  constructor(private service:PersonnelService,private toast:ToastService){}ngOnInit(){this.charger();}
- charger(){forkJoin({stats:this.service.dashboard(),employes:this.service.employes(this.recherche),conges:this.service.conges(),contrats:this.service.contrats(),options:this.service.options(),affectations:this.service.affectations(),soldes:this.service.soldes(),evaluations:this.service.evaluations(),statistiques:this.service.statistiques(),tauxPresence:this.service.tauxPresence()}).subscribe({next:r=>{Object.assign(this,r);this.normaliserPageConges();},error:e=>this.echec(e,'Chargement impossible')});}
+ charger(){forkJoin({stats:this.service.dashboard(),employes:this.service.employes(this.recherche),conges:this.service.conges(),contrats:this.service.contrats(),options:this.service.options(),affectations:this.service.affectations(),soldes:this.service.soldes(),evaluations:this.service.evaluations(),statistiques:this.service.statistiques()}).subscribe({next:r=>{Object.assign(this,r);this.tauxPresence=r.statistiques.presence;this.normaliserPageConges();},error:e=>this.echec(e,'Chargement impossible')});}
  rechercher(){this.pagination['equipe'].page=1;this.service.employes(this.recherche).subscribe(v=>this.employes=v);}
  rechercherDans(cle:'contrats'|'conges'|'affectations'|'evaluations'){
   this.recherchesAppliquees[cle]=this.normaliser(this.recherches[cle]);
@@ -52,10 +52,50 @@ export class PersonnelDashboardComponent implements OnInit {
  get soldesFiltres(){const q=this.recherchesAppliquees.conges;return this.filtrer(this.soldes,q,s=>[s.employe,s.sol_annee,s.sol_type,s.solde]);}
  get affectationsFiltrees(){const q=this.recherchesAppliquees.affectations;return this.filtrer(this.affectations,q,a=>[a.employe,a.annee,a.matiere,a.niveau,a.classe,a.aff_heures_hebdo]);}
  get evaluationsFiltrees(){const q=this.recherchesAppliquees.evaluations;return this.filtrer(this.evaluations,q,e=>[e.employe,e.eva_date,e.eva_periode,e.eva_note,e.eva_appreciation,e.eva_evaluateur]);}
- filtrerStatistiques(){this.service.statistiques(this.filtreAnnee,this.filtreCategorie).subscribe({next:v=>this.statistiques=v,error:e=>this.echec(e,'Chargement impossible')});}
+ filtrerStatistiques(){this.service.statistiques(this.filtreAnnee,this.filtreCategorie).subscribe({next:v=>{this.statistiques=v;this.tauxPresence=v.presence;},error:e=>this.echec(e,'Chargement impossible')});}
  largeur(v:any,liste:any[],champ:string){const max=Math.max(...liste.map(x=>Number(x[champ])||0),1);return Math.round((Number(v)||0)*100/max);}
  dateValue(value:unknown):string|number|Date|null{return typeof value==='string'||typeof value==='number'||value instanceof Date?value:null;}
  noteWidth(value:unknown):number{return Math.max(0,Math.min(100,(Number(value)||0)*5));}
+ get contexteStatistiques():string {
+  const annee=this.options.annees.find(item=>item.id===this.filtreAnnee)?.label??'12 derniers mois';
+  const categorie=this.filtreCategorie?` · ${this.libelleCategorie(this.filtreCategorie)}`:' · Tout le personnel';
+  return annee+categorie;
+ }
+ total(liste:unknown[],champ:string):number{return liste.reduce<number>((s,item)=>s+(Number((item as Record<string,unknown>)[champ])||0),0);}
+ pourcentage(valeur:unknown,total:number):number{return total<=0?0:Math.round((Number(valeur)||0)*1000/total)/10;}
+ libelleCategorie(value:string):string{return ({ENSEIGNANT:'Enseignants',SURVEILLANT:'Surveillants',ADMINISTRATIF:'Personnel administratif',DIRECTION:'Direction'} as Record<string,string>)[value]??value;}
+ chargeWidth(value:unknown,reference:unknown):number{return Math.min(100,this.pourcentage(value,Number(reference)||40));}
+ chargeClass(taux:unknown):string {
+  const valeur=Number(taux)||0;
+  if(valeur>100)return 'bg-error-500';
+  if(valeur<50)return 'bg-warning-500';
+  return 'bg-success-500';
+ }
+ chargeEtat(taux:unknown):string {
+  const valeur=Number(taux)||0;
+  if(valeur>100)return 'Surcharge';
+  if(valeur===0)return 'Non affecté';
+  if(valeur<50)return 'Sous-charge';
+  return 'Charge normale';
+ }
+ presenceClass(taux:unknown):string {
+  const valeur=Number(taux)||0;
+  if(valeur>=95)return 'bg-success-500';
+  if(valeur>=90)return 'bg-warning-500';
+  return 'bg-error-500';
+ }
+ presenceTextClass(taux:unknown):string {
+  const valeur=Number(taux)||0;
+  if(valeur>=95)return 'text-success-600 dark:text-success-400';
+  if(valeur>=90)return 'text-warning-600 dark:text-warning-400';
+  return 'text-error-600 dark:text-error-400';
+ }
+ presenceEtat(taux:unknown):string {
+  const valeur=Number(taux)||0;
+  if(valeur>=95)return 'Satisfaisant';
+  if(valeur>=90)return 'À surveiller';
+  return 'Critique';
+ }
  get totalPagesConges(){return Math.max(1,Math.ceil(this.conges.length/this.taillePageConges));}
  get congesPagines(){const debut=(this.pageConges-1)*this.taillePageConges;return this.conges.slice(debut,debut+this.taillePageConges);}
  get debutConges(){return this.conges.length?(this.pageConges-1)*this.taillePageConges+1:0;}

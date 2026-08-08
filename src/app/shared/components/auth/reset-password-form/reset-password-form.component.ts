@@ -37,13 +37,15 @@ export class ResetPasswordFormComponent {
       return;
     }
     if (!this.login.trim()) {
+      this.errorMessage = 'Saisissez votre identifiant.';
       return;
     }
     this.errorMessage = '';
     this.isSubmitting = true;
-    this.authService.forgotPassword$(this.login).subscribe(() => {
+    this.authService.forgotPassword$(this.login).subscribe((success) => {
       this.isSubmitting = false;
-      this.requestSent = true;
+      this.requestSent = success;
+      if (!success) this.errorMessage = 'La demande de réinitialisation n’a pas pu être envoyée.';
     });
   }
 

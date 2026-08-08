@@ -165,6 +165,14 @@
             <app-button size="sm" variant="outline" [disabled]="generatingCertificat" (btnClick)="telechargerCertificat()">
               Visualiser le certificat d'inscription
             </app-button>
+            <app-button
+              size="sm"
+              variant="outline"
+              [disabled]="generatingCertificatScolarite || selectedInscription.statut !== 'VALIDEE'"
+              (btnClick)="telechargerCertificatScolarite()"
+            >
+              Visualiser le certificat de scolarité
+            </app-button>
             <app-button size="sm" variant="outline" (btnClick)="openHistoriqueTransferts()">
               Historique des transferts
             </app-button>

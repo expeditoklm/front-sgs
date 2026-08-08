@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { LabelComponent } from '../../form/label/label.component';
 import { CheckboxComponent } from '../../form/input/checkbox.component';
@@ -9,6 +9,9 @@ import { FormsModule } from '@angular/forms';
 import { AuthenticationService } from '../../../../core/services/authentication.service';
 import { ProfileOption } from '../../../../core/models/auth.models';
 import { SelectComponent } from '../../form/select/select.component';
+import { SaasService } from '../../../../core/services/saas.service';
+import { TenantContextService } from '../../../../core/services/tenant-context.service';
+import { Tenant } from '../../../../core/models/saas.models';
 
 type Step = 'credentials' | 'otp' | 'role';
 
@@ -26,7 +29,7 @@ type Step = 'credentials' | 'otp' | 'role';
   templateUrl: './signin-form.component.html',
   styles: ``
 })
-export class SigninFormComponent {
+export class SigninFormComponent implements OnInit {
 
   step: Step = 'credentials';
 
@@ -37,6 +40,9 @@ export class SigninFormComponent {
   login = '';
   password = '';
   otp = '';
+  tenants: Tenant[] = [];
+  selectedTenantId: string | null = null;
+  loadingTenants = true;
 
   profiles: ProfileOption[] = [];
   selectedProfile: string | null = null;
@@ -48,13 +54,35 @@ export class SigninFormComponent {
     }));
   }
 
+  get tenantOptions() {
+    return this.tenants.map(tenant => ({ value: tenant.id, label: tenant.name }));
+  }
+
   errorMessage = '';
 
   constructor(
     private authService: AuthenticationService,
+    private saasService: SaasService,
+    private tenantContext: TenantContextService,
     private router: Router,
     private route: ActivatedRoute
   ) {
+  }
+
+  ngOnInit(): void {
+    this.saasService.publicTenants().subscribe({
+      next: tenants => {
+        this.tenants = tenants;
+        this.loadingTenants = false;
+        const current = this.tenantContext.tenant();
+        this.selectedTenantId = current && tenants.some(tenant => tenant.id === current.id)
+          ? current.id : (tenants.length === 1 ? tenants[0].id : null);
+      },
+      error: () => {
+        this.loadingTenants = false;
+        this.errorMessage = 'Impossible de charger les écoles disponibles.';
+      }
+    });
   }
 
   togglePasswordVisibility() {
@@ -63,6 +91,12 @@ export class SigninFormComponent {
 
   onSignIn() {
     this.errorMessage = '';
+    const tenant = this.tenants.find(item => item.id === this.selectedTenantId);
+    if (!tenant) {
+      this.errorMessage = 'Sélectionnez votre école.';
+      return;
+    }
+    this.tenantContext.select(tenant);
     this.isSubmitting = true;
     this.authService.login$({ login: this.login, password: this.password }).subscribe((result) => {
       this.isSubmitting = false;

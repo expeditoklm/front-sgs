@@ -8,7 +8,27 @@ export interface RhOptions { annees:RhOption[];matieres:RhOption[];niveaux:RhOpt
 export interface Affectation { uu_id:string;employe_uuid:string;employe:string;aff_annee_id:number;annee:string;matiere?:string;niveau?:string;classe?:string;aff_heures_hebdo:number;aff_date_debut:string;aff_date_fin?:string; }
 export interface SoldeConge { uu_id:string;employe_uuid:string;employe:string;sol_annee:number;sol_type:string;sol_jours_acquis:number;sol_jours_reportes:number;jours_pris:number;solde:number; }
 export interface EvaluationRh { uu_id:string;employe_uuid:string;employe:string;eva_date:string;eva_periode:string;eva_note:number;eva_objectifs?:string;eva_appreciation?:string;eva_evaluateur:string; }
-export interface StatistiquesRh { categories:Record<string,unknown>[];contrats:Record<string,unknown>[];chargeEnseignants:Record<string,unknown>[];presence:Record<string,unknown>[];evaluations:Record<string,unknown>[]; }
+export interface StatistiqueCategorieRh { categorie:string;effectif:number; }
+export interface StatistiqueContratRh { type:string;nombre:number; }
+export interface StatistiqueChargeRh { uu_id:string;enseignant:string;heures_hebdo:number;capacite_reference:number;taux_charge:number; }
+export interface StatistiquePresenceRh {
+  mois:string;
+  jours_ouvrables:number;
+  effectif_cible:number;
+  journees_theoriques:number;
+  jours_conges:number;
+  absences_injustifiees:number;
+  jours_absence:number;
+  taux_presence:number;
+}
+export interface StatistiqueEvaluationRh { mois:string;moyenne:number;nombre:number; }
+export interface StatistiquesRh {
+  categories:StatistiqueCategorieRh[];
+  contrats:StatistiqueContratRh[];
+  chargeEnseignants:StatistiqueChargeRh[];
+  presence:StatistiquePresenceRh[];
+  evaluations:StatistiqueEvaluationRh[];
+}
 export interface CritereEvaluationConfig { id?:number;uuid?:string;code:string;libelle:string;coefficient:number;ordre:number; }
 export interface GrilleEvaluationConfig { id:number;uuid:string;code:string;libelle:string;actif:boolean;criteres:CritereEvaluationConfig[]; }
 export interface GrilleEvaluationPayload { code:string;libelle:string;criteres:CritereEvaluationConfig[]; }

@@ -5,20 +5,32 @@
 } @else if (loading) {
   <p class="text-sm text-gray-500 dark:text-gray-400">Chargement...</p>
 } @else if (evaluation) {
-  <app-component-card [title]="evaluation.libelle" [desc]="typeLabels[evaluation.type] + ' — coefficient ' + evaluation.coefficient + ' — barème /' + evaluation.bareme + ' — ' + evaluation.date">
-    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+  <app-component-card
+    [title]="evaluation.libelle"
+    [desc]="typeLabels[evaluation.type] + ' — coefficient ' + evaluation.coefficient + ' — barème /' + evaluation.bareme + ' — ' + evaluation.date">
+    <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <app-button size="sm" variant="outline" (btnClick)="retour()">Retour aux évaluations</app-button>
-        <app-badge [color]="evaluation.statut === 'PUBLIEE' ? 'success' : 'light'">{{ statutLabels[evaluation.statut] }}</app-badge>
+        <app-badge [color]="evaluation.statut === 'PUBLIEE' ? 'success' : 'light'">
+          {{ statutLabels[evaluation.statut] }}
+        </app-badge>
       </div>
       @if (canPublier) {
-        <app-button size="sm" [disabled]="publishing" (btnClick)="publier()">Publier l'évaluation</app-button>
+        <app-button size="sm" [disabled]="publishing" (btnClick)="publier()">Publier l’évaluation</app-button>
       }
     </div>
 
-    @if (!gridEditable) {
+    @if (isPublished && isAdministration) {
+      <div class="mb-5 rounded-xl border border-warning-200 bg-warning-50 p-4 text-sm text-warning-700 dark:border-warning-500/20 dark:bg-warning-500/10 dark:text-warning-300">
+        Vous pouvez proposer une correction, mais la note officielle ne changera qu’après l’approbation de l’enseignant qui a créé cette évaluation.
+      </div>
+    } @else if (isPublished && authService.isTeacher) {
+      <div class="mb-5 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-300">
+        Les notes officielles sont verrouillées. Vous pouvez examiner ci-dessous les demandes de correction de la direction.
+      </div>
+    } @else if (!gridEditable) {
       <p class="mb-4 text-sm text-warning-600 dark:text-orange-400">
-        Cette évaluation est publiée - seuls les rôles SADM/ADM peuvent encore corriger les notes.
+        Cette évaluation est publiée et ses notes sont verrouillées.
       </p>
     }
 
@@ -36,18 +48,20 @@
           <tbody class="divide-y divide-gray-100 dark:divide-white/[0.05]">
             @if (rows.length === 0) {
               <tr>
-                <td class="px-5 py-4 text-gray-500 text-sm dark:text-gray-400" colspan="4">Aucun élève inscrit (VALIDEE) dans cette classe.</td>
+                <td class="px-5 py-4 text-sm text-gray-500 dark:text-gray-400" colspan="4">
+                  Aucun élève inscrit et validé dans cette classe.
+                </td>
               </tr>
             } @else {
               @for (row of rows | paginate:page:pageSize; track row.inscriptionUuid) {
                 <tr>
-                  <td class="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                  <td class="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
                     {{ row.eleveNomComplet }}
                     @if (row.erreur) {
                       <p class="mt-1 text-xs text-error-500">{{ row.erreur }}</p>
                     }
                   </td>
-                  <td class="px-5 py-4 text-start w-32">
+                  <td class="w-32 px-5 py-4 text-start">
                     <app-input-field
                       type="number"
                       [value]="row.valeur ?? ''"
@@ -57,9 +71,13 @@
                     />
                   </td>
                   <td class="px-5 py-4 text-start">
-                    <app-checkbox [checked]="row.absent" [disabled]="!gridEditable" (checkedChange)="setAbsent(row, $event)" />
+                    <app-checkbox
+                      [checked]="row.absent"
+                      [disabled]="!gridEditable"
+                      (checkedChange)="setAbsent(row, $event)"
+                    />
                   </td>
-                  <td class="px-5 py-4 text-start min-w-[200px]">
+                  <td class="min-w-[200px] px-5 py-4 text-start">
                     <app-input-field
                       [value]="row.appreciation"
                       [disabled]="!gridEditable"
@@ -73,12 +91,113 @@
         </table>
       </div>
     </div>
-    <app-pagination class="mt-4 block" [currentPage]="page" [totalPages]="totalPages" [totalItems]="rows.length" [pageSize]="pageSize" itemLabel="élève" (pageChange)="changePage($event)" (pageSizeChange)="changePageSize($event)"/>
+
+    <app-pagination
+      class="mt-4 block"
+      [currentPage]="page"
+      [totalPages]="totalPages"
+      [totalItems]="rows.length"
+      [pageSize]="pageSize"
+      itemLabel="élève"
+      (pageChange)="changePage($event)"
+      (pageSizeChange)="changePageSize($event)"
+    />
 
     @if (gridEditable && rows.length > 0) {
-      <div class="flex items-center justify-end w-full gap-3 mt-6">
-        <app-button size="sm" [disabled]="saving" (btnClick)="enregistrer()">Enregistrer les notes</app-button>
+      @if (isPublished) {
+        <div class="mt-6">
+          <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Motif de la correction <span class="text-error-500">*</span>
+          </label>
+          <textarea
+            class="min-h-24 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:text-white"
+            maxlength="1000"
+            placeholder="Ex. Erreur de transcription constatée lors du contrôle des copies"
+            [value]="motifCorrection"
+            (input)="motifCorrection = $any($event.target).value"
+          ></textarea>
+        </div>
+      }
+      <div class="mt-6 flex w-full items-center justify-end gap-3">
+        <app-button size="sm" [disabled]="saving" (btnClick)="enregistrer()">
+          {{ isPublished ? 'Soumettre la correction à l’enseignant' : 'Enregistrer les notes' }}
+        </app-button>
       </div>
     }
   </app-component-card>
+
+  @if (isPublished) {
+    <div class="mt-6">
+      <app-component-card
+        title="Demandes de correction"
+        [desc]="pendingCorrections + ' demande(s) en attente d’une décision de l’enseignant'">
+        @if (corrections.length === 0) {
+          <p class="text-sm text-gray-500 dark:text-gray-400">Aucune demande de correction pour cette évaluation.</p>
+        } @else {
+          <div class="space-y-4">
+            @for (correction of corrections; track correction.uuid) {
+              <div class="rounded-xl border border-gray-200 p-4 dark:border-white/[0.08]">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p class="font-medium text-gray-800 dark:text-white">{{ studentName(correction.inscriptionId) }}</p>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      Valeur officielle :
+                      <strong>{{ correctionValue(correction.ancienneValeur, correction.ancienneAbsence) }}</strong>
+                      <span class="mx-2">→</span>
+                      Proposition :
+                      <strong>{{ correctionValue(correction.nouvelleValeur, correction.nouvelleAbsence) }}</strong>
+                    </p>
+                  </div>
+                  <app-badge
+                    [color]="correction.statut === 'APPROUVEE' ? 'success' : correction.statut === 'REJETEE' ? 'error' : 'warning'">
+                    {{ statusLabel(correction.statut) }}
+                  </app-badge>
+                </div>
+
+                <div class="mt-3 rounded-lg bg-gray-50 p-3 text-sm text-gray-600 dark:bg-white/[0.03] dark:text-gray-300">
+                  <strong>Motif de la direction :</strong> {{ correction.motif }}
+                </div>
+
+                @if (correction.commentaireDecision) {
+                  <p class="mt-3 text-sm text-gray-600 dark:text-gray-300">
+                    <strong>Commentaire de l’enseignant :</strong> {{ correction.commentaireDecision }}
+                  </p>
+                }
+
+                @if (correction.statut === 'EN_ATTENTE' && authService.isTeacher) {
+                  <div class="mt-4">
+                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Commentaire de décision (facultatif)
+                    </label>
+                    <textarea
+                      class="min-h-20 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 outline-none focus:border-brand-500 dark:border-gray-700 dark:text-white"
+                      maxlength="1000"
+                      placeholder="Précisez la raison de votre décision"
+                      [value]="decisionComments[correction.uuid] || ''"
+                      (input)="decisionComments[correction.uuid] = $any($event.target).value"
+                    ></textarea>
+                    <div class="mt-3 flex justify-end gap-3">
+                      <app-button
+                        size="sm"
+                        variant="outline"
+                        [disabled]="processingCorrectionUuid === correction.uuid"
+                        (btnClick)="rejeter(correction)">
+                        Rejeter
+                      </app-button>
+                      <app-button
+                        size="sm"
+                        [disabled]="processingCorrectionUuid === correction.uuid"
+                        (btnClick)="approuver(correction)">
+                        Approuver et recalculer
+                      </app-button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </app-component-card>
+    </div>
+  }
 }

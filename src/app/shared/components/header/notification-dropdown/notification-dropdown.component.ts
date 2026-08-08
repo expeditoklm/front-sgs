@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Subscription, timer } from 'rxjs';
+import { catchError, of, Subscription, timer } from 'rxjs';
 import {
   ActionNotification,
   ActionNotificationService
@@ -80,6 +80,11 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
 
   ouvrir(notification: ActionNotification): void {
     this.closeDropdown();
-    void this.router.navigateByUrl(notification.route);
+    this.notificationService.marquerCommeLue(notification).pipe(
+      catchError(() => of(void 0))
+    ).subscribe(() => {
+      this.notifications = this.notifications.filter((item) => item.id !== notification.id);
+      void this.router.navigateByUrl(notification.route);
+    });
   }
 }

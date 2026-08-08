@@ -26,7 +26,7 @@ import { Affectation,Conge,Contrat,Employe,EmployePayload,EvaluationRh,GrilleEva
  evaluations(){return this.http.get<ApiResponse<EvaluationRh[]>>(`${this.url}/evaluations`).pipe(map(r=>r.data));}
  evaluer(v:{employeUuid:string;date:string;periode:string;note:number;objectifs:string;appreciation:string}){return this.http.post(`${this.url}/evaluations`,v);}
  statistiques(annee?:number,categorie?:string){let params=new HttpParams();if(annee)params=params.set('annee',annee);if(categorie)params=params.set('categorie',categorie);return this.http.get<ApiResponse<StatistiquesRh>>(`${this.url}/statistiques`,{params}).pipe(map(r=>r.data));}
- tauxPresence(){return this.http.get<ApiResponse<any[]>>(`${this.url}/statistiques/presence`).pipe(map(r=>r.data));}
+ tauxPresence(annee?:number,categorie?:string){let params=new HttpParams();if(annee)params=params.set('annee',annee);if(categorie)params=params.set('categorie',categorie);return this.http.get<ApiResponse<StatistiquesRh['presence']>>(`${this.url}/statistiques/presence`,{params}).pipe(map(r=>r.data));}
  mesConges(){return this.http.get<ApiResponse<any[]>>(`${this.url}/moi/conges`).pipe(map(r=>r.data));}
  mesSoldes(){return this.http.get<ApiResponse<any[]>>(`${this.url}/moi/soldes`).pipe(map(r=>r.data));}
  demanderMonConge(v:{type:string;dateDebut:string;dateFin:string;motif:string}){return this.http.post(`${this.url}/moi/conges`,v);}

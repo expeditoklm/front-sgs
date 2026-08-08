@@ -1,13 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { PaiementVerification } from '../../../core/models/inscription.models';
 import { InscriptionService } from '../../../core/services/inscription.service';
 
 @Component({
   selector: 'app-paiement-verification',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './paiement-verification.component.html'
 })
 export class PaiementVerificationComponent implements OnInit {
@@ -24,13 +24,14 @@ export class PaiementVerificationComponent implements OnInit {
 
   ngOnInit(): void {
     this.code = (this.route.snapshot.paramMap.get('code') ?? '').trim().toUpperCase();
+    const tenant = (this.route.snapshot.queryParamMap.get('tenant') ?? '').trim().toLowerCase();
     if (!/^[A-Z2-9]{6,40}$/.test(this.code)) {
       this.chargement = false;
       this.invalide = true;
       return;
     }
 
-    this.inscriptions.verifierPaiement(this.code).subscribe({
+    this.inscriptions.verifierPaiement(this.code, tenant).subscribe({
       next: (paiement) => {
         this.paiement = paiement;
         this.chargement = false;

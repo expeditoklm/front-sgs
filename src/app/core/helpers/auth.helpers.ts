@@ -1,7 +1,16 @@
 import { environment } from '../../../environments/environment';
 
 export function completeLogout(): void {
+  // Le tenant sélectionné représente le portail/établissement dans lequel
+  // l'utilisateur souhaite se connecter. Il ne fait pas partie de la session
+  // d'authentification et doit survivre à une déconnexion, à un token expiré
+  // ou au parcours OTP. Le supprimer ici faisait perdre X-SGS-Tenant-ID après
+  // « Administrer », puis toutes les API métier répondaient 403.
+  const tenantContext = localStorage.getItem('sgs_tenant');
+  const theme = localStorage.getItem('theme');
   localStorage.clear();
+  if (tenantContext) localStorage.setItem('sgs_tenant', tenantContext);
+  if (theme) localStorage.setItem('theme', theme);
   window.location.href = '/signin';
 }
 
@@ -17,6 +26,12 @@ export function httpHeaders(): Record<string, string> {
   const accessToken = localStorage.getItem('access_token');
   if (accessToken) {
     headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+  try {
+    const tenant = JSON.parse(localStorage.getItem('sgs_tenant') || 'null');
+    if (tenant?.id) headers['X-SGS-Tenant-ID'] = String(tenant.id);
+  } catch {
+    localStorage.removeItem('sgs_tenant');
   }
 
   return headers;

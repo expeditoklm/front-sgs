@@ -52,7 +52,13 @@
 
           <div>
             <app-label>Établissement <span class="text-error-500">*</span></app-label>
-            <app-input-field type="text" [(value)]="etablissement" id="etablissement" name="etablissement" placeholder="Nom de l'établissement" />
+            <app-select
+              id="etablissement"
+              name="etablissement"
+              [(ngModel)]="tenantId"
+              [options]="tenantOptions"
+              [placeholder]="loadingTenants ? 'Chargement des écoles…' : 'Rechercher et choisir une école'"
+            />
           </div>
 
           <div>
@@ -68,7 +74,7 @@
             <app-button
               className="w-full"
               size="sm"
-              [disabled]="isSubmitting"
+              [disabled]="isSubmitting || loadingTenants || !tenantId"
               (btnClick)="onSubmit()"
             >
               Envoyer la demande

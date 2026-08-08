@@ -6,12 +6,20 @@
       <p class="mt-1 max-w-3xl text-sm text-gray-500 dark:text-gray-400">
         Définissez les fonctionnalités accessibles à chaque profil. Le Super administrateur conserve toujours tous les droits.
       </p>
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+        Profil connecté : <span class="font-medium text-gray-700 dark:text-gray-200">{{ profilConnecteCode || 'inconnu' }}</span>
+        @if (estAdmin && !estSuperAdmin) {
+          <span class="ml-2 rounded-full bg-warning-50 px-2 py-1 text-[11px] font-medium text-warning-700 dark:bg-warning-950/30 dark:text-warning-300">
+            Mode administrateur limité
+          </span>
+        }
+      </p>
     </div>
     <div class="flex flex-wrap gap-3">
       <button (click)="annuler()" [disabled]="!modifie" class="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 disabled:opacity-40 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
         Annuler les changements
       </button>
-      <button (click)="ouvrirConfirmation()" [disabled]="!modifie || sauvegarde" class="rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-theme-xs disabled:opacity-40">
+      <button (click)="ouvrirConfirmation()" [disabled]="!modifie || sauvegarde || (!estSuperAdmin && !estAdmin)" class="rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-theme-xs disabled:opacity-40">
         Enregistrer les permissions
       </button>
     </div>
@@ -67,7 +75,7 @@
               <div class="font-semibold text-gray-900 dark:text-white">{{ profil.code }}</div>
               <div class="mt-1 text-[11px] font-normal leading-4 text-gray-500">{{ profil.libelle }}</div>
               <input type="checkbox" class="mt-2 h-4 w-4 rounded border-gray-300 text-brand-500"
-                [checked]="profilComplet(profil.code)" [disabled]="profil.code === 'SADM'"
+                [checked]="profilComplet(profil.code)" [disabled]="!peutModifierProfil(profil.code)"
                 (change)="basculerProfil(profil.code, $any($event.target).checked)">
             </th>
             }
@@ -82,7 +90,7 @@
             @for (profil of profils; track profil.code) {
             <td class="border-b border-r border-gray-200 p-3 text-center dark:border-gray-800">
               <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-brand-500"
-                [checked]="moduleComplet(groupe.module, profil.code)" [disabled]="profil.code === 'SADM'"
+                [checked]="moduleComplet(groupe.module, profil.code)" [disabled]="!peutModifierProfil(profil.code)"
                 (change)="basculerModule(groupe.module, profil.code, $any($event.target).checked)">
             </td>
             }
@@ -99,7 +107,7 @@
             <td class="border-b border-r border-gray-200 p-4 text-center dark:border-gray-800"
               [ngClass]="autorise(profil.code, permission.code) ? 'bg-success-50 dark:bg-success-950/20' : ''">
               <input type="checkbox" class="h-5 w-5 rounded border-gray-300 text-success-600 focus:ring-success-500"
-                [checked]="autorise(profil.code, permission.code)" [disabled]="profil.code === 'SADM'"
+                [checked]="autorise(profil.code, permission.code)" [disabled]="!peutModifierPermission(permission, profil.code)"
                 (change)="basculer(profil.code, permission.code)">
             </td>
             }

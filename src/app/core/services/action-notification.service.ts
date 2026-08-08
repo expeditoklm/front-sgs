@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, forkJoin, map, of } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { AuthenticationService } from './authentication.service';
 import { InscriptionService } from './inscription.service';
 import { PersonnelService } from './personnel.service';
@@ -11,6 +13,7 @@ export interface ActionNotification {
   count: number;
   route: string;
   tone: 'warning' | 'info';
+  inboxId?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -18,7 +21,8 @@ export class ActionNotificationService {
   constructor(
     private authenticationService: AuthenticationService,
     private inscriptionService: InscriptionService,
-    private personnelService: PersonnelService
+    private personnelService: PersonnelService,
+    private http: HttpClient
   ) {
   }
 
@@ -26,6 +30,24 @@ export class ActionNotificationService {
     const role = this.authenticationService.currentProfile;
     const sources: Observable<ActionNotification | null>[] = [];
     const pagination = { page: 1, size: 1, sortField: 'id', sortOrder: 'DESC' as const, filter: '' };
+
+    sources.push(
+      this.http.get<{ data: any[] }>(`${environment.apiUrl}/referentiels/notifications/me`, {
+        params: { unreadOnly: true }
+      }).pipe(
+        map((response) => response.data ?? []),
+        map((items) => items.map((item) => ({
+          id: `inbox-${item.uuid}`,
+          inboxId: item.uuid,
+          title: item.title,
+          description: item.message,
+          count: 1,
+          route: item.route || '/mon-profil',
+          tone: 'info' as const
+        }))),
+        catchError(() => of([]))
+      ) as Observable<any>
+    );
 
     if (role && ['SEC', 'ADM', 'SADM'].includes(role)) {
       sources.push(
@@ -90,11 +112,20 @@ export class ActionNotificationService {
       );
     }
 
-    if (!sources.length) return of([]);
     return forkJoin(sources).pipe(
-      map((notifications) => notifications.filter(
+      map((notifications) => notifications.flatMap((notification: any) =>
+        Array.isArray(notification) ? notification : [notification]
+      ).filter(
         (notification): notification is ActionNotification => notification !== null && notification.count > 0
       ))
+    );
+  }
+
+  marquerCommeLue(notification: ActionNotification): Observable<void> {
+    if (!notification.inboxId) return of(void 0);
+    return this.http.patch<void>(
+      `${environment.apiUrl}/referentiels/notifications/${notification.inboxId}/read`,
+      {}
     );
   }
 

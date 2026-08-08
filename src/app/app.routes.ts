@@ -36,6 +36,11 @@ import { roleGuard } from './core/guards/role.guard';
 import { PaiementVerificationComponent } from './pages/public/paiement-verification/paiement-verification.component';
 import { PermissionsComponent } from './pages/administration/permissions/permissions.component';
 import { GrillesEvaluationComponent } from './pages/referentiels/grilles-evaluation/grilles-evaluation.component';
+import { CalculationRulesComponent } from './pages/pedagogie/calculation-rules/calculation-rules.component';
+import { TemplateModelsComponent } from './pages/reports/template-models/template-models.component';
+import { SaasSchoolsComponent } from './pages/saas/schools/saas-schools.component';
+import { SaasPlansComponent } from './pages/saas/plans/saas-plans.component';
+import { TenantSubscriptionComponent } from './pages/saas/subscription/tenant-subscription.component';
 
 // Une route par référentiel du Module 01 (Établissements, Années scolaires, Niveaux, Classes,
 // Matières, Salles, Utilisateurs, Profils), toutes servies par le même ReferentielPageComponent
@@ -131,6 +136,41 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { permission: 'PERMISSION_GERER' },
         title: 'Profils et permissions | SGS'
+      },
+      {
+        path: 'saas/ecoles',
+        component: SaasSchoolsComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['SADM'] },
+        title: 'Écoles clientes | SGS SaaS'
+      },
+      {
+        path: 'saas/plans',
+        component: SaasPlansComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['SADM'] },
+        title: 'Plans tarifaires | SGS SaaS'
+      },
+      {
+        path: 'administration/abonnement',
+        component: TenantSubscriptionComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['SADM', 'ADM'] },
+        title: 'Mon abonnement | SGS'
+      },
+      {
+        path: 'pedagogie/regles-calcul',
+        component: CalculationRulesComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['SADM', 'ADM'] },
+        title: 'Règles de calcul | SGS'
+      },
+      {
+        path: 'reports/templates',
+        component: TemplateModelsComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['SADM', 'ADM'] },
+        title: 'Modèles de templates | SGS'
       },
       // Module Inscription des Élèves : ouvert à SEC (secrétariat) en plus de SADM/ADM,
       // cf. @PreAuthorize côté service-inscription (EleveController/PieceJustificativeController/

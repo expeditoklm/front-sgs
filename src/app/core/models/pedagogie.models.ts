@@ -84,6 +84,33 @@ export interface NoteLotResponse {
   erreurs: NoteLotErreur[];
 }
 
+export type NoteCorrectionStatut = 'EN_ATTENTE' | 'APPROUVEE' | 'REJETEE';
+
+export interface NoteCorrection {
+  uuid: string;
+  noteUuid: string;
+  inscriptionId: number;
+  ancienneValeur: number | null;
+  ancienneAbsence: boolean;
+  ancienneAppreciation: string | null;
+  nouvelleValeur: number | null;
+  nouvelleAbsence: boolean;
+  nouvelleAppreciation: string | null;
+  motif: string;
+  statut: NoteCorrectionStatut;
+  demandeurId: number;
+  decideurId: number | null;
+  demandeeLe: string;
+  decideLe: string | null;
+  commentaireDecision: string | null;
+}
+
+export interface NoteCorrectionLotRequest {
+  evaluationUuid: string;
+  motif: string;
+  notes: NoteLotItem[];
+}
+
 // --- Moyennes (lecture seule - jamais de création/modification, cf. MoyenneCalculationService) --
 
 export interface MoyenneMatiere {
@@ -204,4 +231,70 @@ export interface DeliberationDecisionRequest {
   observation: string | null;
   moyenneAjustee: number | null;
   motifAjustement: string | null;
+}
+
+export type CalculationRuleStatut = 'BROUILLON' | 'ACTIVE' | 'ARCHIVEE';
+export type CalculationRuleScopeType = 'SYSTEME' | 'ETABLISSEMENT' | 'NIVEAU' | 'CLASSE' | 'MATIERE' | 'PERIODE' | 'ENSEIGNANT' | 'COMBINE';
+
+export interface CalculationRule {
+  id: number;
+  uuid: string;
+  code: string;
+  libelle: string;
+  description: string | null;
+  scopeType: CalculationRuleScopeType;
+  scopeId: number | null;
+  etablissementId: number | null;
+  niveauId: number | null;
+  classeId: number | null;
+  matiereId: number | null;
+  periodeId: number | null;
+  enseignantId: number | null;
+  templateCode: string;
+  configJson: string;
+  version: number;
+  statut: CalculationRuleStatut;
+  anneeScolaireId: number | null;
+  dateDebut: string | null;
+  dateFin: string | null;
+  actif: boolean;
+}
+
+export interface RuleComponent {
+  id: number;
+  uuid: string;
+  ruleId: number | null;
+  categoryId: number | null;
+  label: string;
+  method: string;
+  weight: number | null;
+  minNotes: number | null;
+  dropLowest: boolean;
+  onlyBest: boolean;
+  gradeScale: number | null;
+  sortOrder: number;
+}
+
+export interface CalculationRulePayload {
+  rule: Partial<CalculationRule>;
+  components: Partial<RuleComponent>[];
+}
+
+export interface CalculationRuleOption {
+  id: number;
+  code: string;
+  label: string;
+}
+
+export interface CalculationRuleOptions {
+  categories: CalculationRuleOption[];
+  etablissements: CalculationRuleOption[];
+  annees: CalculationRuleOption[];
+  niveaux: CalculationRuleOption[];
+  classes: CalculationRuleOption[];
+  matieres: CalculationRuleOption[];
+  periodes: CalculationRuleOption[];
+  enseignants: CalculationRuleOption[];
+  teacher: boolean;
+  superAdmin: boolean;
 }

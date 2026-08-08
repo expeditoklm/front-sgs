@@ -39,6 +39,7 @@ const COMMANDS: CommandItem[] = [
   { label: 'Saisir les notes', description: 'Choisir une évaluation puis saisir les notes', category: 'Actions rapides', route: '/pedagogie/evaluations', permission: 'NOTE_GERER', keywords: 'note notation grille' },
   { label: 'Notes et moyennes', description: 'Consulter les résultats scolaires', category: 'Pages', route: '/pedagogie/moyennes', permission: 'MOYENNE_CONSULTER', keywords: 'bulletin résultat' },
   { label: 'Délibérations', description: 'Gérer les sessions de délibération', category: 'Pages', route: '/pedagogie/deliberations', permission: 'DELIBERATION_GERER', keywords: 'décision conseil classe' },
+  { label: 'Règles de calcul', description: 'Configurer les moyennes et formules', category: 'Pages', route: '/pedagogie/regles-calcul', keywords: 'moyenne formule catégorie pondération' },
   { label: "Journal d'audit", description: 'Consulter les opérations réalisées', category: 'Pages', route: '/audit', permission: 'AUDIT_CONSULTER', keywords: 'historique modification traçabilité' },
   { label: 'Profils et permissions', description: 'Administrer les accès', category: 'Pages', route: '/administration/permissions', permission: 'PERMISSION_GERER', keywords: 'rôle droit sécurité' },
   { label: 'Paramètres du compte', description: 'Modifier mes préférences', category: 'Pages', route: '/parametres-compte', keywords: 'profil mot de passe' }
@@ -220,9 +221,22 @@ export class AppHeaderComponent {
   private refreshCommands(): void {
     const term = this.normalize(this.query);
     this.commandResults = COMMANDS
-      .filter((item) => !item.permission || this.authService.hasPermission(item.permission))
+      .filter((item) => this.canShowCommand(item))
       .filter((item) => !term || this.normalize(`${item.label} ${item.description} ${item.keywords ?? ''}`).includes(term))
       .slice(0, 10);
+  }
+
+  private canShowCommand(item: CommandItem): boolean {
+    if (item.route === '/pedagogie/regles-calcul') {
+      return this.authService.hasAnyRole(['SADM', 'ADM']);
+    }
+    if (item.label === 'Profils et permissions') {
+      return this.authService.canManagePermissions();
+    }
+    if (item.label === 'Administration portail') {
+      return this.authService.canUseAdministrationPortal();
+    }
+    return !item.permission || this.authService.hasPermission(item.permission);
   }
 
   private clearBusinessResults(): void {
@@ -246,7 +260,7 @@ export class AppHeaderComponent {
       this.recentResults = routes
         .map((route) => COMMANDS.find((command) => command.category === 'Pages' && command.route === route))
         .filter((item): item is CommandItem => !!item)
-        .filter((item) => !item.permission || this.authService.hasPermission(item.permission))
+        .filter((item) => this.canShowCommand(item))
         .map((item) => ({ ...item, recent: true, description: `Récemment visitée · ${item.description}` }));
     } catch {
       this.recentResults = [];

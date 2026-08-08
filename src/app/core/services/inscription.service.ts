@@ -247,9 +247,10 @@ export class InscriptionService {
     return this.http.get(`${this.base}/paiements/${uuid}/recu`, { responseType: 'blob' });
   }
 
-  verifierPaiement(code: string): Observable<PaiementVerification> {
+  verifierPaiement(code: string, tenant?: string): Observable<PaiementVerification> {
+    const params = tenant ? { tenant } : undefined;
     return this.http
-      .get<ApiResponse<PaiementVerification>>(`${this.publicApiBase()}/inscriptions/paiements/verification/${encodeURIComponent(code)}/details`)
+      .get<ApiResponse<PaiementVerification>>(`${this.publicApiBase()}/inscriptions/paiements/verification/${encodeURIComponent(code)}/details`, { params })
       .pipe(map((response) => response.data));
   }
 

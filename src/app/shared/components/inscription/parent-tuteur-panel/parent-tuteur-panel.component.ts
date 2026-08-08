@@ -105,8 +105,12 @@ export class ParentTuteurPanelComponent implements OnChanges {
   }
 
   attach(): void {
-    if (!this.formModel.nom || !this.formModel.prenom || !this.formModel.telephone) {
-      this.formError = 'Nom, prénom et téléphone sont obligatoires.';
+    if (!this.formModel.nom || !this.formModel.prenom || !this.formModel.telephone || !this.formModel.email) {
+      this.formError = 'Nom, prénom, téléphone et e-mail sont obligatoires.';
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.formModel.email)) {
+      this.formError = 'Saisissez une adresse e-mail valide.';
       return;
     }
 

@@ -55,7 +55,66 @@
  }
  @if(onglet==='affectations'){<div class="p-4"><div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div class="flex max-w-md flex-1"><input [(ngModel)]="recherches.affectations" (keyup.enter)="rechercherDans('affectations')" placeholder="Employé, année, matière, niveau ou classe…" class="h-10 min-w-0 flex-1 rounded-l-lg border px-3"><button (click)="rechercherDans('affectations')" class="rounded-r-lg bg-gray-100 px-4">Rechercher</button></div><button (click)="modalAffectation=true" class="rounded-lg bg-brand-500 px-3 py-2 text-sm text-white">+ Nouvelle affectation</button></div><div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50"><tr><th class="p-3">Employé</th><th class="p-3">Année</th><th class="p-3">Matière</th><th class="p-3">Niveau / classe</th><th class="p-3">Charge</th><th></th></tr></thead><tbody><tr *ngFor="let a of affectationsFiltrees | paginate:pageDe('affectations'):tailleDe('affectations')" class="border-t"><td class="p-3">{{a.employe}}</td><td class="p-3">{{a.annee}}</td><td class="p-3">{{a.matiere||'—'}}</td><td class="p-3">{{a.niveau||'—'}} / {{a.classe||'—'}}</td><td class="p-3">{{a.aff_heures_hebdo}} h/sem.</td><td class="p-3"><button (click)="supprimerAffectation(a)" class="text-error-600">Supprimer</button></td></tr></tbody></table></div><app-pagination class="mt-4 block" [currentPage]="pageDe('affectations')" [totalPages]="totalPages(affectationsFiltrees,'affectations')" [totalItems]="affectationsFiltrees.length" [pageSize]="tailleDe('affectations')" itemLabel="affectation" (pageChange)="changerPage('affectations',$event,affectationsFiltrees)" (pageSizeChange)="changerTaille('affectations',$event)"/></div>}
  @if(onglet==='evaluations'){<div class="p-4"><div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div class="flex max-w-md flex-1"><input [(ngModel)]="recherches.evaluations" (keyup.enter)="rechercherDans('evaluations')" placeholder="Employé, période, note, appréciation ou évaluateur…" class="h-10 min-w-0 flex-1 rounded-l-lg border px-3"><button (click)="rechercherDans('evaluations')" class="rounded-r-lg bg-gray-100 px-4">Rechercher</button></div><button (click)="modalEvaluation=true" class="rounded-lg bg-brand-500 px-3 py-2 text-sm text-white">+ Nouvelle évaluation</button></div><div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50"><tr><th class="p-3">Employé</th><th class="p-3">Date</th><th class="p-3">Période</th><th class="p-3">Note</th><th class="p-3">Appréciation</th><th class="p-3">Évaluateur</th></tr></thead><tbody><tr *ngFor="let e of evaluationsFiltrees | paginate:pageDe('evaluations'):tailleDe('evaluations')" class="border-t"><td class="p-3">{{e.employe}}</td><td class="p-3">{{e.eva_date|date:'dd/MM/yyyy'}}</td><td class="p-3">{{e.eva_periode}}</td><td class="p-3 font-medium">{{e.eva_note}}/20</td><td class="p-3">{{e.eva_appreciation}}</td><td class="p-3">{{e.eva_evaluateur}}</td></tr></tbody></table></div><app-pagination class="mt-4 block" [currentPage]="pageDe('evaluations')" [totalPages]="totalPages(evaluationsFiltrees,'evaluations')" [totalItems]="evaluationsFiltrees.length" [pageSize]="tailleDe('evaluations')" itemLabel="évaluation" (pageChange)="changerPage('evaluations',$event,evaluationsFiltrees)" (pageSizeChange)="changerTaille('evaluations',$event)"/></div>}
- @if(onglet==='statistiques'){<div class="p-4"><div class="mb-4 flex flex-wrap gap-3 rounded-xl bg-gray-50 p-3"><app-select [(ngModel)]="filtreAnnee" [options]="anneeStatistiqueOptions" placeholder="Toutes les années" className="min-w-52" /><app-select [(ngModel)]="filtreCategorie" [options]="categorieOptions" placeholder="Toutes les catégories" [clearable]="true" className="min-w-52" /><button (click)="filtrerStatistiques()" class="rounded-lg bg-brand-500 px-4 text-sm text-white">Appliquer</button></div><div class="grid gap-4 lg:grid-cols-2"><div class="rounded-xl border p-4"><h3 class="mb-3 font-medium">Effectifs par catégorie</h3><div *ngFor="let c of statistiques.categories" class="mb-3"><div class="flex justify-between text-sm"><span>{{c['categorie']}}</span><b>{{c['effectif']}}</b></div><div class="mt-1 h-3 rounded bg-gray-100"><div class="h-3 rounded bg-brand-500" [style.width.%]="largeur(c['effectif'],statistiques.categories,'effectif')"></div></div></div></div><div class="rounded-xl border p-4"><h3 class="mb-3 font-medium">Répartition des contrats</h3><div *ngFor="let c of statistiques.contrats" class="mb-3"><div class="flex justify-between text-sm"><span>{{c['type']}}</span><b>{{c['nombre']}}</b></div><div class="mt-1 h-3 rounded bg-gray-100"><div class="h-3 rounded bg-warning-500" [style.width.%]="largeur(c['nombre'],statistiques.contrats,'nombre')"></div></div></div></div><div class="rounded-xl border p-4"><h3 class="mb-3 font-medium">Charge des enseignants</h3><div *ngFor="let c of statistiques.chargeEnseignants" class="mb-3"><div class="flex justify-between text-sm"><span>{{c['enseignant']}}</span><b>{{c['heures_hebdo']}} h</b></div><div class="mt-1 h-2 rounded bg-gray-100"><div class="h-2 rounded bg-success-500" [style.width.%]="largeur(c['heures_hebdo'],statistiques.chargeEnseignants,'heures_hebdo')"></div></div></div></div><div class="rounded-xl border p-4"><h3 class="mb-3 font-medium">Évolution des évaluations</h3><div *ngFor="let c of statistiques.evaluations" class="flex items-end gap-3 border-b py-2"><span class="w-20 text-xs">{{dateValue(c['mois'])|date:'MM/yyyy'}}</span><div class="h-5 rounded bg-brand-400" [style.width.%]="noteWidth(c['moyenne'])"></div><b class="text-sm">{{c['moyenne']}}/20</b></div></div></div></div>}
+ @if(onglet==='statistiques'){
+  <div class="p-4">
+   <div class="mb-4 rounded-xl bg-gray-50 p-4 dark:bg-white/[0.03]">
+    <div class="flex flex-wrap items-end gap-3">
+     <label class="text-xs font-medium text-gray-600 dark:text-gray-300">Année scolaire<app-select [(ngModel)]="filtreAnnee" [options]="anneeStatistiqueOptions" placeholder="Toutes les années" className="mt-1 min-w-52" /></label>
+     <label class="text-xs font-medium text-gray-600 dark:text-gray-300">Catégorie<app-select [(ngModel)]="filtreCategorie" [options]="categorieOptions" placeholder="Toutes les catégories" [clearable]="true" className="mt-1 min-w-52" /></label>
+     <button (click)="filtrerStatistiques()" class="h-11 rounded-lg bg-brand-500 px-4 text-sm font-medium text-white">Appliquer</button>
+    </div>
+    <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">Périmètre affiché : <strong>{{contexteStatistiques}}</strong></p>
+   </div>
+   <div class="grid gap-4 lg:grid-cols-2">
+    <section class="rounded-xl border border-gray-200 p-4 dark:border-white/[0.08]">
+     <div class="mb-4 flex items-start justify-between gap-3">
+      <div><h3 class="font-medium text-gray-900 dark:text-white">Effectif actif par catégorie</h3><p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Répartition des collaborateurs actuellement actifs.</p></div>
+      <span class="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">{{total(statistiques.categories,'effectif')}} personnes</span>
+     </div>
+     <div *ngFor="let c of statistiques.categories" class="mb-4 last:mb-0">
+      <div class="flex justify-between gap-3 text-sm"><span>{{libelleCategorie(c.categorie)}}</span><b>{{c.effectif}} · {{pourcentage(c.effectif,total(statistiques.categories,'effectif'))}} %</b></div>
+      <div class="mt-1.5 h-2.5 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800"><div class="h-full rounded-full bg-brand-500" [style.width.%]="pourcentage(c.effectif,total(statistiques.categories,'effectif'))"></div></div>
+     </div>
+     <p *ngIf="statistiques.categories.length===0" class="text-sm text-gray-500">Aucun collaborateur pour ces filtres.</p>
+    </section>
+    <section class="rounded-xl border border-gray-200 p-4 dark:border-white/[0.08]">
+     <div class="mb-4 flex items-start justify-between gap-3">
+      <div><h3 class="font-medium text-gray-900 dark:text-white">Contrats actifs par type</h3><p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Contrats actifs qui recouvrent la période sélectionnée.</p></div>
+      <span class="rounded-full bg-warning-50 px-2.5 py-1 text-xs font-semibold text-warning-700 dark:bg-warning-500/10 dark:text-warning-300">{{total(statistiques.contrats,'nombre')}} contrats</span>
+     </div>
+     <div *ngFor="let c of statistiques.contrats" class="mb-4 last:mb-0">
+      <div class="flex justify-between gap-3 text-sm"><span>{{c.type}}</span><b>{{c.nombre}} · {{pourcentage(c.nombre,total(statistiques.contrats,'nombre'))}} %</b></div>
+      <div class="mt-1.5 h-2.5 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800"><div class="h-full rounded-full bg-warning-500" [style.width.%]="pourcentage(c.nombre,total(statistiques.contrats,'nombre'))"></div></div>
+     </div>
+     <p *ngIf="statistiques.contrats.length===0" class="text-sm text-gray-500">Aucun contrat actif pour ces filtres.</p>
+    </section>
+    <section class="rounded-xl border border-gray-200 p-4 dark:border-white/[0.08]">
+     <div class="mb-4">
+      <div class="flex items-center gap-2"><h3 class="font-medium text-gray-900 dark:text-white">Charge hebdomadaire affectée</h3><span title="La référence de 40 h sert à visualiser la charge. Elle ne remplace pas la durée prévue par le contrat." class="cursor-help rounded-full border border-gray-300 px-1.5 text-xs text-gray-500 dark:border-gray-700">?</span></div>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Somme des heures d’affectation · référence d’affichage : 40 h/semaine.</p>
+     </div>
+     <div class="max-h-[520px] overflow-y-auto pr-1">
+      <div *ngFor="let c of statistiques.chargeEnseignants" class="mb-4">
+       <div class="flex justify-between gap-3 text-sm"><span class="truncate">{{c.enseignant}}</span><span class="shrink-0"><b>{{c.heures_hebdo}} / {{c.capacite_reference}} h</b> · <span class="text-xs text-gray-500">{{chargeEtat(c.taux_charge)}}</span></span></div>
+       <div class="mt-1.5 h-2.5 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800"><div class="h-full rounded-full" [ngClass]="chargeClass(c.taux_charge)" [style.width.%]="chargeWidth(c.heures_hebdo,c.capacite_reference)"></div></div>
+      </div>
+     </div>
+     <p *ngIf="statistiques.chargeEnseignants.length===0" class="text-sm text-gray-500">Aucun enseignant pour ces filtres.</p>
+    </section>
+    <section class="rounded-xl border border-gray-200 p-4 dark:border-white/[0.08]">
+     <div class="mb-4">
+      <div class="flex items-center gap-2"><h3 class="font-medium text-gray-900 dark:text-white">Moyenne mensuelle des évaluations RH</h3><span title="Chaque barre représente la moyenne des évaluations RH enregistrées durant le mois, sur un barème de 20." class="cursor-help rounded-full border border-gray-300 px-1.5 text-xs text-gray-500 dark:border-gray-700">?</span></div>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Le nombre affiché indique combien d’évaluations composent chaque moyenne.</p>
+     </div>
+     <div *ngFor="let c of statistiques.evaluations" class="border-b border-gray-100 py-3 last:border-0 dark:border-white/[0.05]">
+      <div class="mb-1.5 flex items-center justify-between gap-3 text-sm"><span>{{dateValue(c.mois)|date:'MM/yyyy'}} · {{c.nombre}} évaluation(s)</span><b>{{c.moyenne}}/20</b></div>
+      <div class="h-2.5 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800"><div class="h-full rounded-full bg-brand-400" [style.width.%]="noteWidth(c.moyenne)"></div></div>
+     </div>
+     <p *ngIf="statistiques.evaluations.length===0" class="text-sm text-gray-500">Aucune évaluation RH pour ces filtres.</p>
+    </section>
+   </div>
+  </div>
+ }
  </div>
 </div>
 
@@ -81,4 +140,35 @@
 </app-modal>
 <app-modal [isOpen]="modalEvaluation" (close)="modalEvaluation=false" className="max-w-[650px] p-6"><h2 class="text-xl font-semibold">Nouvelle évaluation</h2><div class="mt-5 grid gap-4 sm:grid-cols-2"><label class="sm:col-span-2">Collaborateur<app-select [(ngModel)]="evaluation.employeUuid" [options]="employeOptions" [searchFn]="rechercherEmployesSelect" placeholder="Choisir" className="mt-1" /></label><label>Date<input [(ngModel)]="evaluation.date" type="date" class="mt-1 h-11 w-full rounded-lg border px-3"></label><label>Période<input [(ngModel)]="evaluation.periode" class="mt-1 h-11 w-full rounded-lg border px-3"></label><label>Note /20<input [(ngModel)]="evaluation.note" type="number" min="0" max="20" class="mt-1 h-11 w-full rounded-lg border px-3"></label><span></span><label class="sm:col-span-2">Objectifs<textarea [(ngModel)]="evaluation.objectifs" class="mt-1 w-full rounded-lg border p-3"></textarea></label><label class="sm:col-span-2">Appréciation<textarea [(ngModel)]="evaluation.appreciation" class="mt-1 w-full rounded-lg border p-3"></textarea></label></div><div class="mt-6 text-right"><button (click)="evaluer()" class="rounded-lg bg-brand-500 px-4 py-2 text-white">Enregistrer</button></div></app-modal>
 <app-modal [isOpen]="modalClotureContrat" (close)="modalClotureContrat=false" className="max-w-[520px] p-6"><h2 class="text-xl font-semibold">Clôturer le contrat</h2><p class="mt-2 text-sm text-gray-500">Cette action conserve l'historique du contrat de {{contratACloturer?.employe}}.</p><label class="mt-5 block text-sm">Motif de clôture<textarea [(ngModel)]="motifCloture" rows="3" class="mt-1 w-full rounded-lg border p-3" placeholder="Ex. fin de collaboration"></textarea></label><div class="mt-6 flex justify-end gap-2"><button (click)="modalClotureContrat=false" class="rounded-lg border px-4 py-2">Annuler</button><button data-confirm-skip="true" (click)="cloturer()" [disabled]="!motifCloture.trim()" class="rounded-lg bg-error-600 px-4 py-2 text-white disabled:opacity-40">Confirmer la clôture</button></div></app-modal>
-@if(onglet==='statistiques'){<div class="rounded-2xl border bg-white p-5"><h3 class="font-semibold">Taux de présence mensuel</h3><div class="mt-4 grid gap-3 md:grid-cols-3"><div *ngFor="let p of tauxPresence" class="rounded-xl bg-gray-50 p-3"><div class="flex justify-between text-sm"><span>{{p.mois|date:'MM/yyyy'}}</span><b>{{p.taux_presence}} %</b></div><div class="mt-2 h-2 overflow-hidden rounded-full bg-gray-200"><div class="h-full bg-success-500" [style.width.%]="p.taux_presence"></div></div><p class="mt-1 text-xs text-gray-500">{{p.jours_absence}} jour(s) d'absence</p></div></div></div>}
+@if(onglet==='statistiques'){
+ <section class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/[0.08] dark:bg-white/[0.03]">
+  <div class="flex flex-wrap items-start justify-between gap-3">
+   <div>
+    <div class="flex items-center gap-2">
+     <h3 class="font-semibold text-gray-900 dark:text-white">Taux de présence mensuel</h3>
+     <span title="Taux = (journées-personnes théoriques − journées-personnes d’absence) ÷ journées-personnes théoriques × 100. Seuls les jours ouvrés sont comptés." class="cursor-help rounded-full border border-gray-300 px-1.5 text-xs text-gray-500 dark:border-gray-700">?</span>
+    </div>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Les absences sont des journées-personnes cumulées, pas la durée d’absence d’un seul collaborateur.</p>
+   </div>
+   <div class="flex flex-wrap gap-3 text-xs text-gray-500">
+    <span><i class="mr-1 inline-block h-2 w-2 rounded-full bg-success-500"></i>≥ 95 %</span>
+    <span><i class="mr-1 inline-block h-2 w-2 rounded-full bg-warning-500"></i>90–94,99 %</span>
+    <span><i class="mr-1 inline-block h-2 w-2 rounded-full bg-error-500"></i>&lt; 90 %</span>
+   </div>
+  </div>
+  <div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+   <article *ngFor="let p of tauxPresence" class="rounded-xl bg-gray-50 p-4 dark:bg-gray-900/60">
+    <div class="flex items-start justify-between gap-3">
+     <div><p class="text-sm font-medium text-gray-800 dark:text-gray-200">{{p.mois|date:'MM/yyyy'}}</p><p class="mt-0.5 text-xs text-gray-500">{{p.jours_ouvrables}} jours ouvrés · {{p.effectif_cible}} collaborateurs</p></div>
+     <div class="text-right"><b class="text-sm" [ngClass]="presenceTextClass(p.taux_presence)">{{p.taux_presence}} %</b><p class="text-[11px] text-gray-500">{{presenceEtat(p.taux_presence)}}</p></div>
+    </div>
+    <div class="mt-3 h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800"><div class="h-full rounded-full" [ngClass]="presenceClass(p.taux_presence)" [style.width.%]="p.taux_presence"></div></div>
+    <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
+     <div class="rounded-lg bg-white p-2 dark:bg-white/[0.04]"><span class="block text-gray-500">Absences</span><b>{{p.jours_absence}} / {{p.journees_theoriques}}</b></div>
+     <div class="rounded-lg bg-white p-2 dark:bg-white/[0.04]"><span class="block text-gray-500">Détail</span><b>{{p.jours_conges}} congés · {{p.absences_injustifiees}} injust.</b></div>
+    </div>
+   </article>
+  </div>
+  <p *ngIf="tauxPresence.length===0" class="mt-4 text-sm text-gray-500">Aucune donnée de présence pour cette période.</p>
+ </section>
+}

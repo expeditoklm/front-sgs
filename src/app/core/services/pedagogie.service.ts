@@ -7,6 +7,9 @@ import { ListCriteria } from './referentiel-crud.service';
 import { FilterCriteria } from '../models/inscription.models';
 import {
   DecisionSuggeree,
+  CalculationRule,
+  CalculationRuleOptions,
+  CalculationRulePayload,
   Deliberation,
   DeliberationDecision,
   DeliberationDecisionRequest,
@@ -16,6 +19,8 @@ import {
   MoyenneGenerale,
   MoyenneMatiere,
   Note,
+  NoteCorrection,
+  NoteCorrectionLotRequest,
   NoteLotRequest,
   NoteLotResponse,
   StatistiqueClassePedagogie,
@@ -95,6 +100,30 @@ export class PedagogieService {
       .pipe(map((response) => response.data));
   }
 
+  getNoteCorrections(evaluationUuid: string): Observable<NoteCorrection[]> {
+    return this.http
+      .get<ApiResponse<NoteCorrection[]>>(`${this.base}/notes/corrections/evaluation/${evaluationUuid}`)
+      .pipe(map((response) => response.data));
+  }
+
+  demanderCorrectionNotes(payload: NoteCorrectionLotRequest): Observable<NoteCorrection[]> {
+    return this.http
+      .post<ApiResponse<NoteCorrection[]>>(`${this.base}/notes/corrections`, payload)
+      .pipe(map((response) => response.data));
+  }
+
+  approuverCorrectionNote(uuid: string, commentaire: string | null): Observable<NoteCorrection> {
+    return this.http
+      .post<ApiResponse<NoteCorrection>>(`${this.base}/notes/corrections/${uuid}/approuver`, { commentaire })
+      .pipe(map((response) => response.data));
+  }
+
+  rejeterCorrectionNote(uuid: string, commentaire: string | null): Observable<NoteCorrection> {
+    return this.http
+      .post<ApiResponse<NoteCorrection>>(`${this.base}/notes/corrections/${uuid}/rejeter`, { commentaire })
+      .pipe(map((response) => response.data));
+  }
+
   // --- Moyennes (lecture seule, tous rôles pédagogie - cf. MoyenneController @PreAuthorize) ------
 
   getMoyennesMatiere(inscriptionId: number, periodeId: number): Observable<MoyenneMatiere[]> {
@@ -148,6 +177,38 @@ export class PedagogieService {
       .get<ApiResponse<StatistiqueMatierePedagogie[]>>(`${this.base}/moyennes/statistiques/matieres`, {
         params: new HttpParams().set('classeId', classeId).set('periodeId', periodeId)
       })
+      .pipe(map((response) => response.data));
+  }
+
+  // --- Règles de calcul (SADM/ADM uniquement) ---------------------------
+
+  getCalculationRules(): Observable<CalculationRule[]> {
+    return this.http
+      .get<ApiResponse<CalculationRule[]>>(`${this.base}/regles-calcul`)
+      .pipe(map((response) => response.data));
+  }
+
+  getCalculationRuleComponents(ruleId: number): Observable<any[]> {
+    return this.http
+      .get<ApiResponse<any[]>>(`${this.base}/regles-calcul/${ruleId}/composants`)
+      .pipe(map((response) => response.data));
+  }
+
+  getCalculationRuleOptions(): Observable<CalculationRuleOptions> {
+    return this.http
+      .get<ApiResponse<CalculationRuleOptions>>(`${this.base}/regles-calcul/options`)
+      .pipe(map((response) => response.data));
+  }
+
+  saveCalculationRule(payload: CalculationRulePayload): Observable<CalculationRule> {
+    return this.http
+      .post<ApiResponse<CalculationRule>>(`${this.base}/regles-calcul`, payload)
+      .pipe(map((response) => response.data));
+  }
+
+  activateCalculationRule(ruleId: number): Observable<CalculationRule> {
+    return this.http
+      .post<ApiResponse<CalculationRule>>(`${this.base}/regles-calcul/${ruleId}/activer`, {})
       .pipe(map((response) => response.data));
   }
 

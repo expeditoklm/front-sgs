@@ -81,6 +81,7 @@ export class EleveDossierComponent implements OnInit {
   anneeScolaireOptions: SelectOption[] = [];
   typeInscriptionOptions: SelectOption[] = [];
   generatingCertificat = false;
+  generatingCertificatScolarite = false;
   classeRows: Array<{ id: number; libelle: string; niveauCode: string; anneeScolaireCode: string; montantInscription: number; montantScolarite: number }> = [];
 
   // --- Correction d'un dossier rejeté ---
@@ -318,6 +319,35 @@ export class EleveDossierComponent implements OnInit {
       error: (err) => {
         this.generatingCertificat = false;
         this.toastService.error(err?.error?.message || 'Échec de la génération du certificat.');
+      }
+    });
+  }
+
+  telechargerCertificatScolarite(): void {
+    if (!this.selectedInscription) return;
+    if (this.selectedInscription.statut !== 'VALIDEE') {
+      this.toastService.warning(
+        'Le certificat de scolarité est disponible uniquement après validation de l’inscription.'
+      );
+      return;
+    }
+
+    this.generatingCertificatScolarite = true;
+    this.reportService.genererCertificatScolarite(this.selectedInscription.uuid).subscribe({
+      next: (blob) => {
+        this.generatingCertificatScolarite = false;
+        const code = this.selectedInscription!.code || this.selectedInscription!.uuid;
+        this.documentViewer.open(
+          blob,
+          `Certificat de scolarité ${code}`,
+          `certificat-scolarite-${code}.pdf`
+        );
+      },
+      error: (err) => {
+        this.generatingCertificatScolarite = false;
+        this.toastService.error(
+          err?.error?.message || 'Échec de la génération du certificat de scolarité.'
+        );
       }
     });
   }
