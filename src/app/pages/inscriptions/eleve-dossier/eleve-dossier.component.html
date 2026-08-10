@@ -144,12 +144,18 @@
             @if (canResoumettreCorrection) {
               <div class="mb-4 flex flex-col gap-3 rounded-xl border border-warning-200 bg-warning-50 px-4 py-4 dark:border-warning-500/30 dark:bg-warning-500/10 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p class="font-medium text-warning-800 dark:text-warning-200">Correction attendue</p>
+                  <p class="font-medium text-warning-800 dark:text-warning-200">
+                    {{ dossierAnnuleARelancer ? 'Dossier annulé' : 'Correction attendue' }}
+                  </p>
                   <p class="mt-1 text-sm text-warning-700 dark:text-warning-300">
-                    Corrigez les informations ou les pièces signalées, puis resoumettez le dossier à l’administration.
+                    {{ dossierAnnuleARelancer
+                      ? 'Relancez ce dossier afin de le remettre dans le circuit de validation.'
+                      : 'Corrigez les informations ou les pièces signalées, puis resoumettez le dossier à l’administration.' }}
                   </p>
                 </div>
-                <app-button size="sm" (btnClick)="openResoumission()">Terminer et resoumettre</app-button>
+                <app-button size="sm" (btnClick)="openResoumission()">
+                  {{ dossierAnnuleARelancer ? 'Relancer le dossier' : 'Terminer et resoumettre' }}
+                </app-button>
               </div>
             }
           }
@@ -162,7 +168,12 @@
             <app-button size="sm" variant="outline" (btnClick)="openCreatePaiement()">
               Enregistrer un paiement
             </app-button>
-            <app-button size="sm" variant="outline" [disabled]="generatingCertificat" (btnClick)="telechargerCertificat()">
+            <app-button
+              size="sm"
+              variant="outline"
+              [disabled]="generatingCertificat || selectedInscription.statut !== 'VALIDEE'"
+              (btnClick)="telechargerCertificat()"
+            >
               Visualiser le certificat d'inscription
             </app-button>
             <app-button
@@ -308,9 +319,13 @@
   </app-modal>
 
   <app-modal [isOpen]="isResoumissionOpen" (close)="closeResoumission()" className="max-w-[520px] p-5 lg:p-8">
-    <h4 class="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90">Resoumettre le dossier corrigé</h4>
+    <h4 class="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90">
+      {{ dossierAnnuleARelancer ? 'Relancer le dossier annulé' : 'Resoumettre le dossier corrigé' }}
+    </h4>
     <p class="text-sm text-gray-500 dark:text-gray-400">
-      Confirmez que toutes les corrections demandées ont été effectuées. Le dossier repassera en attente de validation et l’administration sera avertie.
+      {{ dossierAnnuleARelancer
+        ? 'Le dossier repassera en attente de validation et conservera son historique, ses pièces et ses paiements.'
+        : 'Confirmez que toutes les corrections demandées ont été effectuées. Le dossier repassera en attente de validation et l’administration sera avertie.' }}
     </p>
     @if (selectedInscription?.motifDernierRejet) {
       <div class="mt-5 rounded-xl border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300">
@@ -324,7 +339,7 @@
     <div class="mt-8 flex items-center justify-end gap-3">
       <app-button size="sm" variant="outline" [disabled]="resubmitting" (btnClick)="closeResoumission()">Annuler</app-button>
       <app-button size="sm" [disabled]="resubmitting" (btnClick)="confirmerResoumission()">
-        {{ resubmitting ? 'Resoumission en cours…' : 'Confirmer la resoumission' }}
+        {{ resubmitting ? 'Traitement en cours…' : (dossierAnnuleARelancer ? 'Confirmer la relance' : 'Confirmer la resoumission') }}
       </app-button>
     </div>
   </app-modal>

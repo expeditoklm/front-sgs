@@ -309,6 +309,12 @@ export class EleveDossierComponent implements OnInit {
 
   telechargerCertificat(): void {
     if (!this.selectedInscription) return;
+    if (this.selectedInscription.statut !== 'VALIDEE') {
+      this.toastService.warning(
+        "Le certificat d'inscription est disponible uniquement après validation du dossier."
+      );
+      return;
+    }
     this.generatingCertificat = true;
     this.reportService.genererCertificatInscription(this.selectedInscription.uuid).subscribe({
       next: (blob) => {
@@ -415,8 +421,12 @@ export class EleveDossierComponent implements OnInit {
   }
 
   get canResoumettreCorrection(): boolean {
-    return this.selectedInscription?.statut === 'REJETEE'
+    return ['REJETEE', 'ANNULEE'].includes(this.selectedInscription?.statut ?? '')
       && this.authenticationService.hasAnyRole(['SEC', 'SADM', 'ADM']);
+  }
+
+  get dossierAnnuleARelancer(): boolean {
+    return this.selectedInscription?.statut === 'ANNULEE';
   }
 
   get isCorrectionResoumise(): boolean {
@@ -437,17 +447,28 @@ export class EleveDossierComponent implements OnInit {
 
   confirmerResoumission(): void {
     if (!this.selectedInscription || !this.canResoumettreCorrection) return;
+    const relanceAnnulation = this.dossierAnnuleARelancer;
     this.resubmitting = true;
     this.resoumissionError = '';
     this.inscriptionService
-      .transition(this.selectedInscription.uuid, 'EN_ATTENTE', 'Dossier corrigé et resoumis pour validation')
+      .transition(
+        this.selectedInscription.uuid,
+        'EN_ATTENTE',
+        relanceAnnulation
+          ? 'Dossier annulé relancé par le secrétariat pour validation'
+          : 'Dossier corrigé et resoumis pour validation'
+      )
       .subscribe({
         next: (inscription) => {
           this.resubmitting = false;
           this.isResoumissionOpen = false;
           this.inscriptions = this.inscriptions.map((item) => item.uuid === inscription.uuid ? inscription : item);
           this.selectedInscription = inscription;
-          this.toastService.success("Le dossier corrigé a été resoumis à l'administration.");
+          this.toastService.success(
+            relanceAnnulation
+              ? "Le dossier annulé a été relancé auprès de l'administration."
+              : "Le dossier corrigé a été resoumis à l'administration."
+          );
         },
         error: (err) => {
           this.resubmitting = false;
