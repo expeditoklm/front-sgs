@@ -37,14 +37,9 @@ export const tokenInterceptor: HttpInterceptorFn = (request, next) => {
       if (!authenticationMissing) {
         return throwError(() => error);
       }
-      if (localStorage.getItem('refresh_token') !== null) {
-        return handleRefreshToken(authorizedRequest, next, authService, tenantContext);
-      }
-      // 401 sans refresh_token exploitable (token invalide/absent, pas seulement expiré) :
-      // aucun rafraîchissement possible, retour direct à /signin plutôt que de laisser
-      // l'erreur remonter silencieusement jusqu'au composant appelant.
-      completeLogout();
-      return throwError(() => error);
+      // Le refresh token est un cookie HttpOnly : le frontend ne peut et ne doit pas tester sa
+      // présence. La gateway répondra 401 si la session de renouvellement n'existe plus.
+      return handleRefreshToken(authorizedRequest, next, authService, tenantContext);
     })
   );
 };

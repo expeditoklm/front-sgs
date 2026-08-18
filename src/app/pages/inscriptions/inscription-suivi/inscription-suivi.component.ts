@@ -20,8 +20,7 @@ import {
   Inscription,
   STATUT_INSCRIPTION_LABELS,
   StatutInscription,
-  TYPE_INSCRIPTION_LABELS,
-  TypeInscription
+  TYPE_INSCRIPTION_LABELS
 } from '../../../core/models/inscription.models';
 
 // Cible de transition demandée depuis une ligne du tableau - certaines cibles exigent un motif

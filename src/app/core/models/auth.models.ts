@@ -27,7 +27,7 @@ export interface User {
 }
 
 export interface MonProfil {
-  id: number;
+  id: number | null;
   uuid: string;
   code: string;
   firstName: string;

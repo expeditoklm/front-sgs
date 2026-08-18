@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PersonnelService } from '../../../core/services/personnel.service';
-import { CritereEvaluationConfig, GrilleEvaluationConfig, GrilleEvaluationPayload } from '../../../core/models/personnel.models';
+import { GrilleEvaluationConfig, GrilleEvaluationPayload } from '../../../core/models/personnel.models';
 import { ToastService } from '../../../core/services/toast.service';
 import { PageBreadcrumbComponent } from '../../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';

@@ -18,15 +18,12 @@ interface OtpStepData {
 interface RoleSelectionData {
   roleName: string;
   roleUuid: string;
-  accessToken: string;
-  refreshToken: string;
   permissions: string[];
   profiles?: ProfileOption[];
 }
 
 interface RefreshTokenData {
-  token: string;
-  refreshToken: string;
+  expires: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -140,8 +137,8 @@ export class AuthenticationService {
             permissions: response.data.permissions ?? [],
             profiles
           };
-          localStorage.setItem('user', JSON.stringify(updated));
-          localStorage.setItem('profile', updated.profilCode);
+          sessionStorage.setItem('user', JSON.stringify(updated));
+          sessionStorage.setItem('profile', updated.profilCode);
           this.user.set(updated);
         }),
         map(() => true),
@@ -149,28 +146,15 @@ export class AuthenticationService {
       );
   }
 
-  // Le backend pose aussi un cookie httpOnly, mais SameSite=Lax : le navigateur ne l'envoie pas
-  // sur les appels cross-origin (Angular sur :4200, API sur :58080 - ports différents = origines
-  // différentes). On garde donc le vrai access token pour l'attacher nous-mêmes en
-  // Authorization: Bearer (cf. httpHeaders()) - le backend accepte déjà ce fallback
-  // (KeycloakAuthorizationFilter.extractToken()).
+  // Le backend renouvelle les cookies HttpOnly ; aucun jeton n'est exposé au JavaScript.
   refreshToken$(): Observable<boolean> {
-    const refreshToken = localStorage.getItem('refresh_token');
-    if (!refreshToken) {
-      return of(false);
-    }
-
     return this.http
       .post<ApiResponse<RefreshTokenData>>(
         `${this.endpoint}/refresh-token`,
-        { token: refreshToken },
+        {},
         { withCredentials: true }
       )
       .pipe(
-        tap((response) => {
-          localStorage.setItem('access_token', response.data.token);
-          localStorage.setItem('refresh_token', response.data.refreshToken);
-        }),
         map(() => true),
         catchError(() => of(false))
       );
@@ -276,8 +260,8 @@ export class AuthenticationService {
   }
 
   get isAuthenticated(): boolean {
-    return localStorage.getItem('user') !== null &&
-      (localStorage.getItem('access_token') !== null || localStorage.getItem('refresh_token') !== null);
+    return sessionStorage.getItem('user') !== null &&
+      true;
   }
 
   get currentProfile(): string | null {
@@ -333,12 +317,12 @@ export class AuthenticationService {
       profilCode: current.profilCode || profile.profilCode,
       profilLibelle: current.profilLibelle || profile.profilLibelle
     };
-    localStorage.setItem('user', JSON.stringify(updated));
+    sessionStorage.setItem('user', JSON.stringify(updated));
     this.user.set(updated);
   }
 
   private get userFromStorage(): User | null {
-    const raw = localStorage.getItem('user');
+    const raw = sessionStorage.getItem('user');
     return raw ? JSON.parse(raw) : null;
   }
 
@@ -354,10 +338,9 @@ export class AuthenticationService {
       profiles: this.normalizeProfiles(data.profiles ?? this.pendingProfiles)
     };
 
-    localStorage.setItem('access_token', data.accessToken);
-    localStorage.setItem('refresh_token', data.refreshToken);
-    localStorage.setItem('user', JSON.stringify(user));
-    localStorage.setItem('profile', user.profilCode);
+    // Les jetons d'accès et de renouvellement restent dans des cookies HttpOnly.
+    sessionStorage.setItem('user', JSON.stringify(user));
+    sessionStorage.setItem('profile', user.profilCode);
     this.user.set(user);
     this.resetPendingState();
   }
@@ -380,7 +363,7 @@ export class AuthenticationService {
     const current = this.user();
     if (!current) return;
     const updated = { ...current, profiles };
-    localStorage.setItem('user', JSON.stringify(updated));
+    sessionStorage.setItem('user', JSON.stringify(updated));
     this.user.set(updated);
   }
 }

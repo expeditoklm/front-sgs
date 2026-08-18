@@ -5,7 +5,7 @@
 # ---------------------------------------------------------------------------
 # Étape 1/2 : build - Node + Angular CLI, jamais présents dans l'image finale
 # ---------------------------------------------------------------------------
-FROM node:22-alpine AS build
+FROM node:22.18.0-alpine3.22 AS build
 WORKDIR /app
 
 # Couche dépendances : ne se réinvalide que si package*.json change, pas à chaque modif de code.
@@ -19,7 +19,7 @@ RUN npm run build -- --configuration production
 # Étape 2/2 : exécution - Nginx seul sert les fichiers statiques compilés, aucun outil Node,
 # aucun code source, aucun node_modules dans l'image finale.
 # ---------------------------------------------------------------------------
-FROM nginx:1.27-alpine AS runtime
+FROM nginx:1.27.5-alpine AS runtime
 
 RUN rm /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/conf.d/default.conf

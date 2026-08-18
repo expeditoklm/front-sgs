@@ -10,7 +10,7 @@ import { RouterModule } from '@angular/router';
     <a
       [routerLink]="to"
       [ngClass]="combinedClasses"
-      (click)="handleClick($event)"
+      (click)="handleClick()"
     >
       <ng-content></ng-content>
     </a>
@@ -27,7 +27,7 @@ export class DropdownItemTwoComponent {
     return `${this.baseClassName} ${this.className}`.trim();
   }
 
-  handleClick(event: Event) {
+  handleClick(): void {
     this.click.emit();
     this.itemClick.emit();
   }

@@ -1,5 +1,3 @@
-import { environment } from '../../../environments/environment';
-
 export function completeLogout(): void {
   // Le tenant sélectionné représente le portail/établissement dans lequel
   // l'utilisateur souhaite se connecter. Il ne fait pas partie de la session
@@ -9,6 +7,7 @@ export function completeLogout(): void {
   const tenantContext = localStorage.getItem('sgs_tenant');
   const theme = localStorage.getItem('theme');
   localStorage.clear();
+  sessionStorage.clear();
   if (tenantContext) localStorage.setItem('sgs_tenant', tenantContext);
   if (theme) localStorage.setItem('theme', theme);
   window.location.href = '/signin';
@@ -17,16 +16,11 @@ export function completeLogout(): void {
 export function httpHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
     'X-App-Name': 'SGS',
-    'X-User-Role': localStorage.getItem('profile') || ''
+    'X-User-Role': sessionStorage.getItem('profile') || ''
   };
 
-  // Le cookie de session posé par le backend est SameSite=Lax : il n'est pas envoyé sur les
-  // appels cross-origin (Angular :4200 -> API :58080). On attache donc explicitement l'access
-  // token en Bearer - le backend gère déjà ce fallback (KeycloakAuthorizationFilter.extractToken()).
-  const accessToken = localStorage.getItem('access_token');
-  if (accessToken) {
-    headers['Authorization'] = `Bearer ${accessToken}`;
-  }
+  // L'authentification est portée exclusivement par le cookie HttpOnly. SameSite compare le
+  // site (schéma + domaine), pas le port : localhost:4200 et localhost:58080 restent same-site.
   try {
     const tenant = JSON.parse(localStorage.getItem('sgs_tenant') || 'null');
     if (tenant?.id) headers['X-SGS-Tenant-ID'] = String(tenant.id);
@@ -58,8 +52,4 @@ export function isAuthEndpoint(url: string): boolean {
     pathname === `/authentication/${endpoint}` ||
     pathname.startsWith(`/authentication/${endpoint}/`)
   );
-}
-
-export function frontendUrl(path: string): string {
-  return environment.frontendUrl + path;
 }

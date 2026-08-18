@@ -64,7 +64,6 @@ export class MoyennesConsultationComponent implements OnInit {
   inscriptionId = '';
 
   private roster: Inscription[] = [];
-  private loadingRoster = false;
 
   // --- Onglet "par élève" ---
   moyennesMatiere: MoyenneMatiere[] = [];
@@ -123,7 +122,6 @@ export class MoyennesConsultationComponent implements OnInit {
     this.roster = [];
     if (!this.classeId) return;
 
-    this.loadingRoster = true;
     this.inscriptionService
       .filterInscriptions(
         [
@@ -136,12 +134,10 @@ export class MoyennesConsultationComponent implements OnInit {
         next: (page) => {
           this.roster = page.content;
           this.eleveOptions = page.content.map((i) => ({ value: String(i.id), label: i.eleveNomComplet }));
-          this.loadingRoster = false;
         },
         error: () => {
           this.roster = [];
           this.eleveOptions = [];
-          this.loadingRoster = false;
         }
       });
   }

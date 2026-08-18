@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import {
   Component,
-  ElementRef,
   EventEmitter,
   HostListener,
   Input,
@@ -24,8 +23,6 @@ export class ModalComponent {
   @Input() showCloseButton = true;
   @Input() isFullscreen = false;
 
-  constructor(private el: ElementRef) {}
-
   ngOnInit() {
     if (this.isOpen) {
       document.body.style.overflow = 'hidden';
@@ -40,7 +37,7 @@ export class ModalComponent {
     document.body.style.overflow = this.isOpen ? 'hidden' : 'unset';
   }
 
-  onBackdropClick(event: MouseEvent) {
+  onBackdropClick() {
     if (!this.isFullscreen) {
       this.close.emit();
     }

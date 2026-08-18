@@ -123,22 +123,6 @@ export const AUDIT_MODULES: AuditModuleDescriptor[] = [
   }
 ];
 
-// Chaque DTO de réponse a une forme différente (libelle, nom, firstName/lastName, dates...) :
-// plutôt que du mapping par entité, on devine le meilleur champ à afficher — cohérent avec
-// l'approche générique du endpoint d'historique côté backend.
-export function recordLabel(record: Record<string, any>): string {
-  if (record['libelle']) return String(record['libelle']);
-  if (record['nom']) return String(record['nom']);
-  if (record['firstName'] || record['lastName']) {
-    return `${record['firstName'] ?? ''} ${record['lastName'] ?? ''}`.trim();
-  }
-  if (record['dateDebut'] && record['dateFin']) {
-    return `${record['dateDebut']} → ${record['dateFin']}`;
-  }
-  if (record['code']) return String(record['code']);
-  return `#${record['id']}`;
-}
-
 export function humanizeKey(key: string): string {
   const labels: Record<string, string> = {
     anneeScolaire: 'Année scolaire',
