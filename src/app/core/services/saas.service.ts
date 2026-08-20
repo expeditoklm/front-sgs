@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/auth.models';
-import { ProvisioningJob, SaaSPlan, Subscription, Tenant } from '../models/saas.models';
+import { ProvisioningJob, SaaSPlan, SchoolApplication, Subscription, Tenant } from '../models/saas.models';
 
 @Injectable({ providedIn: 'root' })
 export class SaasService {
@@ -16,6 +16,12 @@ export class SaasService {
   publicTenants(): Observable<Tenant[]> {
     return this.http.get<ApiResponse<Tenant[]>>(`${this.endpoint}/public/tenants`).pipe(map(r => r.data ?? []));
   }
+  publicPlans(): Observable<SaaSPlan[]> {
+    return this.http.get<ApiResponse<SaaSPlan[]>>(`${this.endpoint}/public/plans`).pipe(map(r => r.data ?? []));
+  }
+  applyForSchool(payload: SchoolApplication): Observable<Tenant> {
+    return this.http.post<ApiResponse<Tenant>>(`${this.endpoint}/public/school-applications`, payload).pipe(map(r => r.data));
+  }
   createTenant(payload: Partial<Tenant>): Observable<Tenant> {
     return this.http.post<ApiResponse<Tenant>>(`${this.endpoint}/tenants`, payload).pipe(map(r => r.data));
   }
@@ -24,6 +30,9 @@ export class SaasService {
   }
   createPlan(payload: Partial<SaaSPlan>): Observable<SaaSPlan> {
     return this.http.post<ApiResponse<SaaSPlan>>(`${this.endpoint}/plans`, payload).pipe(map(r => r.data));
+  }
+  updatePlan(id: string, payload: Partial<SaaSPlan>): Observable<SaaSPlan> {
+    return this.http.put<ApiResponse<SaaSPlan>>(`${this.endpoint}/plans/${id}`, payload).pipe(map(r => r.data));
   }
   currentSubscription(): Observable<Subscription | null> {
     return this.http.get<ApiResponse<Subscription | null>>(`${this.endpoint}/subscriptions/current`).pipe(map(r => r.data));
@@ -36,6 +45,12 @@ export class SaasService {
   }
   provision(tenantId: string): Observable<ProvisioningJob> {
     return this.http.post<ApiResponse<ProvisioningJob>>(`${this.endpoint}/tenants/${tenantId}/provision`, {}).pipe(map(r => r.data));
+  }
+  approveSchool(tenantId: string): Observable<ProvisioningJob> {
+    return this.http.post<ApiResponse<ProvisioningJob>>(`${this.endpoint}/tenants/${tenantId}/approve`, {}).pipe(map(r => r.data));
+  }
+  rejectSchool(tenantId: string, reason: string): Observable<Tenant> {
+    return this.http.post<ApiResponse<Tenant>>(`${this.endpoint}/tenants/${tenantId}/reject`, { reason }).pipe(map(r => r.data));
   }
   sendAdministratorInvitation(tenantId: string): Observable<void> {
     return this.http.post<ApiResponse<void>>(`${this.endpoint}/tenants/${tenantId}/administrator/invitation`, {})

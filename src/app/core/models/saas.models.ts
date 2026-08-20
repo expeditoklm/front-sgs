@@ -1,4 +1,4 @@
-export type TenantStatus = 'DRAFT' | 'PROVISIONING' | 'ACTIVE' | 'SUSPENDED' | 'FAILED';
+export type TenantStatus = 'DRAFT' | 'PENDING_REVIEW' | 'PROVISIONING' | 'ACTIVE' | 'SUSPENDED' | 'REJECTED' | 'FAILED';
 
 export interface Tenant {
   id: string;
@@ -8,6 +8,20 @@ export interface Tenant {
   email?: string | null;
   status: TenantStatus;
   createdAt?: string;
+  founderName?: string | null;
+  contactPhone?: string | null;
+  rejectionReason?: string | null;
+}
+
+export interface SchoolApplication {
+  slug: string;
+  schoolName: string;
+  founderName: string;
+  email: string;
+  phone: string;
+  planId: string;
+  termsAccepted: boolean;
+  privacyAccepted: boolean;
 }
 
 export interface SaaSPlan {
@@ -30,7 +44,7 @@ export interface Subscription {
   tenantName?: string;
   planId: string;
   planName?: string;
-  status: 'TRIAL' | 'ACTIVE' | 'PAST_DUE' | 'SUSPENDED' | 'CANCELLED';
+  status: 'PENDING' | 'TRIAL' | 'ACTIVE' | 'PAST_DUE' | 'SUSPENDED' | 'CANCELLED';
   startsAt: string;
   endsAt?: string | null;
   trialEndsAt?: string | null;

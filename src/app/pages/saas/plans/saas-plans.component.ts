@@ -82,16 +82,20 @@ import { ModalComponent } from '../../../shared/components/ui/modal/modal.compon
                 <li *ngFor="let feature of plan.features" class="flex gap-2"><span class="font-bold text-success-500">✓</span>{{ feature }}</li>
               </ul>
             }
+            <button type="button" (click)="openEditForm(plan)"
+              class="mt-5 inline-flex h-10 w-full items-center justify-center rounded-xl border border-brand-200 px-4 text-sm font-semibold text-brand-600 transition hover:bg-brand-50 dark:border-brand-500/30 dark:text-brand-300 dark:hover:bg-brand-500/10">
+              Modifier le plan
+            </button>
           </article>
         </section>
       }
     </div>
 
     <app-modal [isOpen]="showForm" (close)="closeForm()" className="max-w-2xl p-0">
-      <form #planForm="ngForm" (ngSubmit)="create(planForm)" class="max-h-[90vh] overflow-y-auto p-6 sm:p-8">
+      <form #planForm="ngForm" (ngSubmit)="save(planForm)" class="max-h-[90vh] overflow-y-auto p-6 sm:p-8">
         <div class="pr-12">
-          <p class="text-xs font-bold uppercase tracking-wider text-brand-500">Nouvelle offre</p>
-          <h2 class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">Créer un plan tarifaire</h2>
+          <p class="text-xs font-bold uppercase tracking-wider text-brand-500">{{ editingPlanId ? 'Modification' : 'Nouvelle offre' }}</p>
+          <h2 class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ editingPlanId ? 'Modifier le plan tarifaire' : 'Créer un plan tarifaire' }}</h2>
           <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Les champs marqués d’un astérisque sont obligatoires.</p>
         </div>
 
@@ -100,6 +104,7 @@ import { ModalComponent } from '../../../shared/components/ui/modal/modal.compon
             <span class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Code du plan *</span>
             <input [(ngModel)]="draft.code" (ngModelChange)="normalizeCode($event)" name="code"
               required minlength="2" maxlength="40" pattern="[A-Z0-9_]{2,40}"
+              [readonly]="!!editingPlanId"
               placeholder="Ex. PREMIUM" class="h-11 w-full rounded-xl border border-gray-300 bg-transparent px-3.5 text-sm uppercase text-gray-900 outline-none focus:border-brand-500 dark:border-gray-700 dark:text-white">
             @if (planForm.submitted && planForm.controls['code']?.invalid) {
               <span class="mt-1 block text-xs text-error-500">Utilisez 2 à 40 lettres majuscules, chiffres ou caractères _.</span>
@@ -135,6 +140,11 @@ import { ModalComponent } from '../../../shared/components/ui/modal/modal.compon
             placeholder="Décrivez brièvement à qui s’adresse cette offre…"
             class="w-full rounded-xl border border-gray-300 bg-transparent px-3.5 py-3 text-sm text-gray-900 outline-none focus:border-brand-500 dark:border-gray-700 dark:text-white"></textarea>
         </label>
+        <label class="mt-5 flex items-center gap-3 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+          <input [(ngModel)]="draft.active" name="active" type="checkbox"
+            class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Plan actif et disponible pour les abonnements</span>
+        </label>
         <label class="mt-5 block">
           <span class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Fonctionnalités incluses</span>
           <textarea [(ngModel)]="featuresText" name="features" rows="3"
@@ -146,7 +156,7 @@ import { ModalComponent } from '../../../shared/components/ui/modal/modal.compon
         <div class="mt-8 flex flex-col-reverse gap-3 border-t border-gray-100 pt-5 dark:border-gray-800 sm:flex-row sm:justify-end">
           <button type="button" (click)="closeForm()" class="h-11 rounded-xl border border-gray-300 px-5 text-sm font-semibold text-gray-700 dark:border-gray-700 dark:text-gray-300">Annuler</button>
           <button type="submit" [disabled]="saving" class="h-11 rounded-xl bg-brand-500 px-6 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
-            {{ saving ? 'Création en cours…' : 'Créer le plan' }}
+            {{ saving ? 'Enregistrement…' : (editingPlanId ? 'Enregistrer les modifications' : 'Créer le plan') }}
           </button>
         </div>
       </form>
@@ -158,6 +168,7 @@ export class SaasPlansComponent implements OnInit {
   loading = true;
   saving = false;
   showForm = false;
+  editingPlanId: string | null = null;
   featuresText = '';
   draft: Partial<SaaSPlan> = this.emptyDraft();
 
@@ -175,8 +186,16 @@ export class SaasPlansComponent implements OnInit {
   }
 
   openForm(): void {
+    this.editingPlanId = null;
     this.draft = this.emptyDraft();
     this.featuresText = '';
+    this.showForm = true;
+  }
+
+  openEditForm(plan: SaaSPlan): void {
+    this.editingPlanId = plan.id || plan.uuid;
+    this.draft = { ...plan, features: [...(plan.features ?? [])] };
+    this.featuresText = (plan.features ?? []).join('\n');
     this.showForm = true;
   }
 
@@ -184,7 +203,7 @@ export class SaasPlansComponent implements OnInit {
     if (!this.saving) this.showForm = false;
   }
 
-  create(form: NgForm): void {
+  save(form: NgForm): void {
     this.draft.code = this.cleanCode(this.draft.code);
     if (form.invalid) {
       form.control.markAllAsTouched();
@@ -193,16 +212,30 @@ export class SaasPlansComponent implements OnInit {
     }
     this.saving = true;
     this.draft.features = this.featuresText.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
-    this.api.createPlan(this.draft).subscribe({
+    const request = this.editingPlanId
+      ? this.api.updatePlan(this.editingPlanId, this.draft)
+      : this.api.createPlan(this.draft);
+    request.subscribe({
       next: (plan) => {
-        this.plans = [plan, ...this.plans];
+        const wasEditing = !!this.editingPlanId;
+        this.plans = wasEditing
+          ? this.plans.map((item) => (item.id === plan.id || item.uuid === plan.uuid) ? plan : item)
+          : [plan, ...this.plans];
         this.saving = false;
         this.showForm = false;
-        this.toast.success(`Le plan « ${plan.name} » a été créé.`, 'Plan créé');
+        this.editingPlanId = null;
+        this.toast.success(
+          `Le plan « ${plan.name} » a été ${wasEditing ? 'modifié' : 'créé'}.`,
+          wasEditing ? 'Plan modifié' : 'Plan créé'
+        );
       },
       error: (error) => {
         this.saving = false;
-        this.toast.error(this.errorMessage(error, 'La création du plan a échoué.'), 'Création impossible');
+        const wasEditing = !!this.editingPlanId;
+        this.toast.error(
+          this.errorMessage(error, `La ${wasEditing ? 'modification' : 'création'} du plan a échoué.`),
+          wasEditing ? 'Modification impossible' : 'Création impossible'
+        );
       }
     });
   }

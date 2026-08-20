@@ -168,7 +168,7 @@ export class SigninFormComponent implements OnInit {
       }
       const redirectTo = this.platformAdminMode
         ? '/saas/ecoles'
-        : (this.route.snapshot.queryParamMap.get('redirectTo') || '/');
+        : (this.route.snapshot.queryParamMap.get('redirectTo') || '/app');
       this.router.navigateByUrl(redirectTo);
     });
   }

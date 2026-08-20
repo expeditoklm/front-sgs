@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { AuthenticationService } from './authentication.service';
 import { InscriptionService } from './inscription.service';
 import { PersonnelService } from './personnel.service';
+import { SaasService } from './saas.service';
 
 export interface ActionNotification {
   id: string;
@@ -22,6 +23,7 @@ export class ActionNotificationService {
     private authenticationService: AuthenticationService,
     private inscriptionService: InscriptionService,
     private personnelService: PersonnelService,
+    private saasService: SaasService,
     private http: HttpClient
   ) {
   }
@@ -105,6 +107,22 @@ export class ActionNotificationService {
             'Nouvelles demandes en attente de validation et d’attribution des rôles',
             requests.length,
             '/administration/demandes-compte',
+            'warning'
+          )),
+          catchError(() => of(null))
+        )
+      );
+    }
+
+    if (role === 'SADM') {
+      sources.push(
+        this.saasService.tenants().pipe(
+          map((tenants) => this.notification(
+            'demandes-ecole',
+            'Écoles à valider',
+            'Nouvelles demandes d’ouverture d’école en attente de décision',
+            tenants.filter((tenant) => tenant.status === 'PENDING_REVIEW').length,
+            '/saas/ecoles',
             'warning'
           )),
           catchError(() => of(null))

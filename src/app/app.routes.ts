@@ -41,6 +41,7 @@ import { TemplateModelsComponent } from './pages/reports/template-models/templat
 import { SaasSchoolsComponent } from './pages/saas/schools/saas-schools.component';
 import { SaasPlansComponent } from './pages/saas/plans/saas-plans.component';
 import { TenantSubscriptionComponent } from './pages/saas/subscription/tenant-subscription.component';
+import { LandingComponent } from './pages/public/landing/landing.component';
 
 // Une route par référentiel du Module 01 (Établissements, Années scolaires, Niveaux, Classes,
 // Matières, Salles, Utilisateurs, Profils), toutes servies par le même ReferentielPageComponent
@@ -61,6 +62,7 @@ const referentielRoutes: Routes = REFERENTIEL_CRUD_ENTITIES.map((entity) => ({
 }));
 
 export const routes: Routes = [
+  { path: '', component: LandingComponent, pathMatch: 'full', title: 'SGS | Gestion scolaire' },
   {
     path: 'verification-paiement/:code',
     component: PaiementVerificationComponent,
@@ -72,9 +74,8 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children:[
       {
-        path: '',
+        path: 'app',
         component: EcommerceComponent,
-        pathMatch: 'full',
         title: 'Accueil | SGS',
       },
       {

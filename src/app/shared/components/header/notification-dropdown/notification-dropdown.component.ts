@@ -80,11 +80,13 @@ export class NotificationDropdownComponent implements OnInit, OnDestroy {
 
   ouvrir(notification: ActionNotification): void {
     this.closeDropdown();
+    // La cloche sert uniquement de point d'entrée vers l'écran métier.
+    // Aucune décision ne doit être prise depuis le menu de notifications.
+    void this.router.navigateByUrl(notification.route);
+
+    // Le marquage comme lu reste secondaire et ne doit jamais retarder la navigation.
     this.notificationService.marquerCommeLue(notification).pipe(
       catchError(() => of(void 0))
-    ).subscribe(() => {
-      this.notifications = this.notifications.filter((item) => item.id !== notification.id);
-      void this.router.navigateByUrl(notification.route);
-    });
+    ).subscribe();
   }
 }
