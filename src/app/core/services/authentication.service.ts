@@ -43,7 +43,11 @@ export class AuthenticationService {
   constructor(private http: HttpClient) {
   }
 
-  login$(credentials: { login: string; password: string }): Observable<{ success: boolean; user?: UserSummary }> {
+  login$(credentials: { login: string; password: string }): Observable<{
+    success: boolean;
+    user?: UserSummary;
+    message?: string;
+  }> {
     return this.http
       .post<ApiResponse<LoginStepData>>(`${this.endpoint}/login`, credentials, { withCredentials: true })
       .pipe(
@@ -52,7 +56,14 @@ export class AuthenticationService {
           this.pendingUser = response.data.user;
         }),
         map((response) => ({ success: true, user: response.data.user })),
-        catchError(() => of({ success: false }))
+        catchError((error: HttpErrorResponse) => of({
+          success: false,
+          // Ne pas exposer `details` ici : il peut contenir des informations techniques
+          // (URL Keycloak, statut interne, etc.). Le champ `message` est destiné à l'écran.
+          message: typeof error.error?.message === 'string' && error.error.message.trim()
+            ? error.error.message.trim()
+            : 'Identifiants incorrects. Merci de réessayer.'
+        }))
       );
   }
 

@@ -43,6 +43,7 @@ export class SigninFormComponent implements OnInit {
   tenants: Tenant[] = [];
   selectedTenantId: string | null = null;
   loadingTenants = true;
+  platformAdminMode = false;
 
   profiles: ProfileOption[] = [];
   selectedProfile: string | null = null;
@@ -77,6 +78,10 @@ export class SigninFormComponent implements OnInit {
         const current = this.tenantContext.tenant();
         this.selectedTenantId = current && tenants.some(tenant => tenant.id === current.id)
           ? current.id : (tenants.length === 1 ? tenants[0].id : null);
+        // Une installation neuve n'a encore aucune école. Proposer alors directement
+        // l'amorçage par le super administrateur de la plateforme.
+        this.platformAdminMode = tenants.length === 0;
+        if (this.platformAdminMode) this.tenantContext.clear();
       },
       error: () => {
         this.loadingTenants = false;
@@ -91,17 +96,21 @@ export class SigninFormComponent implements OnInit {
 
   onSignIn() {
     this.errorMessage = '';
-    const tenant = this.tenants.find(item => item.id === this.selectedTenantId);
-    if (!tenant) {
-      this.errorMessage = 'Sélectionnez votre école.';
-      return;
+    if (this.platformAdminMode) {
+      this.tenantContext.clear();
+    } else {
+      const tenant = this.tenants.find(item => item.id === this.selectedTenantId);
+      if (!tenant) {
+        this.errorMessage = 'Sélectionnez votre école.';
+        return;
+      }
+      this.tenantContext.select(tenant);
     }
-    this.tenantContext.select(tenant);
     this.isSubmitting = true;
     this.authService.login$({ login: this.login, password: this.password }).subscribe((result) => {
       this.isSubmitting = false;
       if (!result.success) {
-        this.errorMessage = 'Identifiants incorrects. Merci de réessayer.';
+        this.errorMessage = result.message ?? 'Identifiants incorrects. Merci de réessayer.';
         return;
       }
       this.step = 'otp';
@@ -121,8 +130,16 @@ export class SigninFormComponent implements OnInit {
         this.errorMessage = "Aucun rôle actif n'est associé à ce compte. Contactez un administrateur.";
         return;
       }
-      this.profiles = result.profiles;
-      this.selectedProfile = result.profiles.length === 1 ? result.profiles[0].code : null;
+      const profiles = this.platformAdminMode
+        ? result.profiles.filter(profile => profile.code.replace(/^ROLE_/, '') === 'SADM')
+        : result.profiles;
+      if (!profiles.length) {
+        this.errorMessage = "Cet accès est réservé au super administrateur de la plateforme.";
+        this.step = 'credentials';
+        return;
+      }
+      this.profiles = profiles;
+      this.selectedProfile = profiles.length === 1 ? profiles[0].code : null;
       this.step = 'role';
     });
   }
@@ -149,7 +166,9 @@ export class SigninFormComponent implements OnInit {
         this.errorMessage = "Rôle non autorisé ou session expirée. Recommencez la connexion.";
         return;
       }
-      const redirectTo = this.route.snapshot.queryParamMap.get('redirectTo') || '/';
+      const redirectTo = this.platformAdminMode
+        ? '/saas/ecoles'
+        : (this.route.snapshot.queryParamMap.get('redirectTo') || '/');
       this.router.navigateByUrl(redirectTo);
     });
   }
@@ -157,6 +176,18 @@ export class SigninFormComponent implements OnInit {
   backToCredentials() {
     this.step = 'credentials';
     this.otp = '';
+    this.errorMessage = '';
+  }
+
+  useSchoolLogin(): void {
+    this.platformAdminMode = false;
+    this.errorMessage = '';
+  }
+
+  usePlatformAdminLogin(): void {
+    this.platformAdminMode = true;
+    this.selectedTenantId = null;
+    this.tenantContext.clear();
     this.errorMessage = '';
   }
 }

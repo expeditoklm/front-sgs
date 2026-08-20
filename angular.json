@@ -64,6 +64,17 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "tunnel": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.tunnel.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -76,6 +87,10 @@
             },
             "development": {
               "buildTarget": "sgs-frontend:build:development"
+            },
+            "tunnel": {
+              "buildTarget": "sgs-frontend:build:tunnel",
+              "proxyConfig": "proxy.tunnel.json"
             }
           },
           "defaultConfiguration": "development"

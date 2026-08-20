@@ -24,15 +24,32 @@
 
         <!-- Form -->
         <form (ngSubmit)="onSignIn()" class="space-y-6">
-          <div>
-            <app-label>École <span class="text-error-500">*</span></app-label>
-            <app-select
-              name="tenant"
-              [(ngModel)]="selectedTenantId"
-              [options]="tenantOptions"
-              [placeholder]="loadingTenants ? 'Chargement des écoles…' : 'Choisir une école'"
-            />
-          </div>
+          @if (platformAdminMode) {
+            <div class="rounded-xl border border-brand-200 bg-brand-50 p-4 dark:border-brand-500/30 dark:bg-brand-500/10">
+              <p class="text-sm font-semibold text-brand-700 dark:text-brand-300">Administration de la plateforme</p>
+              <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                Connectez-vous sans école pour créer et initialiser le premier établissement.
+              </p>
+              @if (tenants.length) {
+                <button type="button" (click)="useSchoolLogin()" class="mt-2 text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400">
+                  Se connecter à une école
+                </button>
+              }
+            </div>
+          } @else {
+            <div>
+              <app-label>École <span class="text-error-500">*</span></app-label>
+              <app-select
+                name="tenant"
+                [(ngModel)]="selectedTenantId"
+                [options]="tenantOptions"
+                [placeholder]="loadingTenants ? 'Chargement des écoles…' : 'Choisir une école'"
+              />
+              <button type="button" (click)="usePlatformAdminLogin()" class="mt-2 text-sm font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400">
+                Accès super administrateur
+              </button>
+            </div>
+          }
           <div>
             <app-label>Identifiant <span class="text-error-500">*</span></app-label>
             <app-input-field
@@ -91,7 +108,7 @@
           <app-button
             className="w-full"
             size="sm"
-            [disabled]="isSubmitting || loadingTenants || !selectedTenantId"
+            [disabled]="isSubmitting || loadingTenants || (!platformAdminMode && !selectedTenantId)"
             (btnClick)="onSignIn()"
           >
             Se connecter
