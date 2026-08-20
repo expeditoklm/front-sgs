@@ -22,6 +22,12 @@ export class SaasService {
   applyForSchool(payload: SchoolApplication): Observable<Tenant> {
     return this.http.post<ApiResponse<Tenant>>(`${this.endpoint}/public/school-applications`, payload).pipe(map(r => r.data));
   }
+  askPublicAssistant(message: string, history: Array<{role: 'user' | 'assistant'; content: string}>): Observable<{answer: string; aiPowered: boolean}> {
+    return this.http.post<ApiResponse<{answer: string; aiPowered: boolean}>>(`${this.endpoint}/public/assistant/chat`, { message, history }).pipe(map(r => r.data));
+  }
+  sendPublicSupportMessage(payload: {name: string; email: string; subject: string; message: string}): Observable<void> {
+    return this.http.post<ApiResponse<void>>(`${this.endpoint}/public/support/messages`, payload).pipe(map(() => void 0));
+  }
   createTenant(payload: Partial<Tenant>): Observable<Tenant> {
     return this.http.post<ApiResponse<Tenant>>(`${this.endpoint}/tenants`, payload).pipe(map(r => r.data));
   }
